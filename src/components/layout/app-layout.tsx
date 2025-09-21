@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import Header from "../header";
 import { Footer } from "../footer";
+import Header from "../header";
 
 export function AppLayout() {
   return (
     <>
-      <div className="bg-[#F5f5f5] font-poppins ">
+      <div className=" font-poppins ">
         <ScrollToHash />
         <Header />
         <Outlet />
-        <Footer/>
+        <Footer />
       </div>
     </>
   );

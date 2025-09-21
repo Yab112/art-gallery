@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Heart, Search } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ArtworkCardProps {
   id: string;
@@ -39,13 +40,15 @@ export function ArtworkCard({
     onFavorite?.(id);
   };
 
-  const handleSearch = () => {
-    console.log("[v0] Search clicked for artwork:", id);
-    onSearch?.(id);
-  };
-
+  const navigate = useNavigate();
   return (
-    <div className="group relative">
+    <div
+      className="group relative cursor-pointer"
+      onClick={() => navigate(`/artwork/${id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") navigate(`/artwork/${id}`);
+      }}
+    >
       {/* Artwork Image Container */}
       <div
         className={cn(
@@ -62,13 +65,13 @@ export function ArtworkCard({
         />
         {/* Overlay background on hover */}
         <div
-          className={`pointer-events-none absolute inset-0 transition-all duration-500 ease-in-out ${
+          className={`pointer-events-none absolute inset-0 cursor-pointer transition-all duration-500 ease-in-out ${
             isHovered ? "bg-black/60 opacity-100" : "bg-black/0 opacity-0"
           }`}
         />
         {/* Hover Buttons - slide down from top */}
         <div
-          className={`absolute top-24 right-0 left-0 z-10 flex justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${
+          className={`absolute top-24 right-0 left-0 z-10 flex cursor-pointer justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${
             isHovered
               ? "pointer-events-auto translate-y-10 opacity-100"
               : "-translate-y-full pointer-events-none opacity-0"
@@ -78,7 +81,10 @@ export function ArtworkCard({
             size="sm"
             variant="secondary"
             className="bg-white/90 shadow-md hover:bg-white"
-            onClick={handleSearch}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/artwork/${id}`);
+            }}
           >
             <Search className="h-4 w-4" />
           </Button>
@@ -86,7 +92,10 @@ export function ArtworkCard({
             size="sm"
             variant="secondary"
             className="bg-white/90 shadow-md hover:bg-white"
-            onClick={handleFavorite}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFavorite();
+            }}
           >
             <Heart className="h-4 w-4" />
           </Button>
