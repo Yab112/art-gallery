@@ -103,21 +103,19 @@ const newArtworks = [
 
 export function RelatedArtworks() {
   return (
-    <section className=" px-4 py-16">
-      <div className="mx-auto max-w-7xl">
-        <SectionTitle
-          title="Other works by Niina Villanueva"
-          //   subtitle="The latest arrivals"
-        />
+    <section className=" py-16">
+      <SectionTitle
+        title="Other works by Niina Villanueva"
+        //   subtitle="The latest arrivals"
+      />
 
-        {/* Masonry Grid Layout */}
-        <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3 xl:columns-4">
-          {newArtworks.map((artwork) => (
-            <div key={artwork.id} className="break-inside-avoid">
-              <ArtworkCard isMasonry {...artwork} />
-            </div>
-          ))}
-        </div>
+      {/* Masonry Grid Layout */}
+      <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3 xl:columns-4">
+        {newArtworks.map((artwork) => (
+          <div key={artwork.id} className="break-inside-avoid">
+            <ArtworkCard isMasonry {...artwork} />
+          </div>
+        ))}
       </div>
     </section>
   );
