@@ -7,31 +7,36 @@ import { SectionTitle } from "../section-title";
 const artists = [
   {
     name: "Daniel Roibal",
-    image: "/artist-1.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
   },
   {
     name: "Alex Katz",
     nationality: "American",
     birthYear: "1927",
-    image: "/artist-1.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
   },
   {
     name: "Salvo",
     nationality: "Italian",
     birthYear: "1947",
     deathYear: "2015",
-    image: "/artist-1.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
   },
   {
     name: "Andy Warhol",
     nationality: "American",
     birthYear: "1928",
     deathYear: "1987",
-    image: "/artist-1.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
   },
   {
     name: "Katherine",
-    image: "/artist-1.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
   },
 ];
 

@@ -17,6 +17,8 @@ interface ArtworkCardProps {
   onFavorite?: (id: string) => void;
   onSearch?: (id: string) => void;
   isMasonry?: boolean;
+  onImageClick?: (src: string) => void;
+  artworks?: any[];
 }
 
 export function ArtworkCard({
