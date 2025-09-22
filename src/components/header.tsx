@@ -13,7 +13,7 @@ export default function Header() {
             </div>
             <div className="flex items-center gap-8 text-sm">
               <nav className="flex items-center gap-6">
-                <span className="font-medium text-orange-500">
+                <span className="font-medium text-red-900">
                   New arrivals
                 </span>
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
@@ -26,7 +26,7 @@ export default function Header() {
                   Drawing
                 </span>
 
-                <div className="font-bold text-2xl text-black">artalistic</div>
+                <div className="font-bold text-2xl text-red-700">artalistic</div>
 
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Photography
