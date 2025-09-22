@@ -1,0 +1,57 @@
+import { SectionTitle } from "@/components/section-title"
+import { ArtworkCard } from "@/components/artwork-card"
+import { Button } from "@/components/ui/button"
+
+interface Artwork {
+  id: string
+  image: string
+  title: string
+  artist: string
+  price: string
+  year: string
+  medium: string
+  dimensions: string
+  seller: string
+}
+
+interface ArtworkGridProps {
+  artworks: Artwork[]
+  viewMode: "grid" | "list"
+  onFavorite: (id: string) => void
+  onLoadMore?: () => void
+}
+
+export function ArtworkGrid({ artworks, viewMode, onFavorite, onLoadMore }: ArtworkGridProps) {
+  return (
+    <section className="py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        <SectionTitle title="Featured Artworks" subtitle="Curated collection of exceptional pieces" className="mb-12" />
+
+        <div
+          className={`grid gap-8 ${
+            viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"
+          }`}
+        >
+          {artworks.map((artwork) => (
+            <div key={artwork.id} className="group">
+              <ArtworkCard {...artwork} onFavorite={onFavorite} isMasonry={false} />
+            </div>
+          ))}
+        </div>
+
+        {onLoadMore && (
+          <div className="text-center mt-12">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
+              onClick={onLoadMore}
+            >
+              Load More Artworks
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
