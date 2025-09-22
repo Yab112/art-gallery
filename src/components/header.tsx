@@ -1,4 +1,5 @@
 import { Search, ShoppingCart, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 
 export default function Header() {
@@ -13,9 +14,7 @@ export default function Header() {
             </div>
             <div className="flex items-center gap-8 text-sm">
               <nav className="flex items-center gap-6">
-                <span className="font-medium text-red-900">
-                  New arrivals
-                </span>
+                <span className="font-medium text-red-900">New arrivals</span>
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Painting
                 </span>
@@ -25,8 +24,11 @@ export default function Header() {
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Drawing
                 </span>
-
-                <div className="font-bold text-2xl text-red-700">artalistic</div>
+                <Link to="/">
+                  <div className="font-bold text-2xl text-red-700">
+                    Art Gallery
+                  </div>
+                </Link>
 
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Photography

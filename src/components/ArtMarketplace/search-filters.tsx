@@ -26,17 +26,17 @@ export function SearchFilters({
   artworkCount,
 }: SearchFiltersProps) {
   return (
-    <section className="py-8 px-4 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between mb-8">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+    <section className="border-gray-200 border-t px-4 py-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 lg:flex-row">
+          <div className="flex flex-1 items-center gap-4">
+            <div className="relative max-w-md flex-1">
+              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-gray-400" />
               <Input
                 placeholder="Search artworks, artists, or galleries..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 rounded-full border-gray-300"
+                className="rounded-full border-gray-300 pl-10"
               />
             </div>
             <Button
@@ -44,14 +44,14 @@ export function SearchFilters({
               size="sm"
               className="rounded-full bg-transparent"
             >
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
               All Filters
             </Button>
           </div>
 
           <div className="flex items-center gap-4 ">
             <Select defaultValue="rarity">
-              <SelectTrigger className="w-32 rounded-full bg-transparent active:ring-0 focus:ring-0">
+              <SelectTrigger className="w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Rarity" />
               </SelectTrigger>
               <SelectContent>
@@ -63,7 +63,7 @@ export function SearchFilters({
             </Select>
 
             <Select defaultValue="medium">
-              <SelectTrigger className="w-32 rounded-full bg-transparent active:ring-0 focus:ring-0">
+              <SelectTrigger className="w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Medium" />
               </SelectTrigger>
               <SelectContent>
@@ -75,7 +75,7 @@ export function SearchFilters({
             </Select>
 
             <Select defaultValue="price">
-              <SelectTrigger className="w-32 rounded-full bg-transparent active:ring-0 focus:ring-0">
+              <SelectTrigger className="w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
               <SelectContent>
@@ -107,7 +107,7 @@ export function SearchFilters({
             </div>
 
             <Select defaultValue="recommended">
-              <SelectTrigger className="w-48 rounded-full bg-transparent active:ring-0 focus:ring-0">
+              <SelectTrigger className="w-48 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>
@@ -121,7 +121,7 @@ export function SearchFilters({
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <p className="text-gray-600">
             {artworkCount.toLocaleString()} Artworks
           </p>

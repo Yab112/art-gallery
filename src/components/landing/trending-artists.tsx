@@ -1,42 +1,38 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import { ArtistCard } from "../artist-card";
 import { SectionTitle } from "../section-title";
 
 const artists = [
   {
     name: "Daniel Roibal",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artist-1.webp",
   },
   {
     name: "Alex Katz",
     nationality: "American",
     birthYear: "1927",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artist-1.webp",
   },
   {
     name: "Salvo",
     nationality: "Italian",
     birthYear: "1947",
     deathYear: "2015",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artist-1.webp",
   },
   {
     name: "Andy Warhol",
     nationality: "American",
     birthYear: "1928",
     deathYear: "1987",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artist-1.webp",
   },
   {
     name: "Katherine",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artist-1.webp",
   },
 ];
 
@@ -94,15 +90,17 @@ export function TrendingArtists() {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {artists.map((artist, index) => (
-              <ArtistCard
-                key={index}
-                name={artist.name}
-                nationality={artist.nationality}
-                birthYear={artist.birthYear}
-                deathYear={artist.deathYear}
-                image={artist.image}
-                onFollow={() => handleFollow(artist.name)}
-              />
+              <Link key={index} to={`/artist/${artist.name}`}>
+                <ArtistCard
+                  key={index}
+                  name={artist.name}
+                  nationality={artist.nationality}
+                  birthYear={artist.birthYear}
+                  deathYear={artist.deathYear}
+                  image={artist.image}
+                  onFollow={() => handleFollow(artist.name)}
+                />
+              </Link>
             ))}
           </div>
         </div>
