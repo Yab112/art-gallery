@@ -1,9 +1,5 @@
-"use client";
-
 import { ArtworkCard } from "@/components/artwork-card";
-import { SectionTitle } from "@/components/section-title";
-import { Button } from "@/components/ui/button";
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { artworks } from "./mockdtas";
 
 interface ArtworkGridProps {
@@ -53,11 +49,10 @@ export function ArtworkGrid({ onImageClick }: ArtworkGridProps) {
 
   return (
     <div>
-      <SectionTitle
+      {/* <SectionTitle
         title="Artworks"
         subtitle={`${artworks.length} Artworks by this artist`}
-      />
-
+      /> */}
 
       <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3 xl:columns-4">
         {displayedArtworks.map((artwork) => (
@@ -70,13 +65,13 @@ export function ArtworkGrid({ onImageClick }: ArtworkGridProps) {
       {/* Loading indicator */}
       {loading && (
         <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
         </div>
       )}
 
       {/* End of results */}
       {!hasMore && (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="py-8 text-center text-muted-foreground">
           <p>You've seen all artworks by this artist</p>
         </div>
       )}

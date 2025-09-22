@@ -1,8 +1,5 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
-import { SectionTitle } from "@/components/section-title";
-import { Heart, Share2, Bell } from "lucide-react";
+import { Bell, Heart, Share2 } from "lucide-react";
 import { useState } from "react";
 
 export function ArtistProfile() {
@@ -11,15 +8,15 @@ export function ArtistProfile() {
 
   return (
     <div className="mb-12">
-      <SectionTitle title="Artist Profile" subtitle="Meet the artist" />
-      <div className="flex flex-col lg:flex-row gap-8 items-start mt-8">
+      {/* <SectionTitle title="Artist Profile" subtitle="Meet the artist" /> */}
+      <div className="mt-8 flex flex-col items-start gap-8 lg:flex-row">
         {/* Artist Image */}
         <div className="flex-shrink-0">
-          <div className="zoom-container rounded-lg overflow-hidden w-80 h-80 bg-gallery-neutral">
+          <div className="zoom-container h-80 w-80 overflow-hidden rounded-lg bg-gallery-neutral">
             <img
               src="/artist-1.webp"
               alt="Carlos Jacanamijoy profile"
-              className="zoom-image w-full h-full object-cover"
+              className="zoom-image h-full w-full object-cover"
             />
           </div>
         </div>
@@ -27,10 +24,10 @@ export function ArtistProfile() {
         {/* Artist Info */}
         <div className="flex-1 space-y-6">
           <div>
-            <h1 className="text-4xl font-light text-foreground mb-2 text-balance">
+            <h1 className="mb-2 text-balance font-light text-4xl text-foreground">
               Carlos Jacanamijoy
             </h1>
-            <p className="text-xl text-muted-foreground font-light">
+            <p className="font-light text-muted-foreground text-xl">
               Colombian, b. 1964
             </p>
           </div>
@@ -74,16 +71,19 @@ export function ArtistProfile() {
           </div>
 
           {/* Follower Count */}
-          <p className="text-sm text-muted-foreground">363 Followers</p>
+          <p className="text-muted-foreground text-sm">363 Followers</p>
 
           {/* Artist Bio */}
           <div className="max-w-3xl">
-            <p className="text-foreground leading-relaxed text-pretty">
+            <p className="text-pretty text-foreground leading-relaxed">
               Carlos Jacanamijoy depicts vivid, colour-saturated and abstract
               landscapes that emphasise the respect for heritage, memory and
               environment that he was taught as a Colombian indigenous of the
               Inga people. While his paintings are made abiding by the...{" "}
-              <button className="text-primary hover:underline font-medium">
+              <button
+                type="button"
+                className="font-medium text-primary hover:underline"
+              >
                 Read more
               </button>
             </p>
@@ -91,7 +91,10 @@ export function ArtistProfile() {
 
           {/* Additional Info */}
           <div className="pt-4">
-            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors underline">
+            <button
+              type="button"
+              className="text-muted-foreground text-sm underline transition-colors hover:text-foreground"
+            >
               See all past shows and fair booths
             </button>
           </div>

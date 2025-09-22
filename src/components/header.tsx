@@ -1,4 +1,5 @@
 import { Search, ShoppingCart, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 
 export default function Header() {
@@ -25,8 +26,11 @@ export default function Header() {
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Drawing
                 </span>
-
-                <div className="font-bold text-2xl text-black">artalistic</div>
+                <Link to="/">
+                  <div className="font-bold text-2xl text-black">
+                    Art Gallery
+                  </div>
+                </Link>
 
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Photography

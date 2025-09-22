@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const slides = [
   {
@@ -34,6 +35,7 @@ export function HeroCarousel() {
   }, []);
 
   const currentSlideData = slides[currentSlide];
+  const navigate = useNavigate();
 
   return (
     <div className="relative">
@@ -62,6 +64,7 @@ export function HeroCarousel() {
                 variant="outline"
                 size="lg"
                 className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
+                onClick={() => navigate("/artwork/1")}
               >
                 {currentSlideData.content.button}
               </Button>

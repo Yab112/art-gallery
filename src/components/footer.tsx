@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CTASection } from "./landing/cta";
 
 const footerSections = [
   {
@@ -42,49 +43,52 @@ const footerSections = [
 
 export function Footer() {
   return (
-    <footer className="border-gray-200 border-t py-16">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {footerSections.map((section, index) => (
-            <div key={index}>
-              <h3 className="mb-4 font-semibold text-gray-900">
-                {section.title}
-              </h3>
-              <ul className="space-y-3">
-                {section.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <Link
-                      to={link.href}
-                      className="text-gray-600 transition-colors hover:text-gray-900"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-                {section.appLinks && (
-                  <>
-                    <li className="pt-2">
-                      <span className="font-medium text-gray-900">
-                        Get the App
-                      </span>
+    <div>
+      <CTASection />
+      <footer className="border-gray-200 border-t py-16">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {footerSections.map((section, index) => (
+              <div key={index}>
+                <h3 className="mb-4 font-semibold text-gray-900">
+                  {section.title}
+                </h3>
+                <ul className="space-y-3">
+                  {section.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <Link
+                        to={link.href}
+                        className="text-gray-600 transition-colors hover:text-gray-900"
+                      >
+                        {link.label}
+                      </Link>
                     </li>
-                    {section.appLinks.map((appLink, appIndex) => (
-                      <li key={appIndex}>
-                        <Link
-                          to={appLink.href}
-                          className="text-gray-600 transition-colors hover:text-gray-900"
-                        >
-                          {appLink.label}
-                        </Link>
+                  ))}
+                  {section.appLinks && (
+                    <>
+                      <li className="pt-2">
+                        <span className="font-medium text-gray-900">
+                          Get the App
+                        </span>
                       </li>
-                    ))}
-                  </>
-                )}
-              </ul>
-            </div>
-          ))}
+                      {section.appLinks.map((appLink, appIndex) => (
+                        <li key={appIndex}>
+                          <Link
+                            to={appLink.href}
+                            className="text-gray-600 transition-colors hover:text-gray-900"
+                          >
+                            {appLink.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </>
+                  )}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </div>
   );
 }

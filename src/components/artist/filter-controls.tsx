@@ -1,9 +1,12 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Bell, Filter, ChevronDown, ArrowUpDown } from "lucide-react"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowUpDown, Bell, ChevronDown, Filter } from "lucide-react";
+import { useState } from "react";
 
 export function FilterControls() {
   const [filters, setFilters] = useState({
@@ -11,25 +14,28 @@ export function FilterControls() {
     medium: "All",
     availability: "All",
     sort: "Recommended",
-  })
+  });
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
       {/* Left side controls */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" className="gap-2 bg-transparent">
+        <Button variant="outline" className="gap-2 rounded-full bg-transparent">
           <Bell className="h-4 w-4" />
           Create Alert
         </Button>
 
-        <Button variant="outline" className="gap-2 bg-transparent">
+        <Button variant="outline" className="gap-2 rounded-full bg-transparent">
           <Filter className="h-4 w-4" />
           All Filters
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 bg-transparent">
+            <Button
+              variant="outline"
+              className="gap-2 rounded-full bg-transparent"
+            >
               Rarity
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -44,7 +50,10 @@ export function FilterControls() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 bg-transparent">
+            <Button
+              variant="outline"
+              className="gap-2 rounded-full bg-transparent"
+            >
               Medium
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -60,7 +69,10 @@ export function FilterControls() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 bg-transparent">
+            <Button
+              variant="outline"
+              className="gap-2 rounded-full bg-transparent"
+            >
               Availability
               <ChevronDown className="h-4 w-4" />
             </Button>
@@ -76,30 +88,49 @@ export function FilterControls() {
       {/* Right side sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2 bg-transparent">
+          <Button
+            variant="outline"
+            className="gap-2 rounded-full bg-transparent"
+          >
             <ArrowUpDown className="h-4 w-4" />
             Sort: {filters.sort}
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setFilters({ ...filters, sort: "Recommended" })}>
+          <DropdownMenuItem
+            onClick={() => setFilters({ ...filters, sort: "Recommended" })}
+          >
             Recommended
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setFilters({ ...filters, sort: "Price: Low to High" })}>
+          <DropdownMenuItem
+            onClick={() =>
+              setFilters({ ...filters, sort: "Price: Low to High" })
+            }
+          >
             Price: Low to High
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setFilters({ ...filters, sort: "Price: High to Low" })}>
+          <DropdownMenuItem
+            onClick={() =>
+              setFilters({ ...filters, sort: "Price: High to Low" })
+            }
+          >
             Price: High to Low
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setFilters({ ...filters, sort: "Recently Added" })}>
+          <DropdownMenuItem
+            onClick={() => setFilters({ ...filters, sort: "Recently Added" })}
+          >
             Recently Added
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setFilters({ ...filters, sort: "Year: Newest First" })}>
+          <DropdownMenuItem
+            onClick={() =>
+              setFilters({ ...filters, sort: "Year: Newest First" })
+            }
+          >
             Year: Newest First
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
+  );
 }
