@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { CallToAction } from "@/components/call-to-action";
-import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
-import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
-import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
+import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
+import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
+import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
+import { CallToAction } from "@/components/call-to-action";
+import { useState } from "react";
 
 const categories = [
   {
@@ -59,6 +59,17 @@ const artworks = [
     seller: "M.S. Rau",
   },
   {
+    id: "1",
+    image: "/artwork-1.jpg",
+    title: "Abraham Casting Out Hagar and Ishmael",
+    artist: "Rembrandt van Rijn",
+    price: "US$68,500",
+    year: "1637",
+    medium: "Oil on canvas",
+    dimensions: "24 × 30 in",
+    seller: "M.S. Rau",
+  },
+  {
     id: "2",
     image: "/artwork-2.jpg",
     title: "Unique Painting",
@@ -78,6 +89,17 @@ const artworks = [
     year: "2020",
     medium: "Mixed media",
     dimensions: "48 × 36 in",
+    seller: "APC Gallery",
+  },
+  {
+    id: "4",
+    image: "/artwork-4.jpg",
+    title: "Aida (Study)",
+    artist: "RETNA",
+    price: "US$18,500",
+    year: "2016",
+    medium: "Charcoal on paper",
+    dimensions: "12 × 16 in",
     seller: "APC Gallery",
   },
   {

@@ -11,7 +11,7 @@ export function SectionTitle({
 }: SectionTitleProps) {
   return (
     <div className={`flex items-center justify-center gap-8 ${className}`}>
-      <div className="h-[2px] max-w-24 flex-1 bg-black" />
+      <div className="h-[2px] max-w-24 flex-1 bg-red-700" />
 
       {/* Title content */}
       <div className="text-center">
@@ -23,7 +23,7 @@ export function SectionTitle({
         )}
       </div>
 
-      <div className="h-[2px] max-w-24 flex-1 bg-black" />
+      <div className="h-[2px] max-w-24 flex-1 bg-red-700" />
     </div>
   );
 }

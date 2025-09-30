@@ -1,6 +1,3 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
 import { SectionTitle } from "@/components/section-title";
 
 interface SectionTitleHeroProps {
@@ -17,18 +14,18 @@ export function SectionTitleHero({
   onButtonClick,
 }: SectionTitleHeroProps) {
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-7xl mx-auto text-center">
+    <section className="px-4 pt-16 pb-4">
+      <div className="mx-auto max-w-7xl text-center">
         <SectionTitle title={title} subtitle={subtitle} className="mb-8" />
-        <div className="flex justify-center mb-12">
-          <Button
+        <div className="mb-12 flex justify-center">
+          {/* <Button
             variant="outline"
             size="lg"
             className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
             onClick={onButtonClick}
           >
             {buttonText}
-          </Button>
+          </Button> */}
         </div>
       </div>
     </section>

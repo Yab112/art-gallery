@@ -1,27 +1,29 @@
-"use client"
-
 interface NavigationTabsProps {
-  activeTab: string
-  onTabChange: (tab: string) => void
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
 const tabs = [
   { id: "artworks", label: "Artworks" },
   { id: "about", label: "About" },
-]
+];
 
-export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
+export function NavigationTabs({
+  activeTab,
+  onTabChange,
+}: NavigationTabsProps) {
   return (
-    <div className="border-b border-border mb-8">
+    <div className="mb-8 border-border border-b">
       <nav className="flex space-x-8">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+            className={`border-b-2 px-1 py-4 font-medium text-sm transition-colors ${
               activeTab === tab.id
                 ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
             }`}
           >
             {tab.label}
@@ -29,5 +31,5 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
         ))}
       </nav>
     </div>
-  )
+  );
 }

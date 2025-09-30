@@ -1,41 +1,52 @@
-"use client"
+"use client";
 
 interface Category {
-  id: string
-  name: string
-  image: string
-  count: string
+  id: string;
+  name: string;
+  image: string;
+  count: string;
 }
 
 interface CategoryGridProps {
-  categories: Category[]
-  onCategorySelect: (categoryId: string) => void
+  categories: Category[];
+  onCategorySelect: (categoryId: string) => void;
 }
 
-export function CategoryGrid({ categories, onCategorySelect }: CategoryGridProps) {
+export function CategoryGrid({
+  categories,
+  onCategorySelect,
+}: CategoryGridProps) {
   return (
-    <section className="py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-16">
+    <section className="px-4 pb-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {categories.map((category) => (
-            <div key={category.id} className="group cursor-pointer" onClick={() => onCategorySelect(category.id)}>
-              <div className="relative overflow-hidden rounded-lg mb-3 aspect-[4/3]">
+            <div
+              key={category.id}
+              className="group cursor-pointer"
+              onClick={() => onCategorySelect(category.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  onCategorySelect(category.id);
+                }
+              }}
+            >
+              <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-lg">
                 <img
                   src={category.image || "/placeholder.svg"}
                   alt={category.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300" />
+                <div className="absolute inset-0 bg-black/20 transition-colors duration-300 group-hover:bg-black/40" />
               </div>
-              <h3 className="font-semibold text-sm text-black group-hover:text-gray-600 transition-colors">
+              <h3 className="font-semibold text-black text-sm transition-colors group-hover:text-gray-600">
                 {category.name}
               </h3>
-              <p className="text-xs text-gray-500">{category.count} works</p>
+              <p className="text-gray-500 text-xs">{category.count} works</p>
             </div>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }
-    

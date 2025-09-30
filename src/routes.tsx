@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
-import LandingPage from "./pages";
 import { AppLayout } from "./components/layout/app-layout";
-import NoMatch from "./pages/NoMatch";
+import LandingPage from "./pages";
+import ArtMarketplace from "./pages/ArtMarketplace";
+import ArtistDetailPage from "./pages/ArtistPublic";
 import ArtworkDetailPage from "./pages/ArtworkDetail";
 import ArtistDetailPage from "./pages/artistpuplic";
 import ArtMarketplace from "./pages/ArtMarketplace";

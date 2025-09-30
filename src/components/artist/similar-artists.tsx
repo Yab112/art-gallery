@@ -1,5 +1,3 @@
-"use client";
-
 import { ArtistCard } from "@/components/artist-card";
 import { SectionTitle } from "@/components/section-title";
 
@@ -38,7 +36,7 @@ const similarArtists = [
 
 export function SimilarArtists() {
   return (
-    <section className="mt-16 pt-8 border-t border-border">
+    <section className="mt-16 border-border border-t pt-8">
       <SectionTitle
         title="Similar Artists"
         subtitle="You may also like"

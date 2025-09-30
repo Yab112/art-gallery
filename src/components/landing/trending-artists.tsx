@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import { ArtistCard } from "../artist-card";
 import { SectionTitle } from "../section-title";
 
@@ -89,15 +90,17 @@ export function TrendingArtists() {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {artists.map((artist, index) => (
-              <ArtistCard
-                key={index}
-                name={artist.name}
-                nationality={artist.nationality}
-                birthYear={artist.birthYear}
-                deathYear={artist.deathYear}
-                image={artist.image}
-                onFollow={() => handleFollow(artist.name)}
-              />
+              <Link key={index} to={`/artist/${artist.name}`}>
+                <ArtistCard
+                  key={index}
+                  name={artist.name}
+                  nationality={artist.nationality}
+                  birthYear={artist.birthYear}
+                  deathYear={artist.deathYear}
+                  image={artist.image}
+                  onFollow={() => handleFollow(artist.name)}
+                />
+              </Link>
             ))}
           </div>
         </div>
