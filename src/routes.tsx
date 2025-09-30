@@ -4,11 +4,10 @@ import LandingPage from "./pages";
 import ArtMarketplace from "./pages/ArtMarketplace";
 import ArtistDetailPage from "./pages/ArtistPublic";
 import ArtworkDetailPage from "./pages/ArtworkDetail";
-import ArtistDetailPage from "./pages/artistpuplic";
-import ArtMarketplace from "./pages/ArtMarketplace";
 import { ArtistsPage } from "./components/artist/artists-page";
 import CheckoutPage from "./pages/Checkout";
 import HowItWorksPage from "./pages/HowItWorks";
+import NoMatch from "./pages/NoMatch";
 
 export const router = createBrowserRouter(
   [
