@@ -7,36 +7,31 @@ import { SectionTitle } from "../section-title";
 const artists = [
   {
     name: "Daniel Roibal",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artwork-1.jpg",
   },
   {
     name: "Alex Katz",
     nationality: "American",
     birthYear: "1927",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artwork-2.jpg",
   },
   {
     name: "Salvo",
     nationality: "Italian",
     birthYear: "1947",
     deathYear: "2015",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artwork-3.jpg",
   },
   {
     name: "Andy Warhol",
     nationality: "American",
     birthYear: "1928",
     deathYear: "1987",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artwork-4.jpg",
   },
   {
     name: "Katherine",
-    image:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9uPyKe718QkjUZJMKbZ55aHDXEM5Pr.png",
+    image: "/artwork-5.jpg",
   },
 ];
 
@@ -87,10 +82,10 @@ export function TrendingArtists() {
           </Button>
         </div>
 
-        <div className="relative ">
+        <div className="relative">
           <div
             ref={scrollRef}
-            className="scrollbar-hide flex gap-6 overflow-x-auto px-12"
+            className="scrollbar-hide flex gap-4 overflow-x-auto px-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {artists.map((artist, index) => (

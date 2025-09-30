@@ -15,7 +15,7 @@ export default function ArtistDetailPage() {
   
   return (
     <div className="min-h-screen bg-white text-foreground">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto    py-8 w-full">
         <ArtistProfile />
         <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

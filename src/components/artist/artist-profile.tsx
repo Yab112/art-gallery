@@ -18,7 +18,7 @@ export function ArtistProfile() {
           <div className="zoom-container rounded-lg overflow-hidden w-80 h-80 bg-gallery-neutral">
             <img
               src="/artist-1.webp"
-              alt="Carlos Jacanamijoy profile"
+              alt="Artist profile"
               className="zoom-image w-full h-full object-cover"
             />
           </div>
@@ -38,9 +38,9 @@ export function ArtistProfile() {
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
             <Button
-              variant={isFollowing ? "secondary" : "outline"}
+              variant="ghost"
               size="lg"
-              className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
+              className="rounded-full px-8 py-3 text-red-700 hover:text-red-800 hover:bg-transparent"
               onClick={() => setIsFollowing(!isFollowing)}
             >
               {isFollowing ? "Following" : "Follow"}

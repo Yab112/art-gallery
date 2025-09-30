@@ -30,12 +30,12 @@ export function ArtistCard({
   };
 
   return (
-    <div className="group w-80 flex-shrink-0">
+    <div className="group w-full max-w-80 flex-shrink-0">
       <div className="relative mb-4 aspect-square overflow-hidden ">
         <img
           src={image || "/placeholder.svg"}
           alt={`Artwork by ${name}`}
-          className="h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 

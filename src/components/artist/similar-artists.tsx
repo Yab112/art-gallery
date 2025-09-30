@@ -7,32 +7,32 @@ const similarArtists = [
   {
     name: "Beatriz Milhazes",
     nationality: "Brazilian",
-    image: "/artist-profile.jpg",
+    image: "/artwork-1.jpg",
   },
   {
     name: "Kehinde Wiley",
     nationality: "American",
-    image: "/artist-profile.jpg",
+    image: "/artwork-2.jpg",
   },
   {
     name: "Yinka Shonibare",
     nationality: "British-Nigerian",
-    image: "/artist-profile.jpg",
+    image: "/artwork-3.jpg",
   },
   {
     name: "Kara Walker",
     nationality: "American",
-    image: "/artist-profile.jpg",
+    image: "/artwork-4.jpg",
   },
   {
     name: "El Anatsui",
     nationality: "Ghanaian",
-    image: "/artist-profile.jpg",
+    image: "/artwork-5.jpg",
   },
   {
     name: "Julie Mehretu",
     nationality: "Ethiopian-American",
-    image: "/artist-profile.jpg",
+    image: "/artwork-6.jpg",
   },
 ];
 
@@ -47,7 +47,7 @@ export function SimilarArtists() {
       <div className="relative">
         <div
           id="similar-artists-container"
-          className="scrollbar-hide flex gap-6 overflow-x-auto px-12"
+          className="scrollbar-hide flex gap-4 overflow-x-auto px-2"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {similarArtists.map((artist, index) => (

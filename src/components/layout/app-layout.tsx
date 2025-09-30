@@ -6,7 +6,7 @@ import Header from "../header";
 export function AppLayout() {
   return (
     <>
-      <div className=" font-poppins ">
+      <div className="font-poppins overflow-x-hidden">
         <ScrollToHash />
         <Header />
         <Outlet />
