@@ -8,6 +8,7 @@ import { ArtistsPage } from "./components/artist/artists-page";
 import CheckoutPage from "./pages/Checkout";
 import HowItWorksPage from "./pages/HowItWorks";
 import NoMatch from "./pages/NoMatch";
+import SellArtPage from "./pages/sellArt";
 
 export const router = createBrowserRouter(
   [
@@ -42,6 +43,10 @@ export const router = createBrowserRouter(
         {
           path: "how-it-works",
           element: <HowItWorksPage />,
+        },
+        {
+          path: "sellart",
+          element: <SellArtPage />,
         },
       ],
     },
