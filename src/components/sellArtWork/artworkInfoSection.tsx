@@ -1,7 +1,6 @@
-"use client";
-
 import { Input } from "@/components/ui/input";
-import type { ArtworkFormData } from "@/lib/types/selart.type";
+import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import type { ArtworkFormData } from "@/lib/schemas/artwork.schema";
 import {
   ARTWORK_TYPES,
   SUPPORT_TYPES,
@@ -13,13 +12,18 @@ import { FormField } from "./formField";
 import { SelectField } from "./selectField";
 
 interface ArtworkInfoSectionProps {
-  formData: ArtworkFormData;
-  onChange: (field: keyof ArtworkFormData, value: any) => void;
+  control: Control<ArtworkFormData>;
+  errors: FieldErrors<ArtworkFormData>;
 }
 
+/**
+ * Artwork Information Section Component
+ * Contains all the basic information fields about the artwork being sold
+ * Uses React Hook Form Controller for form state management
+ */
 export function ArtworkInfoSection({
-  formData,
-  onChange,
+  control,
+  errors,
 }: ArtworkInfoSectionProps) {
   return (
     <div className="space-y-6">
@@ -29,57 +33,122 @@ export function ArtworkInfoSection({
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField label="Type of artwork" required htmlFor="typeOfArtwork">
-            <SelectField
-              id="typeOfArtwork"
-              value={formData.typeOfArtwork}
-              onChange={(value) => onChange("typeOfArtwork", value)}
-              options={ARTWORK_TYPES}
+          <FormField
+            label="Type of artwork"
+            required
+            htmlFor="typeOfArtwork"
+            description={errors.typeOfArtwork?.message}
+          >
+            <Controller
+              name="typeOfArtwork"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  id="typeOfArtwork"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={ARTWORK_TYPES}
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Technique" required htmlFor="technique">
-            <Input
-              id="technique"
-              value={formData.technique}
-              onChange={(e) => onChange("technique", e.target.value)}
-              placeholder="e.g., Oil on canvas, Bronze casting"
+          <FormField
+            label="Technique"
+            required
+            htmlFor="technique"
+            description={errors.technique?.message}
+          >
+            <Controller
+              name="technique"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="technique"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="e.g., Oil on canvas, Bronze casting"
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Artist" required htmlFor="artist">
-            <Input
-              id="artist"
-              value={formData.artist}
-              onChange={(e) => onChange("artist", e.target.value)}
-              placeholder="Artist name"
+          <FormField
+            label="Artist"
+            required
+            htmlFor="artist"
+            description={errors.artist?.message}
+          >
+            <Controller
+              name="artist"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="artist"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Artist name"
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Support" required htmlFor="support">
-            <SelectField
-              id="support"
-              value={formData.support}
-              onChange={(value) => onChange("support", value)}
-              options={SUPPORT_TYPES}
+          <FormField
+            label="Support"
+            required
+            htmlFor="support"
+            description={errors.support?.message}
+          >
+            <Controller
+              name="support"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  id="support"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={SUPPORT_TYPES}
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Title of the artwork" htmlFor="titleOfArtwork">
-            <Input
-              id="titleOfArtwork"
-              value={formData.titleOfArtwork}
-              onChange={(e) => onChange("titleOfArtwork", e.target.value)}
-              placeholder="Artwork title"
+          <FormField
+            label="Title of the artwork"
+            htmlFor="titleOfArtwork"
+            description={errors.titleOfArtwork?.message}
+          >
+            <Controller
+              name="titleOfArtwork"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="titleOfArtwork"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Artwork title"
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="State" required htmlFor="state">
-            <SelectField
-              id="state"
-              value={formData.state}
-              onChange={(value) => onChange("state", value)}
-              options={ARTWORK_STATES}
+          <FormField
+            label="State"
+            required
+            htmlFor="state"
+            description={errors.state?.message}
+          >
+            <Controller
+              name="state"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  id="state"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={ARTWORK_STATES}
+                />
+              )}
             />
           </FormField>
 
@@ -87,68 +156,104 @@ export function ArtworkInfoSection({
             label="Year of the artwork"
             required
             htmlFor="yearOfArtwork"
+            description={errors.yearOfArtwork?.message}
           >
-            <Input
-              id="yearOfArtwork"
-              type="number"
-              value={formData.yearOfArtwork}
-              onChange={(e) => onChange("yearOfArtwork", e.target.value)}
-              placeholder="e.g., 2020"
+            <Controller
+              name="yearOfArtwork"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="yearOfArtwork"
+                  type="number"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="e.g., 2020"
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Dimensions (cm)" required>
+          <FormField
+            label="Dimensions (cm)"
+            required
+            description={errors.dimensions?.message}
+          >
             <div className="grid grid-cols-3 gap-2">
-              <Input
-                placeholder="Height*"
-                value={formData.dimensions.height}
-                onChange={(e) =>
-                  onChange("dimensions", {
-                    ...formData.dimensions,
-                    height: e.target.value,
-                  })
-                }
+              <Controller
+                name="dimensions.height"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    placeholder="Height*"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
-              <Input
-                placeholder="Width*"
-                value={formData.dimensions.width}
-                onChange={(e) =>
-                  onChange("dimensions", {
-                    ...formData.dimensions,
-                    width: e.target.value,
-                  })
-                }
+              <Controller
+                name="dimensions.width"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    placeholder="Width*"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
-              <Input
-                placeholder="Depth"
-                value={formData.dimensions.depth || ""}
-                onChange={(e) =>
-                  onChange("dimensions", {
-                    ...formData.dimensions,
-                    depth: e.target.value,
-                  })
-                }
+              <Controller
+                name="dimensions.depth"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    placeholder="Depth"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </div>
           </FormField>
 
-          <FormField label="Is the work framed?" required htmlFor="isFramed">
-            <SelectField
-              id="isFramed"
-              value={formData.isFramed}
-              onChange={(value) => onChange("isFramed", value)}
-              options={YES_NO_OPTIONS}
+          <FormField
+            label="Is the work framed?"
+            required
+            htmlFor="isFramed"
+            description={errors.isFramed?.message}
+          >
+            <Controller
+              name="isFramed"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  id="isFramed"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={YES_NO_OPTIONS}
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Weight (kg)" required htmlFor="weight">
-            <Input
-              id="weight"
-              type="number"
-              step="0.1"
-              value={formData.weight}
-              onChange={(e) => onChange("weight", e.target.value)}
-              placeholder="e.g., 2.5"
+          <FormField
+            label="Weight (kg)"
+            required
+            htmlFor="weight"
+            description={errors.weight?.message}
+          >
+            <Controller
+              name="weight"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="e.g., 2.5"
+                />
+              )}
             />
           </FormField>
 
@@ -156,34 +261,59 @@ export function ArtworkInfoSection({
             label="Hand delivery accepted"
             required
             htmlFor="handDeliveryAccepted"
+            description={errors.handDeliveryAccepted?.message}
           >
-            <SelectField
-              id="handDeliveryAccepted"
-              value={formData.handDeliveryAccepted}
-              onChange={(value) => onChange("handDeliveryAccepted", value)}
-              options={YES_NO_OPTIONS}
+            <Controller
+              name="handDeliveryAccepted"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  id="handDeliveryAccepted"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={YES_NO_OPTIONS}
+                />
+              )}
             />
           </FormField>
 
-          <FormField label="Origin" required htmlFor="origin">
-            <SelectField
-              id="origin"
-              value={formData.origin}
-              onChange={(value) => onChange("origin", value)}
-              options={ORIGIN_OPTIONS}
+          <FormField
+            label="Origin"
+            required
+            htmlFor="origin"
+            description={errors.origin?.message}
+          >
+            <Controller
+              name="origin"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  id="origin"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={ORIGIN_OPTIONS}
+                />
+              )}
             />
           </FormField>
 
           <FormField
             label="Year of acquisition (for private sellers)"
             htmlFor="yearOfAcquisition"
+            description={errors.yearOfAcquisition?.message}
           >
-            <Input
-              id="yearOfAcquisition"
-              type="number"
-              value={formData.yearOfAcquisition}
-              onChange={(e) => onChange("yearOfAcquisition", e.target.value)}
-              placeholder="e.g., 2018"
+            <Controller
+              name="yearOfAcquisition"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="yearOfAcquisition"
+                  type="number"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="e.g., 2018"
+                />
+              )}
             />
           </FormField>
         </div>

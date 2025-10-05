@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { ArtistsHeader } from "./artists-header";
 import { ArtistsFilters } from "./artists-filters";

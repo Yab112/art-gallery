@@ -1,49 +1,47 @@
-"use client"
+import type React from "react";
 
-import type React from "react"
-
-import { useState, useRef } from "react"
-import { X, ZoomIn, ZoomOut, RotateCw, Download } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState, useRef } from "react";
+import { X, ZoomIn, ZoomOut, RotateCw, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ImageModalProps {
-  src: string
-  onClose: () => void
+  src: string;
+  onClose: () => void;
 }
 
 export function ImageModal({ src, onClose }: ImageModalProps) {
-  const [zoom, setZoom] = useState(1)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const imageRef = useRef<HTMLImageElement>(null)
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.5, 3))
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.5, 0.5))
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.5, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.5, 0.5));
   const handleReset = () => {
-    setZoom(1)
-    setPosition({ x: 0, y: 0 })
-  }
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoom > 1) {
-      setIsDragging(true)
-      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
     }
-  }
+  };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging && zoom > 1) {
       setPosition({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y,
-      })
+      });
     }
-  }
+  };
 
   const handleMouseUp = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
@@ -80,7 +78,9 @@ export function ImageModal({ src, onClose }: ImageModalProps) {
           alt="Artwork detail"
           className="max-w-full max-h-full object-contain transition-transform duration-200"
           style={{
-            transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+            transform: `scale(${zoom}) translate(${position.x / zoom}px, ${
+              position.y / zoom
+            }px)`,
             cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default",
           }}
           draggable={false}
@@ -95,5 +95,5 @@ export function ImageModal({ src, onClose }: ImageModalProps) {
       {/* Click outside to close */}
       <div className="absolute inset-0 -z-10" onClick={onClose} />
     </div>
-  )
+  );
 }

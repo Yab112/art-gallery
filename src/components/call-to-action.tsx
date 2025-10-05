@@ -1,15 +1,13 @@
-"use client"
-
-import { SectionTitle } from "@/components/section-title"
-import { Button } from "@/components/ui/button"
+import { SectionTitle } from "@/components/section-title";
+import { Button } from "@/components/ui/button";
 
 interface CallToActionProps {
-  title: string
-  subtitle: string
-  primaryButtonText: string
-  secondaryButtonText: string
-  onPrimaryClick?: () => void
-  onSecondaryClick?: () => void
+  title: string;
+  subtitle: string;
+  primaryButtonText: string;
+  secondaryButtonText: string;
+  onPrimaryClick?: () => void;
+  onSecondaryClick?: () => void;
 }
 
 export function CallToAction({
@@ -43,5 +41,5 @@ export function CallToAction({
         </div>
       </div>
     </section>
-  )
+  );
 }

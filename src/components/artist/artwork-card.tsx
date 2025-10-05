@@ -1,22 +1,20 @@
-"use client"
-
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { ShoppingCart } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
 
 interface Artwork {
-  id: number
-  title: string
-  year: number
-  artist: string
-  gallery: string
-  price: string
-  image: string
-  height: number
-  sold: boolean
-  medium: string
-  rarity: string
+  id: number;
+  title: string;
+  year: number;
+  artist: string;
+  gallery: string;
+  price: string;
+  image: string;
+  height: number;
+  sold: boolean;
+  medium: string;
+  rarity: string;
 }
 
 interface ArtworkCardProps {
@@ -73,18 +71,22 @@ export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
 
         {artwork.sold && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">SOLD</span>
+            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+              SOLD
+            </span>
           </div>
         )}
 
         <div
-          className={`absolute inset-0 bg-black/20 transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 bg-black/20 transition-opacity duration-300 ${
+            isHovered ? "opacity-100" : "opacity-0"
+          }`}
         >
           <div className="absolute top-3 right-3 flex gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 // Handle purchase logic
               }}
@@ -97,7 +99,9 @@ export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
 
       <div className="p-4 space-y-3">
         <div>
-          <h3 className="font-medium text-foreground text-pretty">{artwork.artist}</h3>
+          <h3 className="font-medium text-foreground text-pretty">
+            {artwork.artist}
+          </h3>
           <p className="text-sm text-muted-foreground italic text-pretty">
             {artwork.title}, {artwork.year}
           </p>
@@ -110,7 +114,11 @@ export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
 
         <div className="flex justify-between items-center">
           <p className="text-sm text-muted-foreground">{artwork.gallery}</p>
-          <p className={`text-sm font-medium ${artwork.sold ? "text-red-600" : "text-foreground"}`}>
+          <p
+            className={`text-sm font-medium ${
+              artwork.sold ? "text-red-600" : "text-foreground"
+            }`}
+          >
             {artwork.sold ? "SOLD" : artwork.price}
           </p>
         </div>
@@ -118,4 +126,3 @@ export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
     </div>
   );
 }
-

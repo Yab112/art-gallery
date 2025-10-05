@@ -1,21 +1,22 @@
-"use client"
-
-import type React from "react"
-import { Plus } from "lucide-react"
-import { ACCEPTED_IMAGE_FORMATS } from "@/lib/constants/srtsell.constant"
+import type React from "react";
+import { Plus } from "lucide-react";
+import { ACCEPTED_IMAGE_FORMATS } from "@/lib/constants/srtsell.constant";
 
 interface AddPhotoBoxProps {
-  onFileSelect: (file: File) => void
-  disabled?: boolean
+  onFileSelect: (file: File) => void;
+  disabled?: boolean;
 }
 
-export function AddPhotoBox({ onFileSelect, disabled = false }: AddPhotoBoxProps) {
+export function AddPhotoBox({
+  onFileSelect,
+  disabled = false,
+}: AddPhotoBoxProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
+    const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      onFileSelect(selectedFile)
+      onFileSelect(selectedFile);
     }
-  }
+  };
 
   return (
     <label
@@ -27,7 +28,9 @@ export function AddPhotoBox({ onFileSelect, disabled = false }: AddPhotoBoxProps
       <div className="flex items-center justify-center w-16 h-16 rounded-full bg-background border border-border shadow-sm mb-2">
         <Plus className="w-8 h-8 text-muted-foreground" />
       </div>
-      <span className="text-xs text-muted-foreground font-medium">Add more</span>
+      <span className="text-xs text-muted-foreground font-medium">
+        Add more
+      </span>
       <input
         id="add-more-photos"
         type="file"
@@ -37,5 +40,5 @@ export function AddPhotoBox({ onFileSelect, disabled = false }: AddPhotoBoxProps
         disabled={disabled}
       />
     </label>
-  )
+  );
 }

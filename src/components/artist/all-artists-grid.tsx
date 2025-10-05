@@ -1,5 +1,3 @@
-"use client";
-
 import { ArtistCard } from "./artist-circle-card";
 
 interface Artist {

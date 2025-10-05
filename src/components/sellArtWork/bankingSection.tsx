@@ -1,16 +1,20 @@
-"use client"
-
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import type { ArtworkFormData } from "@/lib/types/selart.type"
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Controller, type Control, type FieldErrors } from "react-hook-form";
+import type { ArtworkFormData } from "@/lib/schemas/artwork.schema";
 
 interface BankingSectionProps {
-  formData: ArtworkFormData
-  onChange: (field: keyof ArtworkFormData, value: any) => void
+  control: Control<ArtworkFormData>;
+  errors: FieldErrors<ArtworkFormData>;
 }
 
-export function BankingSection({ formData, onChange }: BankingSectionProps) {
+/**
+ * Banking Section Component
+ * Contains banking information and terms acceptance checkboxes
+ * Uses React Hook Form Controller for form state management
+ */
+export function BankingSection({ control, errors }: BankingSectionProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold">
@@ -22,12 +26,23 @@ export function BankingSection({ formData, onChange }: BankingSectionProps) {
           <Label htmlFor="accountHolder">
             Account Holder <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="accountHolder"
-            value={formData.accountHolder}
-            onChange={(e) => onChange("accountHolder", e.target.value)}
-            placeholder="Full name"
+          <Controller
+            name="accountHolder"
+            control={control}
+            render={({ field }) => (
+              <Input
+                id="accountHolder"
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Full name"
+              />
+            )}
           />
+          {errors.accountHolder && (
+            <p className="text-sm text-destructive">
+              {errors.accountHolder.message}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -35,35 +50,62 @@ export function BankingSection({ formData, onChange }: BankingSectionProps) {
             <Label htmlFor="iban">
               IBAN <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="iban"
-              value={formData.iban}
-              onChange={(e) => onChange("iban", e.target.value)}
-              placeholder="FR76 1234 5678 9012 3456 7890 123"
+            <Controller
+              name="iban"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="iban"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="FR76 1234 5678 9012 3456 7890 123"
+                />
+              )}
             />
+            {errors.iban && (
+              <p className="text-sm text-destructive">{errors.iban.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bicCode">
-              BIC code <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="bicCode"
-              value={formData.bicCode}
-              onChange={(e) => onChange("bicCode", e.target.value)}
-              placeholder="BNPAFRPP"
+            <Label htmlFor="bicCode">BIC code</Label>
+            <Controller
+              name="bicCode"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="bicCode"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="BNPAFRPP"
+                />
+              )}
             />
+            {errors.bicCode && (
+              <p className="text-sm text-destructive">
+                {errors.bicCode.message}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="space-y-4 pt-4">
           <div className="flex items-start gap-2">
-            <Checkbox
-              id="acceptTermsOfSale"
-              checked={formData.acceptTermsOfSale}
-              onCheckedChange={(checked) => onChange("acceptTermsOfSale", checked === true)}
+            <Controller
+              name="acceptTermsOfSale"
+              control={control}
+              render={({ field }) => (
+                <Checkbox
+                  id="acceptTermsOfSale"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
             />
-            <Label htmlFor="acceptTermsOfSale" className="text-sm font-normal cursor-pointer">
+            <Label
+              htmlFor="acceptTermsOfSale"
+              className="text-sm font-normal cursor-pointer"
+            >
               I accept{" "}
               <a href="#" className="text-primary underline">
                 the terms of sale
@@ -75,14 +117,28 @@ export function BankingSection({ formData, onChange }: BankingSectionProps) {
               <span className="text-destructive">*</span>
             </Label>
           </div>
+          {errors.acceptTermsOfSale && (
+            <p className="text-sm text-destructive">
+              {errors.acceptTermsOfSale.message}
+            </p>
+          )}
 
           <div className="flex items-start gap-2">
-            <Checkbox
-              id="giveSalesMandate"
-              checked={formData.giveSalesMandate}
-              onCheckedChange={(checked) => onChange("giveSalesMandate", checked === true)}
+            <Controller
+              name="giveSalesMandate"
+              control={control}
+              render={({ field }) => (
+                <Checkbox
+                  id="giveSalesMandate"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
             />
-            <Label htmlFor="giveSalesMandate" className="text-sm font-normal cursor-pointer">
+            <Label
+              htmlFor="giveSalesMandate"
+              className="text-sm font-normal cursor-pointer"
+            >
               I agree to give{" "}
               <a href="#" className="text-primary underline">
                 sales mandate
@@ -91,8 +147,13 @@ export function BankingSection({ formData, onChange }: BankingSectionProps) {
               <span className="text-destructive">*</span>
             </Label>
           </div>
+          {errors.giveSalesMandate && (
+            <p className="text-sm text-destructive">
+              {errors.giveSalesMandate.message}
+            </p>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }

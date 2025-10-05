@@ -1,5 +1,3 @@
-"use client";
-
 import { Eye } from "lucide-react";
 import { ArtistCard } from "./artist-circle-card";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
 import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
 import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";

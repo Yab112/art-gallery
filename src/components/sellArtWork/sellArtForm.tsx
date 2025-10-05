@@ -1,12 +1,12 @@
-"use client";
-
-import type React from "react";
-
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
-import type { ArtworkFormData } from "@/lib/types/selart.type";
+import {
+  artworkFormSchema,
+  type ArtworkFormData,
+} from "@/lib/schemas/artwork.schema";
 import { MAX_PHOTOS } from "@/lib/constants/srtsell.constant";
 import { submitArtwork } from "@/lib/api/artwork";
 import { ArtworkInfoSection } from "./artworkInfoSection";
@@ -17,7 +17,11 @@ import { PriceSection } from "./priceSection";
 import { BankingSection } from "./bankingSection";
 import { Card } from "../ui/card";
 
-const initialFormData: ArtworkFormData = {
+/**
+ * Default form values for the artwork selling form
+ * These values are used to initialize the React Hook Form
+ */
+const defaultValues: ArtworkFormData = {
   typeOfArtwork: "",
   technique: "",
   artist: "",
@@ -43,14 +47,31 @@ const initialFormData: ArtworkFormData = {
   giveSalesMandate: false,
 };
 
+/**
+ * Main artwork selling form component
+ * Uses React Hook Form with Zod validation for form management
+ * Handles submission of artwork data to the backend API
+ */
 export function SellArtForm() {
-  const [formData, setFormData] = useState<ArtworkFormData>(initialFormData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+    reset,
+  } = useForm<ArtworkFormData>({
+    resolver: zodResolver(artworkFormSchema),
+    defaultValues,
+    mode: "onChange", // Validate on change for better UX
+  });
 
-  const handleChange = (field: keyof ArtworkFormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const formData = watch(); 
 
+  /**
+   * Converts form data to FormData for API submission
+   * Handles file uploads and form field serialization
+   */
   const convertToFormData = (data: ArtworkFormData): FormData => {
     const formData = new FormData();
 
@@ -59,20 +80,20 @@ export function SellArtForm() {
     formData.append("technique", data.technique);
     formData.append("artist", data.artist);
     formData.append("support", data.support);
-    formData.append("titleOfArtwork", data.titleOfArtwork);
+    formData.append("titleOfArtwork", data.titleOfArtwork || "");
     formData.append("state", data.state);
     formData.append("yearOfArtwork", data.yearOfArtwork);
     formData.append("isFramed", data.isFramed);
     formData.append("weight", data.weight);
     formData.append("handDeliveryAccepted", data.handDeliveryAccepted);
     formData.append("origin", data.origin);
-    formData.append("yearOfAcquisition", data.yearOfAcquisition);
-    formData.append("description", data.description);
+    formData.append("yearOfAcquisition", data.yearOfAcquisition || "");
+    formData.append("description", data.description || "");
     formData.append("desiredPrice", data.desiredPrice);
     formData.append("acceptPriceNegotiation", data.acceptPriceNegotiation);
     formData.append("accountHolder", data.accountHolder);
     formData.append("iban", data.iban);
-    formData.append("bicCode", data.bicCode);
+    formData.append("bicCode", data.bicCode || "");
     formData.append("acceptTermsOfSale", data.acceptTermsOfSale.toString());
     formData.append("giveSalesMandate", data.giveSalesMandate.toString());
 
@@ -94,44 +115,14 @@ export function SellArtForm() {
     return formData;
   };
 
-  const validateForm = (data: ArtworkFormData): string[] => {
-    const errors: string[] = [];
-
-    if (!data.typeOfArtwork) errors.push("Type of artwork is required");
-    if (!data.technique) errors.push("Technique is required");
-    if (!data.artist) errors.push("Artist name is required");
-    if (!data.titleOfArtwork) errors.push("Title of artwork is required");
-    if (!data.desiredPrice) errors.push("Desired price is required");
-    if (!data.accountHolder) errors.push("Account holder is required");
-    if (!data.iban) errors.push("IBAN is required");
-    if (!data.acceptTermsOfSale)
-      errors.push("You must accept the terms of sale");
-    if (!data.giveSalesMandate) errors.push("You must give sales mandate");
-
-    // Check if at least one photo is uploaded
-    const hasPhotos = data.photos.some((photo) => photo !== null);
-    if (!hasPhotos) errors.push("At least one photo is required");
-
-    return errors;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  /**
+   * Handles form submission with React Hook Form
+   * Validation is handled automatically by Zod schema
+   */
+  const onSubmit = async (data: ArtworkFormData) => {
     try {
-      // Validate form
-      const validationErrors = validateForm(formData);
-      if (validationErrors.length > 0) {
-        alert(
-          "Please fix the following errors:\n" + validationErrors.join("\n")
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Convert to FormData
-      const formDataToSend = convertToFormData(formData);
+      // Convert to FormData for API submission
+      const formDataToSend = convertToFormData(data);
 
       // Log FormData contents for debugging
       console.log("FormData contents:");
@@ -144,7 +135,7 @@ export function SellArtForm() {
       console.log("Submission successful:", result);
 
       // Reset form on success
-      setFormData(initialFormData);
+      reset();
       alert(
         `Artwork submitted successfully! ${
           result.artworkId ? `ID: ${result.artworkId}` : ""
@@ -153,32 +144,40 @@ export function SellArtForm() {
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Error submitting form. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Alert className="bg-white border-none">
         <InfoIcon className="h-4 w-4" />
         <AlertDescription>
-          Tips for filling out the artwork sales form.
+          Tips for filling out the artwork sales form. All required fields are
+          marked with an asterisk (*).
         </AlertDescription>
       </Alert>
 
       <Card className="p-6 space-y-8">
-        <ArtworkInfoSection formData={formData} onChange={handleChange} />
+        <ArtworkInfoSection control={control} errors={errors} />
 
-        <ProofOfOriginSection formData={formData} onChange={handleChange} />
+        <ProofOfOriginSection
+          control={control}
+          errors={errors}
+          setValue={setValue}
+        />
 
-        <DescriptionSection formData={formData} onChange={handleChange} />
+        <DescriptionSection control={control} errors={errors} />
 
-        <PhotosSection formData={formData} onChange={handleChange} />
+        <PhotosSection
+          control={control}
+          errors={errors}
+          setValue={setValue}
+          formData={formData}
+        />
 
-        <PriceSection formData={formData} onChange={handleChange} />
+        <PriceSection control={control} errors={errors} formData={formData} />
 
-        <BankingSection formData={formData} onChange={handleChange} />
+        <BankingSection control={control} errors={errors} />
 
         <div className="flex justify-end pt-6">
           <Button type="submit" size="lg" disabled={isSubmitting}>
