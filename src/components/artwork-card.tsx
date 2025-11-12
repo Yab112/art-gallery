@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 import { Heart, Search } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAddFavorite } from "@/api/favorites/useAddFavorite";
-import { useRemoveFavorite } from "@/api/favorites/useRemoveFavorite";
+import { useAddFavorite } from "@/services/favorites/useAddFavorite";
+import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite";
 import { useCheckFavorite } from "@/queries/favoriteQueries";
 
 interface ArtworkCardProps {

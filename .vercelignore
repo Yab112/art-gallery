@@ -1,3 +1,0 @@
-# Ignore source API files - these are client-side hooks, not serverless functions
-src/api/
-

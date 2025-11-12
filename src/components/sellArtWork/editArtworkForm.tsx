@@ -8,9 +8,9 @@ import {
   type ArtworkFormData,
 } from "@/lib/schemas/artwork.schema";
 import { MAX_PHOTOS } from "@/lib/constants/srtsell.constant";
-import { useUpdateArtwork } from "@/api/artwork/useUpdateArtwork";
+import { useUpdateArtwork } from "@/services/artwork/useUpdateArtwork";
 import { useGetPresignedImageUploadUrl, useGetPresignedDocumentUploadUrl } from "@/queries/uploadQueries";
-import { uploadFileToS3 } from "@/api/upload";
+import { uploadFileToS3 } from "@/services/upload";
 import { ArtworkInfoSection } from "./artworkInfoSection";
 import { ProofOfOriginSection } from "./proofOfOriginSection";
 import { DescriptionSection } from "./descriptionSection";

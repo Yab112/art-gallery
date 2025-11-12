@@ -5,7 +5,7 @@ import { SearchFilters } from "@/components/artMarketplace/search-filters";
 import { CallToAction } from "@/components/call-to-action";
 import { useSearchParams } from "react-router-dom";
 import { useArtworks } from "@/queries/artworkQueries";
-import { useAddFavorite } from "@/api/favorites/useAddFavorite";
+import { useAddFavorite } from "@/services/favorites/useAddFavorite";
 
 const categories = [
   {

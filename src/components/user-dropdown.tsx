@@ -16,11 +16,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 
 interface UserDropdownProps {
-  onLogin?: () => void;
   onLogout?: () => void;
 }
 
-export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
+export function UserDropdown({ onLogout }: UserDropdownProps) {
   // Use custom auth hook for easier access
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const navigate = useNavigate();
@@ -34,12 +33,6 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
   };
 
   const handleCloseAuth = () => {
-    setShowAuth(false);
-    setIsOpen(false);
-  };
-
-  const handleLogin = () => {
-    onLogin?.();
     setShowAuth(false);
     setIsOpen(false);
   };

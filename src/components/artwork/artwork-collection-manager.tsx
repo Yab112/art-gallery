@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useMyCollections } from "@/queries/collectionQueries";
-import { useAddArtworkToCollection } from "@/api/collections/useAddArtworkToCollection";
+import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkToCollection";
 import { FolderPlus, Loader2, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";

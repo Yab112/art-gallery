@@ -22,10 +22,10 @@ import { Palette } from "lucide-react";
 import { useMyCollections } from "@/queries/collectionQueries";
 import { useMyArtworks } from "@/queries/artworkQueries";
 import { ArtworkCard } from "@/components/artwork-card";
-import { useCreateCollection } from "@/api/collections/useCreateCollection";
-import { useDeleteCollection } from "@/api/collections/useDeleteCollection";
-import { usePublishCollection } from "@/api/collections/usePublishCollection";
-import { useUnpublishCollection } from "@/api/collections/useUnpublishCollection";
+import { useCreateCollection } from "@/services/collections/useCreateCollection";
+import { useDeleteCollection } from "@/services/collections/useDeleteCollection";
+import { usePublishCollection } from "@/services/collections/usePublishCollection";
+import { useUnpublishCollection } from "@/services/collections/useUnpublishCollection";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { collectionKeys } from "@/queries/queryKeys";
@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
-import { uploadFileToS3 } from "@/api/upload";
+import { uploadFileToS3 } from "@/services/upload";
 
 export default function ProfilePage() {
   const { user: sessionUser } = useAuth();

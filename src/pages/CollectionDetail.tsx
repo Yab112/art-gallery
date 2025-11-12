@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { ArtworkCard } from "@/components/artwork-card";
 import { Button } from "@/components/ui/button";
-import { useRemoveArtworkFromCollection } from "@/api/collections/useRemoveArtworkFromCollection";
-import { usePublishCollection } from "@/api/collections/usePublishCollection";
-import { useUnpublishCollection } from "@/api/collections/useUnpublishCollection";
-import { useDeleteCollection } from "@/api/collections/useDeleteCollection";
+import { useRemoveArtworkFromCollection } from "@/services/collections/useRemoveArtworkFromCollection";
+import { usePublishCollection } from "@/services/collections/usePublishCollection";
+import { useUnpublishCollection } from "@/services/collections/useUnpublishCollection";
+import { useDeleteCollection } from "@/services/collections/useDeleteCollection";
 import { useQueryClient } from "@tanstack/react-query";
 import { collectionKeys } from "@/queries/queryKeys";
 import { toast } from "sonner";

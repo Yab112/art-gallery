@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useRemoveFavorite } from "@/api/favorites/useRemoveFavorite";
+import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { favoriteKeys } from "@/queries/queryKeys";

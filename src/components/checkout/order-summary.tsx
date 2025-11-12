@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Heart } from "lucide-react";
 import { useCartItems, useCartSummary } from "@/queries/cartQueries";
-import { useRemoveFromCart } from "@/api/cart/useRemoveFromCart";
-import { useAddFavorite } from "@/api/favorites/useAddFavorite";
+import { useRemoveFromCart } from "@/services/cart/useRemoveFromCart";
+import { useAddFavorite } from "@/services/favorites/useAddFavorite";
 
 const shippingCost = 150;
 const taxRate = 0.08;

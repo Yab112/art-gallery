@@ -16,11 +16,11 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { useUpdateProfile } from "@/api/users/useUpdateProfile";
+import { useUpdateProfile } from "@/services/users/useUpdateProfile";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
-import { uploadFileToS3 } from "@/api/upload";
+import { uploadFileToS3 } from "@/services/upload";
 
 interface EditProfileFormData {
   name: string;

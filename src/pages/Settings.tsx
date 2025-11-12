@@ -14,7 +14,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { useUpdateProfile } from "@/api/users/useUpdateProfile";
+import { useUpdateProfile } from "@/services/users/useUpdateProfile";
 import { toast } from "sonner";
 
 interface SettingsFormData {

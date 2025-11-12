@@ -6,7 +6,7 @@ import { Palette, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { ArtworkCard } from "@/components/artwork-card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useDeleteArtwork } from "@/api/artwork/useDeleteArtwork";
+import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork";
 import { useQueryClient } from "@tanstack/react-query";
 import { artworkKeys } from "@/queries/queryKeys";
 import { toast } from "sonner";
