@@ -1,3 +1,5 @@
+"use client";
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,17 +23,40 @@ interface PriceSectionProps {
   formData: ArtworkFormData;
 }
 
-/**
- * Price Section Component
- * Contains pricing information and commission calculations
- * Uses React Hook Form Controller for form state management
- */
 export function PriceSection({ control, errors, formData }: PriceSectionProps) {
   const calculateNetPrice = () => {
-    const price = Number.parseFloat(formData.desiredPrice) || 0;
+    // Remove $ and commas, then parse
+    const priceStr = formData.desiredPrice?.replace(/[$,]/g, "") || "0";
+    const price = Number.parseFloat(priceStr) || 0;
     const commission = price * COMMISSION_RATE;
     const taxes = price * TAX_RATE;
     return price - commission - taxes;
+  };
+
+  // Format number with dollar sign and commas
+  const formatCurrency = (value: string): string => {
+    // Remove all non-numeric characters except decimal point
+    const numericValue = value.replace(/[^0-9.]/g, "");
+    if (!numericValue) return "";
+    
+    // Split by decimal point
+    const parts = numericValue.split(".");
+    const integerPart = parts[0] || "";
+    const decimalPart = parts[1] || "";
+    
+    // Add commas to integer part
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    
+    // Combine with dollar sign
+    if (decimalPart) {
+      return `$${formattedInteger}.${decimalPart}`;
+    }
+    return formattedInteger ? `$${formattedInteger}` : "";
+  };
+
+  // Parse currency value (remove $ and commas)
+  const parseCurrency = (value: string): string => {
+    return value.replace(/[$,]/g, "");
   };
 
   return (
@@ -45,21 +70,34 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="desiredPrice">
-            Desired price (in euros) <span className="text-destructive">*</span>
+            Desired price (in $) <span className="text-destructive">*</span>
           </Label>
           <Controller
             name="desiredPrice"
             control={control}
-            render={({ field }) => (
-              <Input
-                id="desiredPrice"
-                type="number"
-                step="0.01"
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="0.00"
-              />
-            )}
+            render={({ field }) => {
+              const displayValue = field.value ? formatCurrency(field.value) : "";
+              
+              return (
+                <div className="relative">
+                  <Input
+                    id="desiredPrice"
+                    type="text"
+                    value={displayValue}
+                    onChange={(e) => {
+                      const rawValue = parseCurrency(e.target.value);
+                      field.onChange(rawValue);
+                    }}
+                    onBlur={field.onBlur}
+                    placeholder="$0.00"
+                    className="pl-8"
+                  />
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    $
+                  </span>
+                </div>
+              );
+            }}
           />
           {errors.desiredPrice && (
             <p className="text-sm text-destructive">
@@ -73,7 +111,10 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
             For you (commission {(COMMISSION_RATE * 100).toFixed(0)}% + taxes)
           </Label>
           <div className="h-10 px-3 py-2 bg-muted rounded-md flex items-center text-muted-foreground">
-            {calculateNetPrice().toFixed(2)} €
+            ${calculateNetPrice().toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
         </div>
       </div>
@@ -86,7 +127,10 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
           name="acceptPriceNegotiation"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+            >
               <SelectTrigger id="acceptPriceNegotiation">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>

@@ -15,7 +15,7 @@ export function HeroSection() {
             gallery, we make art accessible to everyone.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-red-700 hover:bg-red-800">
+            <Button size="lg" className="bg-red-700 hover:bg-red-800 text-white">
               Start Collecting
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

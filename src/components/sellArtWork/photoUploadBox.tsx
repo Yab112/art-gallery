@@ -5,7 +5,7 @@ import { ACCEPTED_IMAGE_FORMATS } from "@/lib/constants/srtsell.constant";
 
 interface PhotoUploadBoxProps {
   index: number;
-  file: File | null;
+  file: File | string | null; // Support both File objects and string URLs
   onFileSelect: (index: number, file: File) => void;
   onRemove: (index: number) => void;
 }
@@ -24,10 +24,15 @@ export function PhotoUploadBox({
   };
 
   if (file) {
+    // Handle both File objects and string URLs
+    const imageSrc = file instanceof File 
+      ? URL.createObjectURL(file) 
+      : file;
+    
     return (
       <div className="relative aspect-square group">
         <img
-          src={URL.createObjectURL(file) || "/placeholder.svg"}
+          src={imageSrc || "/placeholder.svg"}
           alt={`Photo ${index + 1}`}
           className="w-full h-full object-cover rounded-lg border border-border"
         />

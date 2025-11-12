@@ -3,10 +3,17 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { UserDropdown } from "./user-dropdown";
 import { useState } from "react";
+import { useCartSummary } from "@/queries/cartQueries";
+import { useNavigate } from "react-router-dom";
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  
+  // Fetch cart summary for count
+  const { data: cartSummary } = useCartSummary();
+  const cartCount = cartSummary?.totalItems || 0;
 
   const handleSearchToggle = () => {
     setIsSearchOpen(!isSearchOpen);
@@ -88,12 +95,18 @@ export default function Header() {
                 )}
               </Button>
               <UserDropdown />
-              <Button size="icon" variant="ghost">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => navigate("/checkout")}
+              >
                 <div className="relative">
                   <ShoppingCart className="h-5 w-5 cursor-pointer text-gray-600" />
-                  <span className="-top-2 -right-2 absolute flex h-4 w-4 items-center justify-center rounded-full bg-black text-white text-xs">
-                    0
-                  </span>
+                  {cartCount > 0 && (
+                    <span className="-top-2 -right-2 absolute flex h-4 w-4 items-center justify-center rounded-full bg-black text-white text-xs">
+                      {cartCount}
+                    </span>
+                  )}
                 </div>
               </Button>
             </div>

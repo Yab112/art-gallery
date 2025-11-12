@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 import { Heart, Search } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAddFavorite } from "@/api/favorites/useAddFavorite";
+import { useRemoveFavorite } from "@/api/favorites/useRemoveFavorite";
+import { useCheckFavorite } from "@/queries/favoriteQueries";
 
 interface ArtworkCardProps {
   id: string;
@@ -36,13 +39,29 @@ export function ArtworkCard({
   isMasonry = false,
 }: ArtworkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-
-  const handleFavorite = () => {
-    console.log("[v0] Favorite clicked for artwork:", id);
-    onFavorite?.(id);
-  };
-
   const navigate = useNavigate();
+
+  // Check if artwork is favorited
+  const { data: favoriteCheck } = useCheckFavorite(id);
+  const isFavorited = favoriteCheck?.isFavorite || false;
+
+  // Mutations
+  const { addFavorite } = useAddFavorite();
+  const { removeFavorite } = useRemoveFavorite();
+
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (isFavorited) {
+        await removeFavorite(id);
+      } else {
+        await addFavorite(id);
+      }
+      onFavorite?.(id);
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    }
+  };
   return (
     <div
       className="group relative cursor-pointer"
@@ -93,13 +112,10 @@ export function ArtworkCard({
           <Button
             size="sm"
             variant="secondary"
-            className="bg-white/90 shadow-md hover:bg-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFavorite();
-            }}
+            className={`bg-white/90 shadow-md hover:bg-white ${isFavorited ? "text-red-500" : ""}`}
+            onClick={handleFavorite}
           >
-            <Heart className="h-4 w-4" />
+            <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
           </Button>
         </div>
       </div>

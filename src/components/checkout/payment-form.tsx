@@ -348,7 +348,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
               <p className="text-blue-800 mb-4">
                 You will be redirected to PayPal to complete your payment.
               </p>
-              <Button type="button" className="bg-blue-600 hover:bg-blue-700">
+              <Button type="button" className="bg-[#053352] hover:bg-[#042a47] text-white">
                 Continue with PayPal
               </Button>
             </div>
@@ -374,7 +374,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
           >
             Previous
           </Button>
-          <Button type="submit" className="flex-1 bg-red-600 hover:bg-red-700">
+          <Button type="submit" className="flex-1 bg-red-700 hover:bg-red-800 text-white">
             Continue to Review
           </Button>
         </div>

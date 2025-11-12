@@ -10,6 +10,7 @@ import { PaymentForm } from "@/components/checkout/payment-form";
 import { ShippingInfo } from "@/components/checkout/shipping-info";
 // import { StripeProvider } from "@/components/checkout/stripe-provider";
 import { Link } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 
 export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -52,7 +53,8 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -205,7 +207,7 @@ export default function CheckoutPage() {
                     <Button
                       onClick={handlePlaceOrder}
                       disabled={isProcessing}
-                      className="flex-1 bg-red-600 hover:bg-red-700"
+                      className="flex-1 bg-red-700 hover:bg-red-800 text-white"
                     >
                       {isProcessing ? "Processing..." : "Place Order"}
                     </Button>
@@ -222,5 +224,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

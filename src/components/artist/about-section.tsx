@@ -7,37 +7,36 @@ import {
   Palette,
   Users,
 } from "lucide-react";
+import type { UserProfile } from "@/types/user.types";
 
-export function AboutSection() {
+interface AboutSectionProps {
+  user: UserProfile;
+}
+
+export function AboutSection({ user }: AboutSectionProps) {
   return (
     <div className="max-w-4xl space-y-12">
       {/* Artist Biography */}
       <section>
         <h2 className="mb-6 font-light text-2xl text-foreground">Biography</h2>
         <div className="prose prose-lg max-w-none text-foreground">
-          <p className="mb-4 leading-relaxed">
-            Carlos Jacanamijoy depicts vivid, colour-saturated and abstract
-            landscapes that emphasise the respect for heritage, memory and
-            environment that he was taught as a Colombian indigenous of the Inga
-            people. While his paintings are made abiding by the traditional
-            techniques of his ancestors, they also incorporate contemporary
-            artistic practices and materials.
-          </p>
-          <p className="mb-4 leading-relaxed">
-            Born in 1964 in Santiago, Putumayo, Colombia, Jacanamijoy's work is
-            deeply rooted in his indigenous heritage and the natural landscapes
-            of the Amazon rainforest. His paintings serve as a bridge between
-            ancient wisdom and contemporary artistic expression, creating a
-            unique visual language that speaks to both cultural preservation and
-            artistic innovation.
-          </p>
-          <p className="leading-relaxed">
-            His vibrant canvases often feature swirling forms and organic shapes
-            that evoke the movement of water, wind, and the spiritual energy of
-            the natural world. Through his art, Jacanamijoy invites viewers to
-            experience the profound connection between humanity and nature that
-            is central to Inga cosmology.
-          </p>
+          {user.artworkCount !== undefined && user.artworkCount > 0 ? (
+            <p className="mb-4 leading-relaxed">
+              {user.name || "This artist"} has {user.artworkCount} {user.artworkCount === 1 ? "artwork" : "artworks"} available on our platform.
+            </p>
+          ) : (
+            <p className="mb-4 leading-relaxed">
+              {user.name || "This artist"} is a member of our art gallery community.
+            </p>
+          )}
+          {user.createdAt && (
+            <p className="mb-4 leading-relaxed">
+              Member since {new Date(user.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+              })}.
+            </p>
+          )}
         </div>
       </section>
 

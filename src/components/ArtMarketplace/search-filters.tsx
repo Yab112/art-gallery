@@ -15,6 +15,14 @@ interface SearchFiltersProps {
   viewMode: "grid" | "list";
   onViewModeChange: (mode: "grid" | "list") => void;
   artworkCount: number;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
+  priceRange?: string;
+  onPriceRangeChange?: (value: string) => void;
+  medium?: string;
+  onMediumChange?: (value: string) => void;
+  rarity?: string;
+  onRarityChange?: (value: string) => void;
 }
 
 export function SearchFilters({
@@ -22,7 +30,14 @@ export function SearchFilters({
   onSearchChange,
   viewMode,
   onViewModeChange,
-  artworkCount,
+  sortBy = "recommended",
+  onSortChange,
+  priceRange = "price",
+  onPriceRangeChange,
+  medium = "medium",
+  onMediumChange,
+  rarity = "rarity",
+  onRarityChange,
 }: SearchFiltersProps) {
   return (
     <section className="border-gray-200 border-t px-4 py-8">
@@ -48,12 +63,17 @@ export function SearchFilters({
             </Button>
           </div>
 
-          <div className="flex items-center gap-4 ">
-            <Select defaultValue="rarity">
-              <SelectTrigger className="w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
+          <div className="flex items-center gap-4">
+            <Select value={rarity} onValueChange={onRarityChange} modal={false}>
+              <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Rarity" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                position="popper"
+                sideOffset={4}
+                className="z-[100]"
+                align="start"
+              >
                 <SelectItem value="rarity">Rarity</SelectItem>
                 <SelectItem value="common">Common</SelectItem>
                 <SelectItem value="rare">Rare</SelectItem>
@@ -61,11 +81,16 @@ export function SearchFilters({
               </SelectContent>
             </Select>
 
-            <Select defaultValue="medium">
-              <SelectTrigger className="w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
+            <Select value={medium} onValueChange={onMediumChange} modal={false}>
+              <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Medium" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                position="popper"
+                sideOffset={4}
+                className="z-[100]"
+                align="start"
+              >
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="painting">Painting</SelectItem>
                 <SelectItem value="photography">Photography</SelectItem>
@@ -73,11 +98,20 @@ export function SearchFilters({
               </SelectContent>
             </Select>
 
-            <Select defaultValue="price">
-              <SelectTrigger className="w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
+            <Select
+              value={priceRange}
+              onValueChange={onPriceRangeChange}
+              modal={false}
+            >
+              <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                position="popper"
+                sideOffset={4}
+                className="z-[100]"
+                align="start"
+              >
                 <SelectItem value="price">Price Range</SelectItem>
                 <SelectItem value="under-1k">Under $1,000</SelectItem>
                 <SelectItem value="1k-10k">$1,000 - $10,000</SelectItem>
@@ -105,11 +139,15 @@ export function SearchFilters({
               </Button>
             </div>
 
-            <Select defaultValue="recommended">
-              <SelectTrigger className="w-48 rounded-full bg-transparent focus:ring-0 active:ring-0">
+            <Select value={sortBy} onValueChange={onSortChange}>
+              <SelectTrigger className="h-10 w-48 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                position="popper"
+                sideOffset={4}
+                className="z-[100]"
+              >
                 <SelectItem value="recommended">Sort: Recommended</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
@@ -120,11 +158,7 @@ export function SearchFilters({
           </div>
         </div>
 
-        <div className="mb-8 flex items-center justify-between">
-          <p className="text-gray-600">
-            {artworkCount.toLocaleString()} Artworks
-          </p>
-        </div>
+        <div className="mb-8 flex items-center justify-between"></div>
       </div>
     </section>
   );

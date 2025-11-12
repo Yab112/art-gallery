@@ -1,41 +1,40 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Heart } from "lucide-react";
-
-// Mock cart data
-const cartItems = [
-  {
-    id: "1",
-    title: "Abstract Expression",
-    artist: "Sarah Johnson",
-    image: "/artwork-1.jpg",
-    price: 2500,
-    quantity: 1,
-    size: "24x36 inches",
-    medium: "Oil on Canvas",
-  },
-  {
-    id: "2",
-    title: "Urban Landscape",
-    artist: "Michael Chen",
-    image: "/artwork-2.jpg",
-    price: 1800,
-    quantity: 1,
-    size: "18x24 inches",
-    medium: "Acrylic on Canvas",
-  },
-];
+import { useCartItems, useCartSummary } from "@/queries/cartQueries";
+import { useRemoveFromCart } from "@/api/cart/useRemoveFromCart";
+import { useAddFavorite } from "@/api/favorites/useAddFavorite";
 
 const shippingCost = 150;
 const taxRate = 0.08;
 
 export function OrderSummary() {
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  // Fetch cart data from backend
+  const { data: cartData, isLoading } = useCartItems(1, 10);
+  const { data: cartSummary } = useCartSummary();
+  const { removeFromCart } = useRemoveFromCart();
+  const { addFavorite } = useAddFavorite();
+
+  const cartItems = cartData?.items || [];
+  const subtotal = cartSummary?.totalPrice || 0;
   const tax = subtotal * taxRate;
   const total = subtotal + shippingCost + tax;
+
+  const handleRemove = async (artworkId: string) => {
+    try {
+      await removeFromCart(artworkId);
+    } catch (error) {
+      console.error("Failed to remove from cart:", error);
+    }
+  };
+
+  const handleFavorite = async (artworkId: string) => {
+    try {
+      await addFavorite(artworkId);
+    } catch (error) {
+      console.error("Failed to add to favorites:", error);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg border p-6 sticky top-6">
@@ -43,43 +42,55 @@ export function OrderSummary() {
 
       {/* Cart Items */}
       <div className="space-y-4 mb-6">
-        {cartItems.map((item) => (
-          <div key={item.id} className="flex gap-4">
-            <div className="flex-shrink-0">
-              <img
-                src={item.image}
-                alt={item.title}
-                className="w-16 h-16 object-cover rounded-lg"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 text-sm">
-                {item.title}
-              </h3>
-              <p className="text-sm text-gray-600">{item.artist}</p>
-              <p className="text-xs text-gray-500">
-                {item.size} • {item.medium}
-              </p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="font-medium text-gray-900">
-                  ${item.price.toLocaleString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                    <Heart className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 text-red-600"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+        {isLoading ? (
+          <p className="text-gray-600 text-sm">Loading cart...</p>
+        ) : cartItems.length === 0 ? (
+          <p className="text-gray-600 text-sm">Your cart is empty</p>
+        ) : (
+          cartItems.map((item) => (
+            <div key={item.id} className="flex gap-4">
+              <div className="flex-shrink-0">
+                <img
+                  src={item.artwork?.photos?.[0] || "/placeholder.svg"}
+                  alt={item.artwork?.title || "Artwork"}
+                  className="w-16 h-16 object-cover rounded-lg"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-gray-900 text-sm">
+                  {item.artwork?.title || "Untitled"}
+                </h3>
+                <p className="text-sm text-gray-600">{item.artwork?.artist || "Unknown"}</p>
+                <p className="text-xs text-gray-500">
+                  Quantity: {item.quantity}
+                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="font-medium text-gray-900">
+                    ${item.artwork?.desiredPrice?.toLocaleString() || "0"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      onClick={() => handleFavorite(item.artworkId)}
+                    >
+                      <Heart className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-red-600"
+                      onClick={() => handleRemove(item.artworkId)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Promo Code */}
@@ -100,7 +111,7 @@ export function OrderSummary() {
       <div className="space-y-3 mb-6">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Subtotal</span>
-          <span className="text-gray-900">${subtotal.toLocaleString()}</span>
+          <span className="text-gray-900">${subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Shipping</span>
@@ -113,7 +124,7 @@ export function OrderSummary() {
         <div className="border-t pt-3">
           <div className="flex justify-between text-lg font-bold">
             <span className="text-gray-900">Total</span>
-            <span className="text-gray-900">${total.toLocaleString()}</span>
+            <span className="text-gray-900">${total.toFixed(2)}</span>
           </div>
         </div>
       </div>

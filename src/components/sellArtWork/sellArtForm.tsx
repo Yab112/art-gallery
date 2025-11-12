@@ -8,7 +8,9 @@ import {
   type ArtworkFormData,
 } from "@/lib/schemas/artwork.schema";
 import { MAX_PHOTOS } from "@/lib/constants/srtsell.constant";
-import { submitArtwork } from "@/lib/api/artwork";
+import { useCreateArtwork } from "@/api/artwork/useCreateArtwork";
+import { useGetPresignedImageUploadUrl, useGetPresignedDocumentUploadUrl } from "@/queries/uploadQueries";
+import { uploadFileToS3 } from "@/api/upload";
 import { ArtworkInfoSection } from "./artworkInfoSection";
 import { ProofOfOriginSection } from "./proofOfOriginSection";
 import { DescriptionSection } from "./descriptionSection";
@@ -16,15 +18,20 @@ import { PhotosSection } from "./photosSection";
 import { PriceSection } from "./priceSection";
 import { BankingSection } from "./bankingSection";
 import { Card } from "../ui/card";
+import { useNavigate } from "react-router-dom";
+import type { CreateArtworkDto } from "@/types/artwork.types";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
 /**
  * Default form values for the artwork selling form
  * These values are used to initialize the React Hook Form
+ * Note: artist and accountHolder will be prefilled from user data if available
  */
-const defaultValues: ArtworkFormData = {
+const getDefaultValues = (userName?: string): ArtworkFormData => ({
   typeOfArtwork: "",
   technique: "",
-  artist: "",
+  artist: userName || "", // Prefill with user's name if available
   support: "",
   titleOfArtwork: "",
   state: "",
@@ -40,12 +47,12 @@ const defaultValues: ArtworkFormData = {
   photos: Array(MAX_PHOTOS).fill(null),
   desiredPrice: "",
   acceptPriceNegotiation: "",
-  accountHolder: "",
+  accountHolder: userName || "", // Prefill with user's name if available
   iban: "",
   bicCode: "",
   acceptTermsOfSale: false,
   giveSalesMandate: false,
-};
+});
 
 /**
  * Main artwork selling form component
@@ -53,6 +60,9 @@ const defaultValues: ArtworkFormData = {
  * Handles submission of artwork data to the backend API
  */
 export function SellArtForm() {
+  const { user } = useAuth();
+  const userName = user?.name || "";
+
   const {
     control,
     handleSubmit,
@@ -62,88 +72,132 @@ export function SellArtForm() {
     reset,
   } = useForm<ArtworkFormData>({
     resolver: zodResolver(artworkFormSchema),
-    defaultValues,
+    defaultValues: getDefaultValues(userName),
     mode: "onChange", // Validate on change for better UX
   });
 
+  // Update artist and accountHolder fields when user data becomes available
+  useEffect(() => {
+    if (userName) {
+      setValue("artist", userName);
+      setValue("accountHolder", userName);
+    }
+  }, [userName, setValue]);
+
   const formData = watch(); 
 
+  const { createArtwork, isCreating } = useCreateArtwork();
+  const { mutateAsync: getPresignedImageUrl } = useGetPresignedImageUploadUrl();
+  const { mutateAsync: getPresignedDocumentUrl } = useGetPresignedDocumentUploadUrl();
+  const navigate = useNavigate();
+
   /**
-   * Converts form data to FormData for API submission
-   * Handles file uploads and form field serialization
+   * Upload files to S3 and return their public URLs
    */
-  const convertToFormData = (data: ArtworkFormData): FormData => {
-    const formData = new FormData();
+  const uploadFilesToS3 = async (files: File[]): Promise<string[]> => {
+    const uploadPromises = files.map(async (file) => {
+      // Get presigned URL for image
+      const presignedData = await getPresignedImageUrl({
+        fileName: file.name,
+        contentType: file.type,
+        expirySeconds: 3600,
+      });
 
-    // Add all text fields
-    formData.append("typeOfArtwork", data.typeOfArtwork);
-    formData.append("technique", data.technique);
-    formData.append("artist", data.artist);
-    formData.append("support", data.support);
-    formData.append("titleOfArtwork", data.titleOfArtwork || "");
-    formData.append("state", data.state);
-    formData.append("yearOfArtwork", data.yearOfArtwork);
-    formData.append("isFramed", data.isFramed);
-    formData.append("weight", data.weight);
-    formData.append("handDeliveryAccepted", data.handDeliveryAccepted);
-    formData.append("origin", data.origin);
-    formData.append("yearOfAcquisition", data.yearOfAcquisition || "");
-    formData.append("description", data.description || "");
-    formData.append("desiredPrice", data.desiredPrice);
-    formData.append("acceptPriceNegotiation", data.acceptPriceNegotiation);
-    formData.append("accountHolder", data.accountHolder);
-    formData.append("iban", data.iban);
-    formData.append("bicCode", data.bicCode || "");
-    formData.append("acceptTermsOfSale", data.acceptTermsOfSale.toString());
-    formData.append("giveSalesMandate", data.giveSalesMandate.toString());
+      // Upload file to S3
+      await uploadFileToS3(presignedData.presignedUrl, file);
 
-    // Add dimensions as JSON string
-    formData.append("dimensions", JSON.stringify(data.dimensions));
-
-    // Add proof of origin file
-    if (data.proofOfOrigin) {
-      formData.append("proofOfOrigin", data.proofOfOrigin);
-    }
-
-    // Add photos (filter out null values)
-    data.photos.forEach((photo, index) => {
-      if (photo) {
-        formData.append(`photo_${index}`, photo);
-      }
+      // Return public URL
+      return presignedData.publicUrl;
     });
 
-    return formData;
+    return Promise.all(uploadPromises);
+  };
+
+  /**
+   * Upload document to S3 and return public URL
+   */
+  const uploadDocumentToS3 = async (file: File): Promise<string> => {
+    // Get presigned URL for document
+    const presignedData = await getPresignedDocumentUrl({
+      fileName: file.name,
+      contentType: file.type,
+      expirySeconds: 3600,
+    });
+
+    // Upload file to S3
+    await uploadFileToS3(presignedData.presignedUrl, file);
+
+    // Return public URL
+    return presignedData.publicUrl;
   };
 
   /**
    * Handles form submission with React Hook Form
    * Validation is handled automatically by Zod schema
+   * Uploads files to S3 first, then submits artwork with URLs
    */
   const onSubmit = async (data: ArtworkFormData) => {
     try {
-      // Convert to FormData for API submission
-      const formDataToSend = convertToFormData(data);
-
-      // Log FormData contents for debugging
-      console.log("FormData contents:");
-      for (const [key, value] of formDataToSend.entries()) {
-        console.log(key, value);
+      // Step 1: Upload photos to S3
+      const photoFiles = data.photos.filter((photo): photo is File => photo !== null);
+      if (photoFiles.length === 0) {
+        throw new Error("At least one photo is required");
       }
 
-      // Submit artwork using API function
-      const result = await submitArtwork(formDataToSend);
+      const photoUrls = await uploadFilesToS3(photoFiles);
+
+      // Step 2: Upload proof of origin to S3 (if provided)
+      let proofOfOriginUrl: string | undefined;
+      if (data.proofOfOrigin) {
+        proofOfOriginUrl = await uploadDocumentToS3(data.proofOfOrigin);
+      }
+
+      // Step 3: Convert form data to CreateArtworkDto
+      const artworkData: CreateArtworkDto = {
+        title: data.titleOfArtwork || undefined,
+        artist: data.artist,
+        technique: data.technique,
+        support: data.support,
+        state: data.state,
+        yearOfArtwork: data.yearOfArtwork,
+        dimensions: {
+          height: parseFloat(data.dimensions.height),
+          width: parseFloat(data.dimensions.width),
+          depth: data.dimensions.depth ? parseFloat(data.dimensions.depth) : undefined,
+        },
+        isFramed: data.isFramed === "yes",
+        weight: data.weight,
+        handDeliveryAccepted: data.handDeliveryAccepted === "yes",
+        origin: data.origin,
+        yearOfAcquisition: data.yearOfAcquisition || "",
+        description: data.description || "",
+        desiredPrice: parseFloat(data.desiredPrice),
+        acceptPriceNegotiation: data.acceptPriceNegotiation === "yes",
+        accountHolder: data.accountHolder,
+        iban: data.iban,
+        bicCode: data.bicCode || undefined,
+        acceptTermsOfSale: data.acceptTermsOfSale,
+        giveSalesMandate: data.giveSalesMandate,
+        proofOfOrigin: proofOfOriginUrl,
+        photos: photoUrls,
+      };
+
+      // Step 4: Submit artwork using API
+      const result = await createArtwork(artworkData);
       console.log("Submission successful:", result);
 
       // Reset form on success
       reset();
-      alert(
-        `Artwork submitted successfully! ${
-          result.artworkId ? `ID: ${result.artworkId}` : ""
-        }`
-      );
-    } catch (error) {
+      
+      // Navigate to artwork detail or marketplace
+      if (result.artworkId) {
+        navigate(`/artwork/${result.artworkId}`);
+      } else {
+        navigate("/buyart");
+      }
+    } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert("Error submitting form. Please try again.");
+      // Error is already handled by useCreateArtwork hook (toast notification)
     }
   };
 
@@ -177,11 +231,16 @@ export function SellArtForm() {
 
         <PriceSection control={control} errors={errors} formData={formData} />
 
-        <BankingSection control={control} errors={errors} />
+        <BankingSection control={control} errors={errors} formData={formData} />
 
         <div className="flex justify-end pt-6">
-          <Button type="submit" size="lg" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Submit your artwork"}
+          <Button 
+            type="submit" 
+            size="lg" 
+            disabled={isSubmitting || isCreating}
+            className="bg-red-700 hover:bg-red-800 text-white"
+          >
+            {isSubmitting || isCreating ? "Submitting..." : "Submit your artwork"}
           </Button>
         </div>
       </Card>

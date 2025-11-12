@@ -220,7 +220,7 @@ export function ShippingInfo({ onNext }: ShippingInfoProps) {
 
         {/* Continue Button */}
         <div className="pt-6">
-          <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
+          <Button type="submit" className="w-full bg-red-700 hover:bg-red-800 text-white">
             Continue to Payment
           </Button>
         </div>

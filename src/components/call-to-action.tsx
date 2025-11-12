@@ -33,7 +33,7 @@ export function CallToAction({
           </Button>
           <Button
             size="lg"
-            className="rounded-full bg-black text-white px-8 py-3 hover:bg-gray-800"
+            className="rounded-full bg-red-700 hover:bg-red-800 text-white px-8 py-3"
             onClick={onSecondaryClick}
           >
             {secondaryButtonText}

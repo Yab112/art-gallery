@@ -12,18 +12,19 @@ import { Button } from "./ui/button";
 import { SigninForm } from "./auth/signin-form";
 import { SignupForm } from "./auth/signup-form";
 import { AuthLayout } from "./auth/auth-layout";
+import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "react-router-dom";
 
 interface UserDropdownProps {
-  isLoggedIn?: boolean;
   onLogin?: () => void;
   onLogout?: () => void;
 }
 
-export function UserDropdown({
-  isLoggedIn = false,
-  onLogin,
-  onLogout,
-}: UserDropdownProps) {
+export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
+  // Use custom auth hook for easier access
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const navigate = useNavigate();
+  const isLoggedIn = isAuthenticated;
   const [isOpen, setIsOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authView, setAuthView] = useState<"signin" | "signup">("signin");
@@ -43,9 +44,14 @@ export function UserDropdown({
     setIsOpen(false);
   };
 
-  const handleLogout = () => {
-    onLogout?.();
-    setIsOpen(false);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      onLogout?.();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    }
   };
 
   if (showAuth) {
@@ -73,8 +79,13 @@ export function UserDropdown({
         variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
         className="relative hover:bg-gray-100"
+        disabled={isLoading}
       >
-        <User className="h-5 w-5 cursor-pointer text-gray-600" />
+        {isLoading ? (
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+        ) : (
+          <User className="h-5 w-5 cursor-pointer text-gray-600" />
+        )}
       </Button>
 
       {isOpen && (
@@ -85,14 +96,24 @@ export function UserDropdown({
                 {/* User Info */}
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-red-700" />
-                    </div>
+                    {user?.image ? (
+                      <img
+                        src={user.image}
+                        alt={user.name || "User"}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-red-700" />
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        John Doe
+                        {user?.name || "User"}
                       </p>
-                      <p className="text-xs text-gray-500">john@example.com</p>
+                      <p className="text-xs text-gray-500">
+                        {user?.email || ""}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -103,7 +124,7 @@ export function UserDropdown({
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => {
                       setIsOpen(false);
-                      console.log("Navigate to profile");
+                      navigate("/profile");
                     }}
                   >
                     <User className="h-4 w-4 mr-3 text-gray-500" />
@@ -113,7 +134,7 @@ export function UserDropdown({
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => {
                       setIsOpen(false);
-                      console.log("Navigate to favorites");
+                      navigate("/favorites");
                     }}
                   >
                     <Heart className="h-4 w-4 mr-3 text-gray-500" />
@@ -123,7 +144,7 @@ export function UserDropdown({
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => {
                       setIsOpen(false);
-                      console.log("Navigate to orders");
+                      navigate("/orders");
                     }}
                   >
                     <ShoppingBag className="h-4 w-4 mr-3 text-gray-500" />
@@ -133,7 +154,7 @@ export function UserDropdown({
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => {
                       setIsOpen(false);
-                      console.log("Navigate to settings");
+                      navigate("/settings");
                     }}
                   >
                     <Settings className="h-4 w-4 mr-3 text-gray-500" />

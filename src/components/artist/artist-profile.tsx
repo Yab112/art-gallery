@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Bell, Heart, Share2 } from "lucide-react";
 import { useState } from "react";
+import type { UserProfile } from "@/types/user.types";
 
-export function ArtistProfile() {
+interface ArtistProfileProps {
+  user: UserProfile;
+}
+
+export function ArtistProfile({ user }: ArtistProfileProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -14,8 +19,8 @@ export function ArtistProfile() {
         <div className="flex-shrink-0">
           <div className="zoom-container h-80 w-80 overflow-hidden rounded-lg bg-gallery-neutral">
             <img
-              src="/artist-1.webp"
-              alt="Artist profile"
+              src={user.image || "/placeholder.svg"}
+              alt={user.name || "Artist profile"}
               className="zoom-image w-full h-full object-cover"
             />
           </div>
@@ -25,10 +30,10 @@ export function ArtistProfile() {
         <div className="flex-1 space-y-6">
           <div>
             <h1 className="mb-2 text-balance font-light text-4xl text-foreground">
-              Carlos Jacanamijoy
+              {user.name || "Artist"}
             </h1>
             <p className="font-light text-muted-foreground text-xl">
-              Colombian, b. 1964
+              {user.email || "Artist"}
             </p>
           </div>
 
@@ -74,20 +79,13 @@ export function ArtistProfile() {
           <p className="text-muted-foreground text-sm">363 Followers</p>
 
           {/* Artist Bio */}
-          <div className="max-w-3xl">
-            <p className="text-pretty text-foreground leading-relaxed">
-              Carlos Jacanamijoy depicts vivid, colour-saturated and abstract
-              landscapes that emphasise the respect for heritage, memory and
-              environment that he was taught as a Colombian indigenous of the
-              Inga people. While his paintings are made abiding by the...{" "}
-              <button
-                type="button"
-                className="font-medium text-primary hover:underline"
-              >
-                Read more
-              </button>
-            </p>
-          </div>
+          {user.artworkCount !== undefined && user.artworkCount > 0 && (
+            <div className="max-w-3xl">
+              <p className="text-pretty text-foreground leading-relaxed">
+                {user.artworkCount} {user.artworkCount === 1 ? "artwork" : "artworks"} available
+              </p>
+            </div>
+          )}
 
           {/* Additional Info */}
           <div className="pt-4">

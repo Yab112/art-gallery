@@ -1,80 +1,62 @@
 import { ArtworkCard } from "@/components/artwork-card";
-import { useCallback, useEffect, useState } from "react";
-import { artworks } from "./mockdtas";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Palette } from "lucide-react";
+import type { Artwork } from "@/types/artwork.types";
 
 interface ArtworkGridProps {
+  artworks: Artwork[];
+  isLoading?: boolean;
   onImageClick: (src: string) => void;
 }
 
-export function ArtworkGrid({ onImageClick }: ArtworkGridProps) {
-  const [displayedArtworks, setDisplayedArtworks] = useState(
-    artworks.slice(0, 6)
-  );
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+export function ArtworkGrid({ artworks, isLoading, onImageClick }: ArtworkGridProps) {
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="mt-12 flex justify-center py-8">
+        <div className="h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
+      </div>
+    );
+  }
 
-  const loadMoreArtworks = useCallback(() => {
-    if (loading || !hasMore) return;
-
-    setLoading(true);
-
-    // Simulate API call delay
-    setTimeout(() => {
-      const currentLength = displayedArtworks.length;
-      const nextArtworks = artworks.slice(currentLength, currentLength + 4);
-
-      if (nextArtworks.length === 0) {
-        setHasMore(false);
-      } else {
-        setDisplayedArtworks((prev) => [...prev, ...nextArtworks]);
-      }
-
-      setLoading(false);
-    }, 800);
-  }, [displayedArtworks.length, loading, hasMore]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 1000
-      ) {
-        loadMoreArtworks();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreArtworks]);
+  // Show empty state
+  if (artworks.length === 0) {
+    return (
+      <div className="mt-12">
+        <EmptyState
+          icon={Palette}
+          title="No Artworks Yet"
+          description="This artist hasn't uploaded any artworks yet. Check back soon to see their collection."
+        />
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* <SectionTitle
-        title="Artworks"
-        subtitle={`${artworks.length} Artworks by this artist`}
-      /> */}
-
       <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3 xl:columns-4">
-        {displayedArtworks.map((artwork) => (
+        {artworks.map((artwork) => (
           <div key={artwork.id} className="break-inside-avoid">
-            <ArtworkCard isMasonry {...artwork} onImageClick={onImageClick} />
+            <ArtworkCard
+              isMasonry
+              id={artwork.id}
+              image={artwork.photos?.[0] || "/placeholder.svg"}
+              title={artwork.title || "Untitled"}
+              artist={artwork.artist}
+              price={`US$${artwork.desiredPrice?.toLocaleString() || "0"}`}
+              year={artwork.yearOfArtwork}
+              medium={artwork.technique}
+              dimensions={
+                artwork.dimensions
+                  ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+                  : "N/A"
+              }
+              seller={artwork.user?.name || "Unknown"}
+              onImageClick={onImageClick}
+            />
           </div>
         ))}
       </div>
-
-      {/* Loading indicator */}
-      {loading && (
-        <div className="flex justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
-        </div>
-      )}
-
-      {/* End of results */}
-      {!hasMore && (
-        <div className="py-8 text-center text-muted-foreground">
-          <p>You've seen all artworks by this artist</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -72,15 +72,23 @@ export function PhotosSection({
         control={control}
         render={() => (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {Array.from({ length: photoSlots - 1 }).map((_, index) => (
-              <PhotoUploadBox
-                key={index}
-                index={index}
-                file={formData.photos[index] || null}
-                onFileSelect={handlePhotoChange}
-                onRemove={handleRemovePhoto}
-              />
-            ))}
+            {Array.from({ length: photoSlots - 1 }).map((_, index) => {
+              const photo = formData.photos[index];
+              // Handle both File objects and string URLs
+              const photoValue = photo instanceof File || typeof photo === "string" 
+                ? photo 
+                : null;
+              
+              return (
+                <PhotoUploadBox
+                  key={index}
+                  index={index}
+                  file={photoValue}
+                  onFileSelect={handlePhotoChange}
+                  onRemove={handleRemovePhoto}
+                />
+              );
+            })}
 
             <AddPhotoBox
               onFileSelect={handleAddMorePhotos}

@@ -7,6 +7,7 @@ import type { ArtworkFormData } from "@/lib/schemas/artwork.schema";
 interface BankingSectionProps {
   control: Control<ArtworkFormData>;
   errors: FieldErrors<ArtworkFormData>;
+  formData?: ArtworkFormData;
 }
 
 /**
@@ -14,7 +15,7 @@ interface BankingSectionProps {
  * Contains banking information and terms acceptance checkboxes
  * Uses React Hook Form Controller for form state management
  */
-export function BankingSection({ control, errors }: BankingSectionProps) {
+export function BankingSection({ control, errors, formData }: BankingSectionProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold">
@@ -97,8 +98,10 @@ export function BankingSection({ control, errors }: BankingSectionProps) {
               render={({ field }) => (
                 <Checkbox
                   id="acceptTermsOfSale"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+                  checked={field.value || false}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked === true);
+                  }}
                 />
               )}
             />
@@ -130,8 +133,10 @@ export function BankingSection({ control, errors }: BankingSectionProps) {
               render={({ field }) => (
                 <Checkbox
                   id="giveSalesMandate"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+                  checked={field.value || false}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked === true);
+                  }}
                 />
               )}
             />

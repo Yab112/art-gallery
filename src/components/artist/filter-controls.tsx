@@ -6,15 +6,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ArrowUpDown, Bell, ChevronDown, Filter } from "lucide-react";
-import { useState } from "react";
 
-export function FilterControls() {
-  const [filters, setFilters] = useState({
-    rarity: "All",
-    medium: "All",
-    availability: "All",
-    sort: "Recommended",
-  });
+interface FilterControlsProps {
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
+  priceRange?: string;
+  onPriceRangeChange?: (value: string) => void;
+  medium?: string;
+  onMediumChange?: (value: string) => void;
+}
+
+export function FilterControls({
+  sortBy = "recommended",
+  onSortChange,
+  priceRange = "",
+  onPriceRangeChange,
+  medium = "",
+  onMediumChange,
+}: FilterControlsProps) {
+  const getSortLabel = (value: string) => {
+    switch (value) {
+      case "price-low":
+        return "Price: Low to High";
+      case "price-high":
+        return "Price: High to Low";
+      case "newest":
+        return "Recently Added";
+      case "oldest":
+        return "Oldest First";
+      case "recommended":
+      default:
+        return "Recommended";
+    }
+  };
 
   return (
     <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -59,11 +83,21 @@ export function FilterControls() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>All</DropdownMenuItem>
-            <DropdownMenuItem>Painting</DropdownMenuItem>
-            <DropdownMenuItem>Photography</DropdownMenuItem>
-            <DropdownMenuItem>Sculpture</DropdownMenuItem>
-            <DropdownMenuItem>Print</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onMediumChange?.("")}>
+              All
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onMediumChange?.("painting")}>
+              Painting
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onMediumChange?.("photography")}>
+              Photography
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onMediumChange?.("sculpture")}>
+              Sculpture
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onMediumChange?.("print")}>
+              Print
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -93,41 +127,35 @@ export function FilterControls() {
             className="gap-2 rounded-full bg-transparent"
           >
             <ArrowUpDown className="h-4 w-4" />
-            Sort: {filters.sort}
+            Sort: {getSortLabel(sortBy)}
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => setFilters({ ...filters, sort: "Recommended" })}
+            onClick={() => onSortChange?.("recommended")}
           >
             Recommended
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              setFilters({ ...filters, sort: "Price: Low to High" })
-            }
+            onClick={() => onSortChange?.("price-low")}
           >
             Price: Low to High
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              setFilters({ ...filters, sort: "Price: High to Low" })
-            }
+            onClick={() => onSortChange?.("price-high")}
           >
             Price: High to Low
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => setFilters({ ...filters, sort: "Recently Added" })}
+            onClick={() => onSortChange?.("newest")}
           >
             Recently Added
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              setFilters({ ...filters, sort: "Year: Newest First" })
-            }
+            onClick={() => onSortChange?.("oldest")}
           >
-            Year: Newest First
+            Oldest First
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

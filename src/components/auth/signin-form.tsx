@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
+import { signIn } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
 
 interface SigninFormData {
   email: string;
@@ -42,21 +44,45 @@ export function SigninForm({
     reset,
   } = form;
 
+  const navigate = useNavigate();
+
   const onSubmit = async (data: SigninFormData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Use Better Auth signIn with proper error handling
+      const result = await signIn.email(
+        {
+          email: data.email,
+          password: data.password,
+          rememberMe: data.rememberMe,
+        },
+        {
+          onSuccess: () => {
+            // Success - redirect to home
+            reset();
+            navigate("/", { replace: true });
+            // Small delay to ensure session is updated
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
+          },
+          onError: (ctx) => {
+            setError(ctx.error?.message || "Failed to sign in. Please try again.");
+            setIsLoading(false);
+          },
+        }
+      );
 
-      // For demo purposes - simulate success
-      console.log("Login data:", data);
-      reset();
-      // In real app, redirect to dashboard
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
+      // Handle result if it's returned synchronously
+      if (result?.error) {
+        setError(result.error.message || "Failed to sign in. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+    } catch (err: any) {
+      setError(err?.message || "An error occurred. Please try again.");
       setIsLoading(false);
     }
   };

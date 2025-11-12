@@ -1,5 +1,7 @@
 import { ArtworkCard } from "@/components/artwork-card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Palette } from "lucide-react";
 
 interface Artwork {
   id: string;
@@ -26,6 +28,25 @@ export function ArtworkGrid({
   onFavorite,
   onLoadMore,
 }: ArtworkGridProps) {
+  if (artworks.length === 0) {
+    return (
+      <section className="px-4">
+        <div className="mx-auto max-w-7xl">
+          <EmptyState
+            icon={Palette}
+            title="No Artworks Found"
+            description="We couldn't find any artworks matching your search. Try adjusting your filters or browse our collections."
+            actionLabel="Browse Collections"   
+            onAction={() => {
+              // Navigate to collections or clear filters
+              window.location.href = "/";
+            }}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="px-4 ">
       <div className="mx-auto max-w-7xl">

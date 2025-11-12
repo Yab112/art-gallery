@@ -5,8 +5,10 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import type React from "react";
+import type { Artwork } from "@/types/artwork.types";
 
 interface ArtworkCollapsiblesProps {
+  artwork: Artwork;
   isShippingOpen: boolean;
   setIsShippingOpen: (open: boolean) => void;
   isGuaranteeOpen: boolean;
@@ -14,6 +16,7 @@ interface ArtworkCollapsiblesProps {
 }
 
 export const ArtworkCollapsibles: React.FC<ArtworkCollapsiblesProps> = ({
+  artwork,
   isShippingOpen,
   setIsShippingOpen,
   isGuaranteeOpen,

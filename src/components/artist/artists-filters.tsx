@@ -175,7 +175,7 @@ export function ArtistsFilters({
           </div>
         </div>
 
-        <Button className="w-full" size="sm">
+        <Button className="w-full bg-red-700 hover:bg-red-800 text-white" size="sm">
           Apply Filters
         </Button>
       </div>

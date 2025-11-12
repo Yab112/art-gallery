@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
+import { signUp } from "@/lib/auth";
 
 interface SignupFormData {
   firstName: string;
@@ -49,18 +50,38 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
     setSuccess(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // For demo purposes - simulate success
-      setSuccess(
-        "Account created successfully! Please check your email to verify your account."
+      // Use Better Auth signUp with proper error handling
+      const result = await signUp.email(
+        {
+          email: data.email,
+          password: data.password,
+          name: `${data.firstName} ${data.lastName}`,
+          // Additional fields can be passed here if needed
+        },
+        {
+          onSuccess: () => {
+            // Success - show success message
+            setSuccess(
+              "Account created successfully! Please check your email to verify your account."
+            );
+            reset();
+            setIsLoading(false);
+          },
+          onError: (ctx) => {
+            setError(ctx.error?.message || "Failed to create account. Please try again.");
+            setIsLoading(false);
+          },
+        }
       );
-      console.log("Signup data:", data);
-      reset();
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
+
+      // Handle result if it's returned synchronously
+      if (result?.error) {
+        setError(result.error.message || "Failed to create account. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+    } catch (err: any) {
+      setError(err?.message || "An error occurred. Please try again.");
       setIsLoading(false);
     }
   };

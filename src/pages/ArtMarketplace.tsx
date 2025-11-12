@@ -1,9 +1,11 @@
-import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
-import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
-import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
-import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
+import { ArtworkGrid } from "@/components/artMarketplace/artwork-grid";
+import { CategoryGrid } from "@/components/artMarketplace/category-grid";
+import { SectionTitleHero } from "@/components/artMarketplace/hero-section";
+import { SearchFilters } from "@/components/artMarketplace/search-filters";
 import { CallToAction } from "@/components/call-to-action";
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useArtworks } from "@/queries/artworkQueries";
+import { useAddFavorite } from "@/api/favorites/useAddFavorite";
 
 const categories = [
   {
@@ -44,114 +46,176 @@ const categories = [
   },
 ];
 
-const artworks = [
-  {
-    id: "1",
-    image: "/artwork-1.jpg",
-    title: "Abraham Casting Out Hagar and Ishmael",
-    artist: "Rembrandt van Rijn",
-    price: "US$68,500",
-    year: "1637",
-    medium: "Oil on canvas",
-    dimensions: "24 × 30 in",
-    seller: "M.S. Rau",
-  },
-  {
-    id: "1",
-    image: "/artwork-1.jpg",
-    title: "Abraham Casting Out Hagar and Ishmael",
-    artist: "Rembrandt van Rijn",
-    price: "US$68,500",
-    year: "1637",
-    medium: "Oil on canvas",
-    dimensions: "24 × 30 in",
-    seller: "M.S. Rau",
-  },
-  {
-    id: "2",
-    image: "/artwork-2.jpg",
-    title: "Unique Painting",
-    artist: "Salvador Dalí",
-    price: "US$98,500",
-    year: "1965",
-    medium: "Oil on canvas",
-    dimensions: "36 × 28 in",
-    seller: "APC Gallery",
-  },
-  {
-    id: "3",
-    image: "/artwork-3.jpg",
-    title: "Illumination Shadows",
-    artist: "RETNA",
-    price: "US$14,250",
-    year: "2020",
-    medium: "Mixed media",
-    dimensions: "48 × 36 in",
-    seller: "APC Gallery",
-  },
-  {
-    id: "4",
-    image: "/artwork-4.jpg",
-    title: "Aida (Study)",
-    artist: "RETNA",
-    price: "US$18,500",
-    year: "2016",
-    medium: "Charcoal on paper",
-    dimensions: "12 × 16 in",
-    seller: "APC Gallery",
-  },
-  {
-    id: "4",
-    image: "/artwork-4.jpg",
-    title: "Aida (Study)",
-    artist: "RETNA",
-    price: "US$18,500",
-    year: "2016",
-    medium: "Charcoal on paper",
-    dimensions: "12 × 16 in",
-    seller: "APC Gallery",
-  },
-  {
-    id: "5",
-    image: "/artwork-5.jpg",
-    title: "Untitled Blue Series",
-    artist: "Contemporary Artist",
-    price: "US$25,000",
-    year: "2023",
-    medium: "Acrylic on canvas",
-    dimensions: "40 × 30 in",
-    seller: "Modern Gallery",
-  },
-  {
-    id: "6",
-    image: "/artwork-6.jpg",
-    title: "Linear Study #3",
-    artist: "Emerging Artist",
-    price: "US$8,500",
-    year: "2024",
-    medium: "Ink on paper",
-    dimensions: "18 × 24 in",
-    seller: "New Wave Gallery",
-  },
-];
-
 export default function ArtMarketplace() {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const handleFavorite = (id: string) => {
-    console.log("[v0] Added to favorites:", id);
+  // Get filter values from URL query params, with defaults
+  const viewMode = (searchParams.get("view") || "grid") as "grid" | "list";
+  const searchQuery = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const sortBy = searchParams.get("sort") || "recommended";
+  const priceRange = searchParams.get("priceRange") || "price";
+  const medium = searchParams.get("medium") || "medium";
+  const rarity = searchParams.get("rarity") || "rarity";
+  const category = searchParams.get("category") || "";
+
+  // Update URL query params
+  const updateSearchParams = (
+    updates: Record<string, string | number | null>
+  ) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (
+        value === null ||
+        value === "" ||
+        value === "price" ||
+        value === "medium" ||
+        value === "rarity"
+      ) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(value));
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const setViewMode = (mode: "grid" | "list") => {
+    updateSearchParams({ view: mode });
+  };
+
+  const setSearchQuery = (query: string) => {
+    updateSearchParams({ search: query || null, page: 1 });
+  };
+
+  const setSortBy = (value: string) => {
+    updateSearchParams({ sort: value, page: 1 });
+  };
+
+  const setPriceRange = (value: string) => {
+    updateSearchParams({
+      priceRange: value === "price" ? null : value,
+      page: 1,
+    });
+  };
+
+  const setMedium = (value: string) => {
+    updateSearchParams({ medium: value === "medium" ? null : value, page: 1 });
+  };
+
+  const setRarity = (value: string) => {
+    updateSearchParams({ rarity: value === "rarity" ? null : value, page: 1 });
+  };
+
+  // Build query params from filters
+  const buildQueryParams = () => {
+    const params: any = {
+      page,
+      limit: 12,
+      status: "APPROVED",
+      search: searchQuery || undefined,
+    };
+
+    // Map sort filter to backend params
+    switch (sortBy) {
+      case "price-low":
+        params.sortBy = "desiredPrice";
+        params.orderBy = "asc";
+        break;
+      case "price-high":
+        params.sortBy = "desiredPrice";
+        params.orderBy = "desc";
+        break;
+      case "newest":
+        params.sortBy = "createdAt";
+        params.orderBy = "desc";
+        break;
+      case "oldest":
+        params.sortBy = "createdAt";
+        params.orderBy = "asc";
+        break;
+      case "recommended":
+      default:
+        params.sortBy = "createdAt";
+        params.orderBy = "desc";
+        break;
+    }
+
+    // Map price range filter
+    switch (priceRange) {
+      case "under-1k":
+        params.maxPrice = 1000;
+        break;
+      case "1k-10k":
+        params.minPrice = 1000;
+        params.maxPrice = 10000;
+        break;
+      case "10k-50k":
+        params.minPrice = 10000;
+        params.maxPrice = 50000;
+        break;
+      case "over-50k":
+        params.minPrice = 50000;
+        break;
+    }
+
+    // Map medium filter to technique
+    if (medium !== "medium") {
+      params.technique = medium;
+    }
+
+    // Map category filter (if implemented in backend)
+    if (category) {
+      // You can add category filtering here when backend supports it
+      // params.category = category;
+    }
+
+    return params;
+  };
+
+  // Fetch artworks from backend
+  const {
+    data: artworksData,
+    isLoading,
+    error,
+  } = useArtworks(buildQueryParams());
+
+  const { addFavorite } = useAddFavorite();
+
+  const handleFavorite = async (id: string) => {
+    try {
+      // For now, just add to favorites. You can check if favorited first using useCheckFavorite
+      await addFavorite(id);
+    } catch (error) {
+      // Error is handled by the mutation hook (toast)
+      console.error("Failed to toggle favorite:", error);
+    }
   };
 
   const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    console.log("[v0] Selected category:", categoryId);
+    // Update URL with category filter
+    updateSearchParams({ category: categoryId || null, page: 1 });
   };
 
   const handleLoadMore = () => {
-    console.log("[v0] Loading more artworks...");
+    updateSearchParams({ page: page + 1 });
   };
+
+  // Transform backend data to match component props
+  const artworks =
+    artworksData?.artworks?.map((artwork) => ({
+      id: artwork.id,
+      image: artwork.photos?.[0] || "/placeholder.svg",
+      title: artwork.title || "Untitled",
+      artist: artwork.artist,
+      price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
+      year: artwork.yearOfArtwork,
+      medium: artwork.technique,
+      dimensions: artwork.dimensions
+        ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+        : "N/A",
+      seller: artwork.user?.name || "Unknown",
+    })) || [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -171,15 +235,45 @@ export default function ArtMarketplace() {
         onSearchChange={setSearchQuery}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        artworkCount={2296363}
+        artworkCount={artworksData?.total || 0}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        priceRange={priceRange}
+        onPriceRangeChange={setPriceRange}
+        medium={medium}
+        onMediumChange={setMedium}
+        rarity={rarity}
+        onRarityChange={setRarity}
       />
 
-      <ArtworkGrid
-        artworks={artworks}
-        viewMode={viewMode}
-        onFavorite={handleFavorite}
-        onLoadMore={handleLoadMore}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-gray-600">Loading artworks...</p>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-red-600">
+            Failed to load artworks. Please try again.
+          </p>
+        </div>
+      ) : artworks.length > 0 ? (
+        <ArtworkGrid
+          artworks={artworks}
+          viewMode={viewMode}
+          onFavorite={handleFavorite}
+          onLoadMore={
+            artworksData && page < artworksData.pages
+              ? handleLoadMore
+              : undefined
+          }
+        />
+      ) : (
+        <ArtworkGrid
+          artworks={[]}
+          viewMode={viewMode}
+          onFavorite={handleFavorite}
+        />
+      )}
 
       <CallToAction
         title="Start Your Collection Today"
