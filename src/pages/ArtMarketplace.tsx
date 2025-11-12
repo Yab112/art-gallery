@@ -1,7 +1,7 @@
-import { ArtworkGrid } from "@/components/artMarketplace/artwork-grid";
-import { CategoryGrid } from "@/components/artMarketplace/category-grid";
-import { SectionTitleHero } from "@/components/artMarketplace/hero-section";
-import { SearchFilters } from "@/components/artMarketplace/search-filters";
+import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
+import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
+import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
+import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
 import { CallToAction } from "@/components/call-to-action";
 import { useSearchParams } from "react-router-dom";
 import { useArtworks } from "@/queries/artworkQueries";
