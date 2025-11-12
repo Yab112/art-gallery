@@ -1,0 +1,4 @@
+# Ignore src/api folder - these are client-side API utilities, not serverless functions
+src/api/
+api/
+
