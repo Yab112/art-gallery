@@ -1,4 +1,3 @@
-# Ignore src/api folder - these are client-side API utilities, not serverless functions
+# Ignore source API files - these are client-side hooks, not serverless functions
 src/api/
-api/
 

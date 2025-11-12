@@ -2,14 +2,12 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "pnpm install",
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
-  "cleanUrls": true,
-  "trailingSlash": false
+  "installCommand": "pnpm install"
 }
+
