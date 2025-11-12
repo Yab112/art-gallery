@@ -22,100 +22,95 @@ import FavoritesPage from "./pages/Favorites";
 import OrdersPage from "./pages/Orders";
 import SettingsPage from "./pages/Settings";
 
-export const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      element: <AppLayout />,
-      children: [
-        {
-          path: "",
-          element: <LandingPage />,
-        },
-        {
-          path: "artwork/:id",
-          element: <ArtworkDetailPage />,
-        },
-        {
-          path: "artwork/:id/edit",
-          element: <EditArtworkPage />,
-        },
-        {
-          path: "artist/:id",
-          element: <ArtistDetailPage />,
-        },
-        {
-          path: "buyart",
-          element: <ArtMarketplace />,
-        },
-        {
-          path: "artists",
-          element: <ArtistsPage />,
-        },
-        {
-          path: "checkout",
-          element: <CheckoutPage />,
-        },
-        {
-          path: "how-it-works",
-          element: <HowItWorksPage />,
-        },
-        {
-          path: "sellart",
-          element: <SellArtPage />,
-        },
-        {
-          path: "profile",
-          element: <ProfilePage />,
-        },
-        {
-          path: "profile/edit",
-          element: <EditProfilePage />,
-        },
-        {
-          path: "profile/my-artworks",
-          element: <MyArtworksPage />,
-        },
-        {
-          path: "profile/collections",
-          element: <CollectionsPage />,
-        },
-        {
-          path: "collections/:id",
-          element: <CollectionDetailPage />,
-        },
-        {
-          path: "favorites",
-          element: <FavoritesPage />,
-        },
-        {
-          path: "orders",
-          element: <OrdersPage />,
-        },
-        {
-          path: "settings",
-          element: <SettingsPage />,
-        },
-      ],
-    },
-    {
-      path: "/login",
-      element: <LoginPage />,
-    },
-    {
-      path: "/signup",
-      element: <SignupPage />,
-    },
-    {
-      path: "/forgot-password",
-      element: <ForgotPasswordPage />,
-    },
-    {
-      path: "*",
-      element: <NoMatch />,
-    },
-  ],
+export const router = createBrowserRouter([
   {
-    basename: global.basename,
-  }
-);
+    path: "/",
+    element: <AppLayout />,
+    children: [
+      {
+        path: "",
+        element: <LandingPage />,
+      },
+      {
+        path: "artwork/:id",
+        element: <ArtworkDetailPage />,
+      },
+      {
+        path: "artwork/:id/edit",
+        element: <EditArtworkPage />,
+      },
+      {
+        path: "artist/:id",
+        element: <ArtistDetailPage />,
+      },
+      {
+        path: "buyart",
+        element: <ArtMarketplace />,
+      },
+      {
+        path: "artists",
+        element: <ArtistsPage />,
+      },
+      {
+        path: "checkout",
+        element: <CheckoutPage />,
+      },
+      {
+        path: "how-it-works",
+        element: <HowItWorksPage />,
+      },
+      {
+        path: "sellart",
+        element: <SellArtPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+      {
+        path: "profile/edit",
+        element: <EditProfilePage />,
+      },
+      {
+        path: "profile/my-artworks",
+        element: <MyArtworksPage />,
+      },
+      {
+        path: "profile/collections",
+        element: <CollectionsPage />,
+      },
+      {
+        path: "collections/:id",
+        element: <CollectionDetailPage />,
+      },
+      {
+        path: "favorites",
+        element: <FavoritesPage />,
+      },
+      {
+        path: "orders",
+        element: <OrdersPage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+      },
+    ],
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/signup",
+    element: <SignupPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "*",
+    element: <NoMatch />,
+  },
+]);
