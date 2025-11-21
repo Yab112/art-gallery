@@ -247,17 +247,17 @@ export default function ArtMarketplace() {
         : null;
       
       return {
-        id: artwork.id,
+      id: artwork.id,
         image: imageUrl || "", // Empty string will trigger placeholder in ArtworkCard
-        title: artwork.title || "Untitled",
-        artist: artwork.artist,
-        price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
-        year: artwork.yearOfArtwork,
-        medium: artwork.technique,
-        dimensions: artwork.dimensions
-          ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
-          : "N/A",
-        seller: artwork.user?.name || "Unknown",
+      title: artwork.title || "Untitled",
+      artist: artwork.artist,
+      price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
+      year: artwork.yearOfArtwork,
+      medium: artwork.technique,
+      dimensions: artwork.dimensions
+        ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+        : "N/A",
+      seller: artwork.user?.name || "Unknown",
       };
     }) || [];
 
@@ -284,10 +284,10 @@ export default function ArtMarketplace() {
           </div>
         </div>
       ) : categories.length > 0 ? (
-        <CategoryGrid
-          categories={categories}
-          onCategorySelect={handleCategorySelect}
-        />
+      <CategoryGrid
+        categories={categories}
+        onCategorySelect={handleCategorySelect}
+      />
       ) : null}
 
       <SearchFilters
@@ -307,12 +307,12 @@ export default function ArtMarketplace() {
       />
 
       <div ref={artworksSectionRef} className="min-h-[500px]">
-        {isLoading ? (
+      {isLoading ? (
           <div className="px-4 py-8">
             <div className="mx-auto max-w-7xl">
               <div className="mb-6 flex items-center justify-center gap-2">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                <p className="text-gray-600">Loading artworks...</p>
+          <p className="text-gray-600">Loading artworks...</p>
               </div>
               {/* Skeleton loader matching grid layout */}
               <div className={viewMode === "grid" ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "space-y-4"}>
@@ -326,31 +326,31 @@ export default function ArtMarketplace() {
                 ))}
               </div>
             </div>
-          </div>
-        ) : error ? (
+        </div>
+      ) : error ? (
           <div className="flex items-center justify-center py-12 min-h-[500px]">
-            <p className="text-red-600">
-              Failed to load artworks. Please try again.
-            </p>
-          </div>
-        ) : artworks.length > 0 ? (
-          <ArtworkGrid
-            artworks={artworks}
-            viewMode={viewMode}
-            onFavorite={handleFavorite}
+          <p className="text-red-600">
+            Failed to load artworks. Please try again.
+          </p>
+        </div>
+      ) : artworks.length > 0 ? (
+        <ArtworkGrid
+          artworks={artworks}
+          viewMode={viewMode}
+          onFavorite={handleFavorite}
             currentPage={artworksData?.page ?? page ?? 1}
             totalPages={Math.max(artworksData?.pages ?? 1, 1)}
             onPageChange={handlePageChange}
-          />
-        ) : (
+        />
+      ) : (
           <div className="min-h-[500px]">
-            <ArtworkGrid
-              artworks={[]}
-              viewMode={viewMode}
-              onFavorite={handleFavorite}
-            />
+        <ArtworkGrid
+          artworks={[]}
+          viewMode={viewMode}
+          onFavorite={handleFavorite}
+        />
           </div>
-        )}
+      )}
       </div>
 
       <CallToAction

@@ -52,7 +52,7 @@ export const useArtworks = (params?: ArtworkQueryParams) => {
         pages: 1,
       };
     },
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+      refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
   });
