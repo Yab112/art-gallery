@@ -9,7 +9,7 @@ export const submitArtwork = async (
   formData: FormData
 ): Promise<ArtworkSubmissionResponse> => {
   try {
-    const response = await fetch("/api/artwork/submit", {
+    const response = await fetch("/api/artworks/submit", {
       method: "POST",
       body: formData,
       // Don't set Content-Type header, let browser set it with boundary
@@ -32,7 +32,7 @@ export const submitArtwork = async (
 // Example backend endpoint handler (Node.js/Express)
 export const exampleBackendHandler = `
 // Example backend endpoint for handling FormData
-app.post('/api/artwork/submit', upload.fields([
+app.post('/api/artworks/submit', upload.fields([
   { name: 'proofOfOrigin', maxCount: 1 },
   { name: 'photo_0', maxCount: 1 },
   { name: 'photo_1', maxCount: 1 },

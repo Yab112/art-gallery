@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,6 +40,45 @@ export function SearchFilters({
   rarity = "rarity",
   onRarityChange,
 }: SearchFiltersProps) {
+  // Inject a style tag to override any margin/padding
+  useEffect(() => {
+    const styleId = "prevent-select-margin";
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+    
+    if (!styleElement) {
+      styleElement = document.createElement("style");
+      styleElement.id = styleId;
+      styleElement.textContent = `
+        body {
+          margin-right: 0 !important;
+          padding-right: 0 !important;
+        }
+        html {
+          margin-right: 0 !important;
+          padding-right: 0 !important;
+        }
+      `;
+      document.head.appendChild(styleElement);
+    }
+
+    // Also use interval as backup
+    const interval = setInterval(() => {
+      const body = document.body;
+      const html = document.documentElement;
+      
+      // Force remove margin-right and padding-right
+      body.style.setProperty("margin-right", "0", "important");
+      body.style.setProperty("padding-right", "0", "important");
+      html.style.setProperty("margin-right", "0", "important");
+      html.style.setProperty("padding-right", "0", "important");
+    }, 16); // Check every frame (~60fps)
+
+    return () => {
+      clearInterval(interval);
+      // Don't remove style element as it should persist
+    };
+  }, []);
+
   return (
     <section className="border-gray-200 border-t px-4 py-8">
       <div className="mx-auto max-w-7xl">
@@ -64,7 +104,7 @@ export function SearchFilters({
           </div>
 
           <div className="flex items-center gap-4">
-            <Select value={rarity} onValueChange={onRarityChange} modal={false}>
+            <Select value={rarity} onValueChange={onRarityChange} {...({ modal: false } as any)}>
               <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Rarity" />
               </SelectTrigger>
@@ -81,7 +121,7 @@ export function SearchFilters({
               </SelectContent>
             </Select>
 
-            <Select value={medium} onValueChange={onMediumChange} modal={false}>
+            <Select value={medium} onValueChange={onMediumChange} {...({ modal: false } as any)}>
               <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Medium" />
               </SelectTrigger>
@@ -101,7 +141,7 @@ export function SearchFilters({
             <Select
               value={priceRange}
               onValueChange={onPriceRangeChange}
-              modal={false}
+              {...({ modal: false } as any)}
             >
               <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Price Range" />
@@ -139,7 +179,7 @@ export function SearchFilters({
               </Button>
             </div>
 
-            <Select value={sortBy} onValueChange={onSortChange}>
+            <Select value={sortBy} onValueChange={onSortChange} {...({ modal: false } as any)}>
               <SelectTrigger className="h-10 w-48 rounded-full bg-transparent focus:ring-0 active:ring-0">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>

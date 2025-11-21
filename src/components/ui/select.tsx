@@ -4,7 +4,11 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+// Wrapper to support modal prop (Radix supports it but types don't include it)
+const Select = ((props: React.ComponentProps<typeof SelectPrimitive.Root> & { modal?: boolean }) => {
+  const { modal, ...rest } = props;
+  return <SelectPrimitive.Root {...(rest as any)} modal={modal} />;
+}) as typeof SelectPrimitive.Root;
 
 const SelectGroup = SelectPrimitive.Group;
 

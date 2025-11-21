@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
 import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
 import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
@@ -5,49 +6,12 @@ import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
 import { CallToAction } from "@/components/call-to-action";
 import { useSearchParams } from "react-router-dom";
 import { useArtworks } from "@/queries/artworkQueries";
+import { useCollections, useCollectionArtworks } from "@/queries/collectionQueries";
 import { useAddFavorite } from "@/services/favorites/useAddFavorite";
-
-const categories = [
-  {
-    id: "contemporary",
-    name: "Contemporary Art",
-    image: "/artwork-1.jpg",
-    count: "1,234",
-  },
-  {
-    id: "painting",
-    name: "Painting",
-    image: "/artwork-1.jpg",
-    count: "2,567",
-  },
-  {
-    id: "street",
-    name: "Street Art",
-    image: "/artwork-2.jpg",
-    count: "892",
-  },
-  {
-    id: "photography",
-    name: "Photography",
-    image: "/artwork-3.jpg",
-    count: "1,456",
-  },
-  {
-    id: "emerging",
-    name: "Emerging Art",
-    image: "/artwork-4.jpg",
-    count: "678",
-  },
-  {
-    id: "20th-century",
-    name: "20th-Century Art",
-    image: "/artwork-5.jpg",
-    count: "3,234",
-  },
-];
 
 export default function ArtMarketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const artworksSectionRef = useRef<HTMLDivElement>(null);
 
   // Get filter values from URL query params, with defaults
   const viewMode = (searchParams.get("view") || "grid") as "grid" | "list";
@@ -85,7 +49,8 @@ export default function ArtMarketplace() {
   };
 
   const setSearchQuery = (query: string) => {
-    updateSearchParams({ search: query || null, page: 1 });
+    // Clear category when user searches manually
+    updateSearchParams({ search: query || null, category: null, page: 1 });
   };
 
   const setSortBy = (value: string) => {
@@ -107,14 +72,56 @@ export default function ArtMarketplace() {
     updateSearchParams({ rarity: value === "rarity" ? null : value, page: 1 });
   };
 
+  // Fetch collections from backend to use as categories
+  // Using default (public) - only public collections will be shown
+  const { data: collectionsData, isLoading: isLoadingCollections } = useCollections(1, 20, "all");
+  
+  // Handle backend response format: { success: true, collections: [...], pagination: {...} }
+  // or transformed format: { collections: [...], page, limit, total, pages }
+  const collections = collectionsData?.collections || [];
+  
+  // Transform collections to categories format
+  const categories = collections.map((collection) => ({
+    id: collection.id,
+    name: collection.name,
+    image: collection.coverImage || "/placeholder.svg",
+    count: (collection.artworkCount || 0).toLocaleString(),
+  }));
+
+  // Map category (collection) to backend query parameters
+  // When a collection is selected, we'll filter by collection name in the search
+  const getCategoryFilter = (categoryId: string) => {
+    // Find the collection by ID
+    const selectedCollection = collections.find(
+      (c) => c.id === categoryId
+    );
+    
+    if (selectedCollection) {
+      // Use collection name for search filtering
+      return { search: selectedCollection.name };
+    }
+    
+    return null;
+  };
+
   // Build query params from filters
   const buildQueryParams = () => {
     const params: any = {
       page,
-      limit: 12,
-      status: "APPROVED",
-      search: searchQuery || undefined,
+      limit: 8,
+      // status: "APPROVED",
     };
+
+    // Handle category filter - if category is selected, use it; otherwise use search query
+    if (category) {
+      const categoryFilter = getCategoryFilter(category);
+      if (categoryFilter?.search) {
+        params.search = categoryFilter.search;
+      }
+    } else if (searchQuery) {
+      // Only use search query if no category is selected
+      params.search = searchQuery;
+    }
 
     // Map sort filter to backend params
     switch (sortBy) {
@@ -159,26 +166,33 @@ export default function ArtMarketplace() {
         break;
     }
 
-    // Map medium filter to technique
-    if (medium !== "medium") {
+    // Map medium filter to technique (only if category doesn't already set technique)
+    if (medium !== "medium" && !category) {
       params.technique = medium;
-    }
-
-    // Map category filter (if implemented in backend)
-    if (category) {
-      // You can add category filtering here when backend supports it
-      // params.category = category;
     }
 
     return params;
   };
 
   // Fetch artworks from backend
+  // If a collection is selected, fetch artworks from that collection
+  // Otherwise, fetch artworks with filters
   const {
-    data: artworksData,
-    isLoading,
-    error,
+    data: collectionArtworksData,
+    isLoading: isLoadingCollectionArtworks,
+    error: collectionArtworksError,
+  } = useCollectionArtworks(category || "", page, 8);
+
+  const {
+    data: filteredArtworksData,
+    isLoading: isLoadingFilteredArtworks,
+    error: filteredArtworksError,
   } = useArtworks(buildQueryParams());
+
+  // Use collection artworks if category is selected, otherwise use filtered artworks
+  const artworksData = category ? collectionArtworksData : filteredArtworksData;
+  const isLoading = category ? isLoadingCollectionArtworks : isLoadingFilteredArtworks;
+  const error = category ? collectionArtworksError : filteredArtworksError;
 
   const { addFavorite } = useAddFavorite();
 
@@ -193,29 +207,59 @@ export default function ArtMarketplace() {
   };
 
   const handleCategorySelect = (categoryId: string) => {
-    // Update URL with category filter
-    updateSearchParams({ category: categoryId || null, page: 1 });
+    // Update URL with category filter and clear search query
+    // If clicking the same category, clear it (toggle off)
+    const newCategory = categoryId === category ? null : categoryId;
+    updateSearchParams({ category: newCategory || null, search: null, page: 1 });
+    
+    // Scroll to artworks section if a collection is selected (user-initiated)
+    if (newCategory && artworksSectionRef.current) {
+      requestAnimationFrame(() => {
+        if (artworksSectionRef.current) {
+          const elementPosition = artworksSectionRef.current.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - 20; // 20px offset from top
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      });
+    }
   };
 
-  const handleLoadMore = () => {
-    updateSearchParams({ page: page + 1 });
+
+  const handlePageChange = (newPage: number) => {
+    updateSearchParams({ page: newPage });
+    // Scroll to top of artworks section when page changes
+    if (artworksSectionRef.current) {
+      artworksSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   // Transform backend data to match component props
   const artworks =
-    artworksData?.artworks?.map((artwork) => ({
-      id: artwork.id,
-      image: artwork.photos?.[0] || "/placeholder.svg",
-      title: artwork.title || "Untitled",
-      artist: artwork.artist,
-      price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
-      year: artwork.yearOfArtwork,
-      medium: artwork.technique,
-      dimensions: artwork.dimensions
-        ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
-        : "N/A",
-      seller: artwork.user?.name || "Unknown",
-    })) || [];
+    artworksData?.artworks?.map((artwork) => {
+      // Get first photo, or null if no photos exist
+      const firstPhoto = artwork.photos?.[0];
+      // Only use photo if it's a valid URL string
+      const imageUrl = firstPhoto && typeof firstPhoto === 'string' && firstPhoto.trim() !== '' 
+        ? firstPhoto 
+        : null;
+      
+      return {
+        id: artwork.id,
+        image: imageUrl || "", // Empty string will trigger placeholder in ArtworkCard
+        title: artwork.title || "Untitled",
+        artist: artwork.artist,
+        price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
+        year: artwork.yearOfArtwork,
+        medium: artwork.technique,
+        dimensions: artwork.dimensions
+          ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+          : "N/A",
+        seller: artwork.user?.name || "Unknown",
+      };
+    }) || [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -225,10 +269,26 @@ export default function ArtMarketplace() {
         buttonText="Browse by collection"
       />
 
-      <CategoryGrid
-        categories={categories}
-        onCategorySelect={handleCategorySelect}
-      />
+      {isLoadingCollections ? (
+        <div className="px-4 pb-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-16 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="mb-3 aspect-[4/3] rounded-lg bg-gray-200" />
+                  <div className="h-4 w-20 rounded bg-gray-200 mb-2" />
+                  <div className="h-3 w-16 rounded bg-gray-200" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : categories.length > 0 ? (
+        <CategoryGrid
+          categories={categories}
+          onCategorySelect={handleCategorySelect}
+        />
+      ) : null}
 
       <SearchFilters
         searchQuery={searchQuery}
@@ -246,34 +306,52 @@ export default function ArtMarketplace() {
         onRarityChange={setRarity}
       />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-gray-600">Loading artworks...</p>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-red-600">
-            Failed to load artworks. Please try again.
-          </p>
-        </div>
-      ) : artworks.length > 0 ? (
-        <ArtworkGrid
-          artworks={artworks}
-          viewMode={viewMode}
-          onFavorite={handleFavorite}
-          onLoadMore={
-            artworksData && page < artworksData.pages
-              ? handleLoadMore
-              : undefined
-          }
-        />
-      ) : (
-        <ArtworkGrid
-          artworks={[]}
-          viewMode={viewMode}
-          onFavorite={handleFavorite}
-        />
-      )}
+      <div ref={artworksSectionRef} className="min-h-[500px]">
+        {isLoading ? (
+          <div className="px-4 py-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-6 flex items-center justify-center gap-2">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                <p className="text-gray-600">Loading artworks...</p>
+              </div>
+              {/* Skeleton loader matching grid layout */}
+              <div className={viewMode === "grid" ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "space-y-4"}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[4/5] rounded-lg bg-gray-200 mb-3" />
+                    <div className="h-4 w-3/4 rounded bg-gray-200 mb-2" />
+                    <div className="h-3 w-1/2 rounded bg-gray-200 mb-1" />
+                    <div className="h-3 w-1/3 rounded bg-gray-200" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12 min-h-[500px]">
+            <p className="text-red-600">
+              Failed to load artworks. Please try again.
+            </p>
+          </div>
+        ) : artworks.length > 0 ? (
+          <ArtworkGrid
+            artworks={artworks}
+            viewMode={viewMode}
+            onFavorite={handleFavorite}
+            currentPage={artworksData?.page ?? page ?? 1}
+            totalPages={Math.max(artworksData?.pages ?? 1, 1)}
+            onPageChange={handlePageChange}
+          />
+        ) : (
+          <div className="min-h-[500px]">
+            <ArtworkGrid
+              artworks={[]}
+              viewMode={viewMode}
+              onFavorite={handleFavorite}
+            />
+          </div>
+        )}
+      </div>
 
       <CallToAction
         title="Start Your Collection Today"

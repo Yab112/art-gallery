@@ -64,7 +64,7 @@ export function HeroCarousel() {
                 variant="outline"
                 size="lg"
                 className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
-                onClick={() => navigate("/artwork/1")}
+                onClick={() => navigate("/buyart")}
               >
                 {currentSlideData.content.button}
               </Button>
