@@ -9,12 +9,24 @@ import { OrderSummary } from "@/components/checkout/order-summary";
 import { PaymentForm } from "@/components/checkout/payment-form";
 import { ShippingInfo } from "@/components/checkout/shipping-info";
 // import { StripeProvider } from "@/components/checkout/stripe-provider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { CheckoutProvider, useCheckout } from "@/contexts/CheckoutContext";
+import { useCreateOrder } from "@/services/order/useCreateOrder";
+import { useInitializePayment } from "@/services/payment/useInitializePayment";
+import { useCartItems } from "@/queries/cartQueries";
+import { toast } from "sonner";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { shippingData, paymentData } = useCheckout();
+  const { data: cartData } = useCartItems(1, 50);
+  const { mutateAsync: createOrder } = useCreateOrder();
+  const { mutateAsync: initializePayment } = useInitializePayment();
 
   // Force refresh to clear cache
 
@@ -37,17 +49,84 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!shippingData || !paymentData) {
+      setError("Please complete all checkout steps");
+      toast.error("Please complete all checkout steps");
+      return;
+    }
+
+    if (!cartData?.items || cartData.items.length === 0) {
+      setError("Your cart is empty");
+      toast.error("Your cart is empty");
+      return;
+    }
+
     setIsProcessing(true);
-    // Handle order placement with Stripe
+    setError(null);
+
     try {
-      // Stripe payment processing will go here
-      console.log("Processing order...");
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      // Redirect to success page
-    } catch (error) {
-      console.error("Payment failed:", error);
-    } finally {
+      // Prepare order items from cart with prices
+      const orderItems = cartData.items.map(item => {
+        const price = Number(item.artwork?.desiredPrice) || 0;
+        if (price <= 0) {
+          throw new Error(`Invalid price for artwork ${item.artwork?.title || item.artworkId}`);
+        }
+        return {
+          artworkId: item.artworkId,
+          quantity: item.quantity,
+          price: price, // Include price from artwork (must be a number)
+        };
+      });
+
+      // Create shipping address object (not string)
+      const shippingAddressObj = {
+        fullName: `${shippingData.firstName} ${shippingData.lastName}`,
+        phone: shippingData.phone,
+        address: `${shippingData.address}${shippingData.apartment ? ', ' + shippingData.apartment : ''}`,
+        city: shippingData.city,
+        state: shippingData.state,
+        zipCode: shippingData.zipCode,
+        country: shippingData.country || 'US',
+      };
+
+      // Step 1: Create order
+      const orderResponse = await createOrder({
+        buyerEmail: shippingData.email,
+        shippingAddress: shippingAddressObj,
+        paymentMethod: paymentData.provider, // chapa, paypal, or card
+        items: orderItems,
+      });
+
+      if (!orderResponse.success) {
+        throw new Error(orderResponse.message || "Failed to create order");
+      }
+
+      const { txRef, totalAmount } = orderResponse.data;
+
+      // Determine currency based on payment provider
+      const currency = paymentData.provider === 'chapa' ? 'ETB' : 'USD';
+
+      // Step 2: Initialize payment
+      const paymentResponse = await initializePayment({
+        provider: paymentData.provider,
+        amount: totalAmount,
+        currency,
+        email: shippingData.email,
+        firstName: shippingData.firstName,
+        lastName: shippingData.lastName,
+        phoneNumber: paymentData.phoneNumber || shippingData.phone,
+        txRef,
+      });
+
+      // Payment hook will redirect to checkout URL automatically
+      if (!paymentResponse.success) {
+        throw new Error(paymentResponse.message || "Failed to initialize payment");
+      }
+
+    } catch (error: any) {
+      console.error("Order placement failed:", error);
+      setError(error?.message || "Failed to process order. Please try again.");
+      toast.error(error?.message || "Failed to process order. Please try again.");
       setIsProcessing(false);
     }
   };
@@ -148,6 +227,12 @@ export default function CheckoutPage() {
                     </p>
                   </div>
 
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-4 border-b">
                       <div>
@@ -155,14 +240,23 @@ export default function CheckoutPage() {
                           Shipping Address
                         </h3>
                         <p className="text-sm text-gray-600">
-                          John Doe
-                          <br />
-                          123 Main St
-                          <br />
-                          New York, NY 10001
+                          {shippingData ? (
+                            <>
+                              {shippingData.firstName} {shippingData.lastName}
+                              <br />
+                              {shippingData.address}
+                              {shippingData.apartment && `, ${shippingData.apartment}`}
+                              <br />
+                              {shippingData.city}, {shippingData.state} {shippingData.zipCode}
+                              <br />
+                              {shippingData.country}
+                            </>
+                          ) : (
+                            <span className="text-red-600">No shipping information provided</span>
+                          )}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => setCurrentStep(1)}>
                         Edit
                       </Button>
                     </div>
@@ -173,10 +267,20 @@ export default function CheckoutPage() {
                           Payment Method
                         </h3>
                         <p className="text-sm text-gray-600">
-                          •••• •••• •••• 4242
+                          {paymentData ? (
+                            paymentData.provider === 'chapa' ? (
+                              <>Chapa (Mobile Money, Bank Transfer)</>
+                            ) : paymentData.provider === 'paypal' ? (
+                              <>PayPal</>
+                            ) : (
+                              <>Credit/Debit Card</>
+                            )
+                          ) : (
+                            <span className="text-red-600">No payment method selected</span>
+                          )}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => setCurrentStep(2)}>
                         Edit
                       </Button>
                     </div>
@@ -225,5 +329,13 @@ export default function CheckoutPage() {
       </div>
     </div>
     </ProtectedRoute>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <CheckoutProvider>
+      <CheckoutContent />
+    </CheckoutProvider>
   );
 }

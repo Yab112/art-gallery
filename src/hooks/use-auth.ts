@@ -18,15 +18,18 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      await signOut();
-      navigate("/", { replace: true });
-      // Small delay to ensure session is cleared
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      await signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            // Use window.location for full page reload to ensure cookies are cleared
+            window.location.href = "/";
+          },
+        },
+      });
     } catch (error) {
       console.error("Logout failed:", error);
-      throw error;
+      // Even if signOut fails, redirect to home
+      window.location.href = "/";
     }
   };
 

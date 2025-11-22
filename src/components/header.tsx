@@ -58,9 +58,9 @@ export default function Header() {
 
                 <Link
                   to="/"
-                  className="font-bold text-2xl text-red-700 hover:text-red-800 transition-colors"
+                  className="flex items-center"
                 >
-                  artalistic
+                  <img src="/mainlogo.png" alt="Logo" className="h-8 w-auto" />
                 </Link>
 
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">

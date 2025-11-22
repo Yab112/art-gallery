@@ -12,6 +12,8 @@ import SellArtPage from "./pages/sellArt";
 import LoginPage from "./pages/Login";
 import SignupPage from "./pages/Signup";
 import ForgotPasswordPage from "./pages/ForgotPassword";
+import ResetPasswordPage from "./pages/ResetPassword";
+import VerifyEmailPage from "./pages/VerifyEmail";
 import ProfilePage from "./pages/Profile";
 import EditProfilePage from "./pages/EditProfile";
 import MyArtworksPage from "./pages/MyArtworks";
@@ -21,6 +23,7 @@ import CollectionsPage from "./pages/Collections";
 import FavoritesPage from "./pages/Favorites";
 import OrdersPage from "./pages/Orders";
 import SettingsPage from "./pages/Settings";
+import PaymentSuccessPage from "./pages/PaymentSuccess";
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +57,10 @@ export const router = createBrowserRouter([
       {
         path: "checkout",
         element: <CheckoutPage />,
+      },
+      {
+        path: "payment/success",
+        element: <PaymentSuccessPage />,
       },
       {
         path: "how-it-works",
@@ -108,6 +115,14 @@ export const router = createBrowserRouter([
   {
     path: "/forgot-password",
     element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: "/verify-email",
+    element: <VerifyEmailPage />,
   },
   {
     path: "*",

@@ -10,12 +10,18 @@ import {
   Bell,
   Shield,
   Save,
+  DollarSign,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useUpdateProfile } from "@/services/users/useUpdateProfile";
 import { toast } from "sonner";
+import { EarningsDashboard } from "@/components/settings/EarningsDashboard";
+import { WithdrawalSection } from "@/components/settings/WithdrawalSection";
+import { PaymentMethodSection } from "@/components/settings/PaymentMethodSection";
 
 interface SettingsFormData {
   name: string;
@@ -27,7 +33,7 @@ export default function SettingsPage() {
   const { data: profileData, isLoading, error } = useMyProfile();
   const { updateProfile, isUpdating } = useUpdateProfile();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "notifications" | "security"
+    "profile" | "notifications" | "security" | "earnings" | "withdrawals" | "payment-method"
   >("profile");
 
   const profile = profileData?.profile || sessionUser;
@@ -125,6 +131,9 @@ export default function SettingsPage() {
             <div className="md:col-span-1">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <nav className="space-y-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
+                    General
+                  </div>
                   <button
                     onClick={() => setActiveTab("profile")}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
@@ -157,6 +166,45 @@ export default function SettingsPage() {
                   >
                     <Shield className="h-5 w-5" />
                     Security
+                  </button>
+
+                  <div className="border-t my-3"></div>
+
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
+                    Artist Dashboard
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("earnings")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeTab === "earnings"
+                        ? "bg-red-50 text-red-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <DollarSign className="h-5 w-5" />
+                    Earnings
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("withdrawals")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeTab === "withdrawals"
+                        ? "bg-red-50 text-red-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Wallet className="h-5 w-5" />
+                    Withdrawals
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("payment-method")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeTab === "payment-method"
+                        ? "bg-red-50 text-red-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <CreditCard className="h-5 w-5" />
+                    Payment Method
                   </button>
                 </nav>
               </div>
@@ -280,6 +328,36 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Earnings Dashboard */}
+              {activeTab === "earnings" && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    Earnings Dashboard
+                  </h2>
+                  <EarningsDashboard />
+                </div>
+              )}
+
+              {/* Withdrawals */}
+              {activeTab === "withdrawals" && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    Withdrawals
+                  </h2>
+                  <WithdrawalSection />
+                </div>
+              )}
+
+              {/* Payment Method */}
+              {activeTab === "payment-method" && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    Payment Method
+                  </h2>
+                  <PaymentMethodSection />
                 </div>
               )}
             </div>

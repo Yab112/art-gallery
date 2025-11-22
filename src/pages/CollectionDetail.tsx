@@ -15,11 +15,11 @@ import { Button } from "@/components/ui/button";
 import { useRemoveArtworkFromCollection } from "@/services/collections/useRemoveArtworkFromCollection";
 import { usePublishCollection } from "@/services/collections/usePublishCollection";
 import { useUnpublishCollection } from "@/services/collections/useUnpublishCollection";
-import { useDeleteCollection } from "@/services/collections/useDeleteCollection";
 import { useQueryClient } from "@tanstack/react-query";
 import { collectionKeys } from "@/queries/queryKeys";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useDeleteCollection } from "@/services/collections/useDeleteCollection";
 
 export default function CollectionDetailPage() {
   const { id } = useParams<{ id: string }>();

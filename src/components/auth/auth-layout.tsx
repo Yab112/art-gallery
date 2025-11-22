@@ -34,11 +34,9 @@ export function AuthLayout({ children, onClose }: AuthLayoutProps) {
             {/* Content */}
             <div className="relative z-10 flex items-center justify-center p-12 w-full">
               <div className="text-center text-white space-y-8">
-                {/* Logo */}
+                {/* Main Logo */}
                 <div className="w-12 h-12 mx-auto">
-                  <div className="w-full h-full bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <div className="w-6 h-6 bg-white rounded-sm transform rotate-45"></div>
-                  </div>
+                  <img src="/mainlogo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
 
                 {/* Welcome text */}

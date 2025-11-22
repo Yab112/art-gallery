@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreditCard, Lock } from "lucide-react";
+import { useCheckout } from "@/contexts/CheckoutContext";
 // import { StripePayment } from "./stripe-payment";
 
 interface PaymentFormProps {
@@ -13,7 +14,8 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const { paymentData, setPaymentData } = useCheckout();
+  const [paymentMethod, setPaymentMethod] = useState(paymentData?.provider || "chapa");
   const [formData, setFormData] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -25,6 +27,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
     billingZip: "",
     sameAsShipping: true,
     saveCard: false,
+    phoneNumber: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -94,6 +97,11 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
+      // Save payment data to context
+      setPaymentData({
+        provider: paymentMethod as 'chapa' | 'paypal' | 'card',
+        phoneNumber: formData.phoneNumber,
+      });
       onNext();
     }
   };
@@ -117,6 +125,40 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
             <div className="flex items-center space-x-3">
               <input
                 type="radio"
+                id="chapa"
+                name="paymentMethod"
+                value="chapa"
+                checked={paymentMethod === "chapa"}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+              />
+              <Label
+                htmlFor="chapa"
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#00A86B">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                </svg>
+                Chapa (Mobile Money, Bank Transfer)
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <input
+                type="radio"
+                id="paypal"
+                name="paymentMethod"
+                value="paypal"
+                checked={paymentMethod === "paypal"}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+              />
+              <Label htmlFor="paypal" className="cursor-pointer">
+                PayPal (International)
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <input
+                type="radio"
                 id="card"
                 name="paymentMethod"
                 value="card"
@@ -132,22 +174,53 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                 Credit or Debit Card
               </Label>
             </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="radio"
-                id="paypal"
-                name="paymentMethod"
-                value="paypal"
-                checked={paymentMethod === "paypal"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
-              />
-              <Label htmlFor="paypal" className="cursor-pointer">
-                PayPal
-              </Label>
-            </div>
           </div>
         </div>
+
+        {paymentMethod === "chapa" && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-start gap-3">
+                <div className="bg-green-100 rounded-full p-2">
+                  <svg className="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-900 mb-2">
+                    Pay with Chapa - Ethiopia's Payment Gateway
+                  </h3>
+                  <p className="text-sm text-green-700 mb-3">
+                    You'll be redirected to Chapa's secure checkout to complete your payment using:
+                  </p>
+                  <ul className="text-sm text-green-700 space-y-1 ml-4 list-disc">
+                    <li>Telebirr</li>
+                    <li>CBE Birr</li>
+                    <li>Local Bank Accounts</li>
+                    <li>International Cards (Visa, Mastercard)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber}
+                onChange={(e) =>
+                  handleInputChange("phoneNumber", e.target.value)
+                }
+                placeholder="09XXXXXXXX or 07XXXXXXXX"
+                className="bg-white"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Providing your phone number helps speed up the payment process
+              </p>
+            </div>
+          </div>
+        )}
 
         {paymentMethod === "card" && (
           <>
