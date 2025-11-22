@@ -44,8 +44,6 @@ export default function Header() {
             </Link>
             <div className="flex items-center gap-8 text-sm">
               <nav className="flex items-center gap-6">
-                <span className="font-medium text-red-900">New arrivals</span>
-                <span className="font-medium text-red-900">New arrivals</span>
                 <span className="cursor-pointer text-gray-700 hover:text-gray-900">
                   Painting
                 </span>

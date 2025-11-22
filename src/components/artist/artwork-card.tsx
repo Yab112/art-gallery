@@ -25,6 +25,7 @@ interface ArtworkCardProps {
 export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -59,15 +60,37 @@ export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
         onMouseEnter={handleMouseEnter}
         onClick={handleImageClick}
       >
-        <img
-          src={artwork.image || "/placeholder.svg"}
-          alt={artwork.title}
-          className="zoom-image w-full h-full object-cover transition-transform duration-300"
-          style={{
-            transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
-            transform: isHovered ? "scale(1.1)" : "scale(1)",
-          }}
-        />
+        {imageError || !artwork.image ? (
+          <div className="flex h-full w-full items-center justify-center bg-gray-200">
+            <div className="text-center">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="mt-2 text-xs text-gray-500">No Image</p>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={artwork.image}
+            alt={artwork.title}
+            className="zoom-image w-full h-full object-cover transition-transform duration-300"
+            style={{
+              transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
+              transform: isHovered ? "scale(1.1)" : "scale(1)",
+            }}
+            onError={() => setImageError(true)}
+          />
+        )}
 
         {artwork.sold && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
