@@ -22,6 +22,7 @@ interface ArtworkCardProps {
   isMasonry?: boolean;
   onImageClick?: (src: string) => void;
   artworks?: any[];
+  disableNavigation?: boolean;
 }
 
 export function ArtworkCard({
@@ -37,6 +38,7 @@ export function ArtworkCard({
   onFavorite,
   onSearch,
   isMasonry = false,
+  disableNavigation = false,
 }: ArtworkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -66,9 +68,11 @@ export function ArtworkCard({
   return (
     <div
       className="group relative cursor-pointer"
-      onClick={() => navigate(`/artwork/${id}`)}
+      onClick={() => !disableNavigation && navigate(`/artwork/${id}`)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") navigate(`/artwork/${id}`);
+        if (!disableNavigation && (e.key === "Enter" || e.key === " ")) {
+          navigate(`/artwork/${id}`);
+        }
       }}
     >
       {/* Artwork Image Container */}

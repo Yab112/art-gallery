@@ -20,6 +20,7 @@ import MyArtworksPage from "./pages/MyArtworks";
 import EditArtworkPage from "./pages/EditArtwork";
 import CollectionDetailPage from "./pages/CollectionDetail";
 import CollectionsPage from "./pages/Collections";
+import PublicCollectionsPage from "./pages/PublicCollections";
 import FavoritesPage from "./pages/Favorites";
 import OrdersPage from "./pages/Orders";
 import SettingsPage from "./pages/Settings";
@@ -81,6 +82,10 @@ export const router = createBrowserRouter([
       {
         path: "profile/my-artworks",
         element: <MyArtworksPage />,
+      },
+      {
+        path: "collections",
+        element: <PublicCollectionsPage />,
       },
       {
         path: "profile/collections",

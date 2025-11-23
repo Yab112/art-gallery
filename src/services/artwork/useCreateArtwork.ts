@@ -35,7 +35,7 @@ export const useCreateArtwork = () => {
 
   const createArtwork = async (data: CreateArtworkDto) => {
     const response = await mutateAsync({
-      url: "/artwork/submit",
+      url: "/artworks/submit",
       method: "POST",
       body: data,
     });

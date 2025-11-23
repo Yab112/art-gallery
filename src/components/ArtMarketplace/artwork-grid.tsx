@@ -1,7 +1,7 @@
 import { ArtworkCard } from "@/components/artwork-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Palette, ChevronLeft, ChevronRight } from "lucide-react";
+import { Palette, ChevronLeft, ChevronRight, CheckSquare, Square } from "lucide-react";
 
 interface Artwork {
   id: string;
@@ -22,6 +22,9 @@ interface ArtworkGridProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  isSelectionMode?: boolean;
+  selectedArtworkIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
 }
 
 export function ArtworkGrid({
@@ -31,6 +34,9 @@ export function ArtworkGrid({
   currentPage,
   totalPages,
   onPageChange,
+  isSelectionMode = false,
+  selectedArtworkIds = new Set(),
+  onToggleSelection,
 }: ArtworkGridProps) {
   if (artworks.length === 0) {
     return (
@@ -107,12 +113,42 @@ export function ArtworkGrid({
           }`}
         >
           {artworks.map((artwork) => (
-            <div key={artwork.id} className="group">
-              <ArtworkCard
-                {...artwork}
-                onFavorite={onFavorite}
-                isMasonry={false}
-              />
+            <div key={artwork.id} className="group relative">
+              {isSelectionMode && (
+                <div className="absolute top-2 left-2 z-20">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSelection?.(artwork.id);
+                    }}
+                    className="bg-white rounded-md p-1.5 shadow-md hover:bg-gray-50 transition-colors"
+                  >
+                    {selectedArtworkIds.has(artwork.id) ? (
+                      <CheckSquare className="h-5 w-5 text-blue-600" />
+                    ) : (
+                      <Square className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              )}
+              <div
+                className={isSelectionMode && selectedArtworkIds.has(artwork.id) ? "ring-2 ring-blue-500 rounded-lg" : ""}
+                onClick={(e) => {
+                  if (isSelectionMode) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onToggleSelection?.(artwork.id);
+                  }
+                }}
+                style={isSelectionMode ? { cursor: 'pointer' } : {}}
+              >
+                <ArtworkCard
+                  {...artwork}
+                  onFavorite={onFavorite}
+                  isMasonry={false}
+                  disableNavigation={isSelectionMode}
+                />
+              </div>
             </div>
           ))}
         </div>
