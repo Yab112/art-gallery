@@ -107,11 +107,10 @@ export function SigninForm({
       if (err?.status === 403 || 
           errorMessage.toLowerCase().includes("verify") ||
           errorMessage.toLowerCase().includes("verification")) {
-        navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}`;
         setIsLoading(false);
         return;
       }
-      
       setError(errorMessage);
       setIsLoading(false);
     }
