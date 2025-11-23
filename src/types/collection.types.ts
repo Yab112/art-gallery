@@ -10,6 +10,12 @@ export interface Collection {
   user?: any;
   artworks?: any[];
   artworkCount?: number;
+  // Engagement metrics (from backend)
+  totalViews?: number;
+  totalLikes?: number;
+  totalComments?: number;
+  totalFavorites?: number;
+  engagementScore?: number;
 }
 
 export interface CollectionListResponse {

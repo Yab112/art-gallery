@@ -1,17 +1,35 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
 import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
 import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
 import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
 import { CallToAction } from "@/components/call-to-action";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useArtworks } from "@/queries/artworkQueries";
 import { useGetCategories } from "@/services/category/useGetCategories";
 import { useAddFavorite } from "@/services/favorites/useAddFavorite";
+import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkToCollection";
+import { useQueryClient } from "@tanstack/react-query";
+import { collectionKeys } from "@/queries/queryKeys";
+import { Button } from "@/components/ui/button";
+import { CheckSquare, Square, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ArtMarketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const artworksSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Check if we're in "add to collection" mode
+  const collectionId = searchParams.get("addToCollection");
+  const isSelectionMode = !!collectionId;
+  
+  // Selection state
+  const [selectedArtworkIds, setSelectedArtworkIds] = useState<Set<string>>(new Set());
+  
+  // Collection operations
+  const { addArtwork, isAdding } = useAddArtworkToCollection();
+  const queryClient = useQueryClient();
 
   // Get filter values from URL query params, with defaults
   const viewMode = (searchParams.get("view") || "grid") as "grid" | "list";
@@ -183,6 +201,46 @@ export default function ArtMarketplace() {
     }
   };
 
+  const handleToggleSelection = (artworkId: string) => {
+    setSelectedArtworkIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(artworkId)) {
+        newSet.delete(artworkId);
+      } else {
+        newSet.add(artworkId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleAddToCollection = async () => {
+    if (!collectionId || selectedArtworkIds.size === 0) {
+      toast.error("Please select at least one artwork");
+      return;
+    }
+
+    try {
+      // Add all selected artworks to the collection
+      const promises = Array.from(selectedArtworkIds).map((artworkId) =>
+        addArtwork(collectionId, artworkId)
+      );
+
+      await Promise.all(promises);
+
+      // Invalidate collection queries
+      queryClient.invalidateQueries({ queryKey: collectionKeys.detail(collectionId) });
+      queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
+
+      toast.success(`Added ${selectedArtworkIds.size} artwork(s) to collection`);
+      
+      // Redirect back to collection detail page
+      navigate(`/collections/${collectionId}`);
+    } catch (error: any) {
+      console.error("Failed to add artworks to collection:", error);
+      toast.error("Failed to add some artworks to the collection");
+    }
+  };
+
   const handleCategorySelect = (categoryId: string) => {
     // Toggle category selection - add if not selected, remove if already selected
     const newSelectedIds = selectedCategoryIds.includes(categoryId)
@@ -286,6 +344,56 @@ export default function ArtMarketplace() {
         onRarityChange={setRarity}
       />
 
+      {/* Selection Mode Banner */}
+      {isSelectionMode && (
+        <div className="sticky top-[73px] z-40 bg-blue-50 border-b border-blue-200 px-4 py-3">
+          <div className="mx-auto max-w-7xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {selectedArtworkIds.size > 0 ? (
+                  <CheckSquare className="h-5 w-5 text-blue-600" />
+                ) : (
+                  <Square className="h-5 w-5 text-blue-600" />
+                )}
+                <span className="text-sm font-medium text-blue-900">
+                  {selectedArtworkIds.size} artwork{selectedArtworkIds.size !== 1 ? 's' : ''} selected
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete("addToCollection");
+                  setSearchParams(newParams);
+                  setSelectedArtworkIds(new Set());
+                }}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleAddToCollection}
+                disabled={selectedArtworkIds.size === 0 || isAdding}
+                className="text-xs"
+              >
+                {isAdding ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  `Add to Collection (${selectedArtworkIds.size})`
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div ref={artworksSectionRef} className="min-h-[500px]">
       {isLoading ? (
           <div className="px-4 py-8">
@@ -318,9 +426,12 @@ export default function ArtMarketplace() {
           artworks={artworks}
           viewMode={viewMode}
           onFavorite={handleFavorite}
-            currentPage={artworksData?.page ?? page ?? 1}
-            totalPages={Math.max(artworksData?.pages ?? 1, 1)}
-            onPageChange={handlePageChange}
+          currentPage={artworksData?.page ?? page ?? 1}
+          totalPages={Math.max(artworksData?.pages ?? 1, 1)}
+          onPageChange={handlePageChange}
+          isSelectionMode={isSelectionMode}
+          selectedArtworkIds={selectedArtworkIds}
+          onToggleSelection={handleToggleSelection}
         />
       ) : (
           <div className="min-h-[500px]">

@@ -63,7 +63,7 @@ export function ArtistCard({
       {/* Circular Avatar */}
       <div className="relative mb-4">
         <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 group-hover:border-gray-300 transition-colors">
-          <img
+        <img
             src={avatar || "/placeholder.svg"}
             alt={`${name} - Artist`}
             className="w-full h-full object-cover"
@@ -79,9 +79,9 @@ export function ArtistCard({
       {/* Artist Name */}
       <div className="mb-3">
         <h3 className="cursor-pointer font-semibold text-gray-900 text-lg hover:text-gray-700 transition-colors mb-1">
-          {name}
-        </h3>
-        {formatLifespan() && (
+            {name}
+          </h3>
+          {formatLifespan() && (
           <p className="text-gray-500 text-sm">{formatLifespan()}</p>
         )}
       </div>
@@ -120,18 +120,18 @@ export function ArtistCard({
             </div>
             <span className="text-green-600 text-xs">Total Sales</span>
           </div>
-        )}
-      </div>
+          )}
+        </div>
 
       {/* Profile Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onFollow}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onFollow}
         className="w-full rounded-full bg-transparent hover:bg-gray-50 border-gray-300"
-      >
+        >
         View Profile
-      </Button>
+        </Button>
     </div>
   );
 }

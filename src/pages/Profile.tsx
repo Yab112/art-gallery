@@ -595,7 +595,7 @@ export default function ProfilePage() {
                 ) : collectionsData?.collections &&
                   collectionsData.collections.length > 0 ? (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {collectionsData.collections
                         .slice(0, 3)
                         .map((collection) => (
@@ -604,9 +604,9 @@ export default function ProfilePage() {
                             to={`/collections/${collection.id}`}
                             className="block"
                           >
-                            <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer bg-white">
-                              {/* Cover Image */}
-                              <div className="w-full h-48 bg-gray-100 relative overflow-hidden">
+                            <div className="group relative">
+                              {/* Cover Image - Same aspect ratio as artwork cards */}
+                              <div className="relative mb-4 overflow-hidden bg-gray-100 aspect-[4/5]">
                                 {collection.coverImage ? (
                                   <img
                                     src={collection.coverImage}
@@ -614,12 +614,12 @@ export default function ProfilePage() {
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                    <FolderOpen className="h-16 w-16 text-gray-400" />
+                                  <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                                    <FolderOpen className="h-12 w-12 text-gray-400" />
                                   </div>
                                 )}
                                 {/* Visibility Badge Overlay */}
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 right-3 z-10">
                                   <span
                                     className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
                                       collection.visibility === "public"
@@ -634,19 +634,14 @@ export default function ProfilePage() {
                                 </div>
                               </div>
 
-                              {/* Collection Info */}
-                              <div className="p-4">
-                                <h3 className="font-semibold text-gray-900 mb-1 text-lg line-clamp-1">
+                              {/* Collection Details - Same style as artwork card */}
+                              <div className="space-y-1">
+                                <h3 className="font-semibold text-black text-sm uppercase tracking-wide line-clamp-1">
                                   {collection.name}
                                 </h3>
-                                {collection.description && (
-                                  <p className="text-sm text-gray-600 line-clamp-2 mb-3 min-h-[2.5rem]">
-                                    {collection.description}
-                                  </p>
-                                )}
-                                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                                  <span className="flex items-center gap-1">
-                                    <ImageIcon className="h-3 w-3" />
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <ImageIcon className="h-3 w-3" />
+                                  <span>
                                     {"artworkCount" in collection &&
                                     collection.artworkCount !== undefined
                                       ? collection.artworkCount
@@ -659,75 +654,75 @@ export default function ProfilePage() {
                                       : "artworks"}
                                   </span>
                                 </div>
+                              </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={async (e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-2 pt-3 border-t border-gray-100 mt-3">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    try {
+                                      if (
+                                        collection.visibility === "public"
+                                      ) {
+                                        await unpublishCollection(
+                                          collection.id
+                                        );
+                                      } else {
+                                        await publishCollection(
+                                          collection.id
+                                        );
+                                      }
+                                      queryClient.invalidateQueries({
+                                        queryKey: collectionKeys.lists(),
+                                      });
+                                    } catch (error) {
+                                      // Error handled by hook
+                                    }
+                                  }}
+                                  className="flex-1"
+                                >
+                                  {collection.visibility === "public" ? (
+                                    <>
+                                      <EyeOff className="h-3 w-3 mr-1" />
+                                      Unpublish
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="h-3 w-3 mr-1" />
+                                      Publish
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (
+                                      window.confirm(
+                                        "Are you sure you want to delete this collection?"
+                                      )
+                                    ) {
                                       try {
-                                        if (
-                                          collection.visibility === "public"
-                                        ) {
-                                          await unpublishCollection(
-                                            collection.id
-                                          );
-                                        } else {
-                                          await publishCollection(
-                                            collection.id
-                                          );
-                                        }
+                                        await deleteCollection(collection.id);
                                         queryClient.invalidateQueries({
                                           queryKey: collectionKeys.lists(),
                                         });
                                       } catch (error) {
                                         // Error handled by hook
                                       }
-                                    }}
-                                    className="flex-1"
-                                  >
-                                    {collection.visibility === "public" ? (
-                                      <>
-                                        <EyeOff className="h-3 w-3 mr-1" />
-                                        Unpublish
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Eye className="h-3 w-3 mr-1" />
-                                        Publish
-                                      </>
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={async (e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      if (
-                                        window.confirm(
-                                          "Are you sure you want to delete this collection?"
-                                        )
-                                      ) {
-                                        try {
-                                          await deleteCollection(collection.id);
-                                          queryClient.invalidateQueries({
-                                            queryKey: collectionKeys.lists(),
-                                          });
-                                        } catch (error) {
-                                          // Error handled by hook
-                                        }
-                                      }
-                                    }}
-                                    disabled={isDeleting}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
+                                    }
+                                  }}
+                                  disabled={isDeleting}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               </div>
                             </div>
                           </Link>

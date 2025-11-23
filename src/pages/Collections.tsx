@@ -62,7 +62,7 @@ export default function CollectionsPage() {
   const [page, setPage] = useState(1);
   const limit = 12;
   const navigate = useNavigate();
-  const { data, isLoading, error, refetch } = useMyCollections(page, limit);
+  const { data, isLoading, error } = useMyCollections(page, limit);
   const { deleteCollection, isDeleting } = useDeleteCollection();
   const { publishCollection } = usePublishCollection();
   const { unpublishCollection } = useUnpublishCollection();
@@ -118,6 +118,18 @@ export default function CollectionsPage() {
     }
   };
 
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreateCollection = async () => {
     if (!newCollection.name.trim()) {
       toast.error("Collection name is required");
@@ -169,9 +181,10 @@ export default function CollectionsPage() {
       setIsCreateModalOpen(false);
 
       // Refresh collections list
-      await refetch();
+      queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
+      toast.success("Collection created successfully!");
     } catch (error: any) {
-      console.error("Failed to create collection:", error);
+      toast.error("Failed to create collection: " + (error?.message || "An error occurred"));
     }
   };
 
@@ -236,14 +249,12 @@ export default function CollectionsPage() {
                     <List className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-1.5 h-7 px-3 text-sm"
+                <Button
                   onClick={() => setIsCreateModalOpen(true)}
+                  className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  Create
+                  <Plus className="h-4 w-4" />
+                  Create Collection
                 </Button>
               </div>
             </div>
@@ -457,173 +468,139 @@ export default function CollectionsPage() {
 
       {/* Create Collection Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="sm:max-w-lg bg-white max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-gray-900">
-                Create New Collection
-              </DialogTitle>
-              <DialogDescription className="text-sm text-gray-600">
-                Create a new collection to organize your artworks.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="collectionName">
-                  Collection Name *
-                </Label>
-                <Input
-                  id="collectionName"
-                  value={newCollection.name}
-                  onChange={(e) =>
-                    setNewCollection({
-                      ...newCollection,
-                      name: e.target.value,
-                    })
-                  }
-                  placeholder="Enter collection name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="collectionDescription">
-                  Description
-                </Label>
-                <Textarea
-                  id="collectionDescription"
-                  value={newCollection.description}
-                  onChange={(e) =>
-                    setNewCollection({
-                      ...newCollection,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Enter collection description (optional)"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="collectionCoverImage">
-                  Cover Image (Optional)
-                </Label>
-                <div className="space-y-2">
-                  {coverImagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={coverImagePreview}
-                        alt="Cover preview"
-                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2"
-                        onClick={() => {
-                          setCoverImageFile(null);
-                          setCoverImagePreview("");
-                          setNewCollection({
-                            ...newCollection,
-                            coverImage: "",
-                          });
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                      <Label
-                        htmlFor="coverImageInput"
-                        className="cursor-pointer text-sm text-gray-600 hover:text-gray-900"
-                      >
-                        Click to upload cover image
-                      </Label>
-                      <Input
-                        id="coverImageInput"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white border-gray-200">
+          <DialogHeader>
+            <DialogTitle>Create New Collection</DialogTitle>
+            <DialogDescription>
+              Create a new collection to organize your favorite artworks.
+            </DialogDescription>
+          </DialogHeader>
 
-                          // Validate file size (max 5MB)
-                          if (file.size > 5 * 1024 * 1024) {
-                            toast.error("Image size must be less than 5MB");
-                            return;
-                          }
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Collection Name *</Label>
+              <Input
+                id="name"
+                value={newCollection.name}
+                onChange={(e) =>
+                  setNewCollection({ ...newCollection, name: e.target.value })
+                }
+                placeholder="My Collection"
+                className="focus:ring-0 focus:ring-offset-0 focus:border-gray-300 border-gray-200 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-300"
+              />
+            </div>
 
-                          // Validate file type
-                          if (!file.type.startsWith("image/")) {
-                            toast.error("Please select an image file");
-                            return;
-                          }
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newCollection.description}
+                onChange={(e) =>
+                  setNewCollection({ ...newCollection, description: e.target.value })
+                }
+                placeholder="Describe your collection..."
+                rows={4}
+                className="focus:ring-0 focus:ring-offset-0 focus:border-gray-300 border-gray-200 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-300"
+              />
+            </div>
 
-                          setCoverImageFile(file);
-                          setCoverImagePreview(URL.createObjectURL(file));
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="collectionVisibility">Visibility</Label>
-                <Select
-                  value={newCollection.visibility}
-                  onValueChange={(value) =>
-                    setNewCollection({
-                      ...newCollection,
-                      visibility: value,
-                    })
-                  }
+            <div>
+              <Label htmlFor="visibility">Visibility</Label>
+              <Select
+                value={newCollection.visibility}
+                onValueChange={(value: "public" | "private" | "unlisted") =>
+                  setNewCollection({ ...newCollection, visibility: value })
+                }
+              >
+                <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus:border-gray-300 border-gray-200 focus:outline-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="unlisted">Unlisted</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="cover">Cover Image</Label>
+              <div className="mt-2 space-y-2">
+                {coverImagePreview ? (
+                  <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
+                    <img
+                      src={coverImagePreview}
+                      alt="Cover preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6"
+                      onClick={() => {
+                        setCoverImageFile(null);
+                        setCoverImagePreview("");
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : null}
+                <label
+                  htmlFor="cover-upload"
+                  className="flex items-center justify-center w-full h-10 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
                 >
-                  <SelectTrigger id="collectionVisibility">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="private">Private</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="unlisted">Unlisted</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsCreateModalOpen(false);
-                    setNewCollection({
-                      name: "",
-                      description: "",
-                      visibility: "private",
-                      coverImage: "",
-                    });
-                    setCoverImageFile(null);
-                    setCoverImagePreview("");
-                  }}
-                  disabled={isCreating || isUploadingCover}
-                  className="rounded-full"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateCollection}
-                  disabled={isCreating || isUploadingCover || !newCollection.name.trim()}
-                  className="bg-red-700 hover:bg-red-800 text-white rounded-full"
-                >
-                  {isCreating || isUploadingCover ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {isUploadingCover ? "Uploading..." : "Creating..."}
-                    </>
-                  ) : (
-                    "Create Collection"
-                  )}
-                </Button>
+                  <Upload className="h-4 w-4 mr-2 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    {coverImagePreview ? "Change Cover Image" : "Upload Cover Image"}
+                  </span>
+                  <input
+                    id="cover-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCoverImageChange}
+                  />
+                </label>
               </div>
             </div>
-          </DialogContent>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setNewCollection({
+                    name: "",
+                    description: "",
+                    visibility: "private",
+                    coverImage: "",
+                  });
+                  setCoverImageFile(null);
+                  setCoverImagePreview("");
+                }}
+                disabled={isCreating || isUploadingCover}
+                className="rounded-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateCollection}
+                disabled={isCreating || isUploadingCover || !newCollection.name.trim()}
+                className="bg-red-700 hover:bg-red-800 text-white rounded-full"
+              >
+                {isCreating || isUploadingCover ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {isUploadingCover ? "Uploading..." : "Creating..."}
+                  </>
+                ) : (
+                  "Create Collection"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
       </Dialog>
     </ProtectedRoute>
   );

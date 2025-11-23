@@ -51,7 +51,7 @@ export default function Header() {
                   Artworks
                 </Link>
                 <Link
-                  to="/profile/collections"
+                  to="/collections"
                   className="text-gray-700 hover:text-gray-900 transition-colors"
                 >
                   Collections
