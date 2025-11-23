@@ -249,12 +249,14 @@ export default function CollectionsPage() {
                     <List className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <Button
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1.5 h-7 px-3 text-sm"
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
                 >
-                  <Plus className="h-4 w-4" />
-                  Create Collection
+                  <Plus className="h-3.5 w-3.5" />
+                  Create
                 </Button>
               </div>
             </div>

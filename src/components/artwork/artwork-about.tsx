@@ -28,73 +28,73 @@ export const ArtworkAbout = ({ artwork, isOwner = false }: ArtworkAboutProps) =>
     .slice(0, 2) || "A";
 
   return (
-    <div className="my-12 max-w-4xl">
-      <h3 className="mb-6 border-b pb-2 text-xl">About the work</h3>
-      <div className="grid gap-x-4 gap-y-2 text-sm md:grid-cols-2">
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Materials</span>
-          <span className="cursor-pointer underline">{artwork.technique}</span>
+    <div className="my-4 max-w-4xl">
+      <h3 className="mb-3 border-b border-gray-200 pb-1.5 text-base font-semibold text-gray-900">About the work</h3>
+      <div className="grid gap-x-3 gap-y-1 text-xs md:grid-cols-2">
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Materials</span>
+          <span className="cursor-pointer text-gray-700 underline">{artwork.technique}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Size</span>
-          <span>{dimensionsStr}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Size</span>
+          <span className="text-gray-700">{dimensionsStr}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Support</span>
-          <span className="cursor-pointer underline">{artwork.support}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Support</span>
+          <span className="cursor-pointer text-gray-700 underline">{artwork.support}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">State</span>
-          <span className="cursor-pointer underline">{artwork.state}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">State</span>
+          <span className="cursor-pointer text-gray-700 underline">{artwork.state}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Year</span>
-          <span>{artwork.yearOfArtwork}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Year</span>
+          <span className="text-gray-700">{artwork.yearOfArtwork}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Origin</span>
-          <span className="cursor-pointer underline">{artwork.origin}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Origin</span>
+          <span className="cursor-pointer text-gray-700 underline">{artwork.origin}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Frame</span>
-          <span>{artwork.isFramed ? "Included" : "Not included"}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Frame</span>
+          <span className="text-gray-700">{artwork.isFramed ? "Included" : "Not included"}</span>
         </div>
-        <div className="flex justify-between border-gray-100 border-b py-2">
-          <span className="text-muted-foreground">Weight</span>
-          <span>{artwork.weight}</span>
+        <div className="flex justify-between border-gray-200 border-b py-1.5">
+          <span className="text-gray-500">Weight</span>
+          <span className="text-gray-700">{artwork.weight}</span>
         </div>
       </div>
       {artwork.description && (
-        <div className="mt-6">
-          <h4 className="mb-2 font-semibold">Description</h4>
-          <p className="text-muted-foreground text-sm">{artwork.description}</p>
+        <div className="mt-3">
+          <h4 className="mb-1.5 text-sm font-semibold text-gray-900">Description</h4>
+          <p className="text-gray-600 text-xs leading-relaxed">{artwork.description}</p>
         </div>
       )}
       {/* Artist Information */}
       {artwork.user && (
-        <div className="mt-8 flex items-center justify-between rounded-lg bg-muted/30 ">
-          <div className="flex items-center gap-3">
+        <div className="mt-4 flex items-center justify-between rounded-md bg-gray-50 border border-gray-200 p-3">
+          <div className="flex items-center gap-2.5">
             {artwork.user.image ? (
               <img
                 src={artwork.user.image}
                 alt={artwork.user.name}
-                className="h-12 w-12 rounded-full object-cover"
+                className="h-10 w-10 rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500 font-bold text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500 text-xs font-bold text-white">
                 {artistInitials}
               </div>
             )}
             <div>
-              <h4 className="font-bold">{artwork.user.name}</h4>
-              <p className="text-muted-foreground text-sm">{artwork.user.email}</p>
+              <h4 className="text-sm font-semibold text-gray-900">{artwork.user.name}</h4>
+              <p className="text-gray-500 text-xs">{artwork.user.email}</p>
             </div>
           </div>
           {!isOwner && (
             <Button
               variant="outline"
-              size="lg"
-              className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
+              size="sm"
+              className="rounded-full border-gray-300 bg-white px-4 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
               onClick={handleSeeProfile}
             >
               See Profile

@@ -172,9 +172,10 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="w-full rounded-full border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+          size="sm"
+          className="w-full justify-start h-8 text-xs rounded-full border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
         >
-          <FolderPlus className="h-4 w-4 mr-2" />
+          <FolderPlus className="h-3.5 w-3.5 mr-1.5" />
           Add to Collection
         </Button>
       </DialogTrigger>

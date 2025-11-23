@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useMyArtworks } from "@/queries/artworkQueries";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Palette, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Palette, Plus, Edit, Trash2, Eye, ArrowLeft } from "lucide-react";
 import { ArtworkCard } from "@/components/artwork-card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork";
 import { useQueryClient } from "@tanstack/react-query";
 import { artworkKeys } from "@/queries/queryKeys";
@@ -19,10 +19,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: nu
       size="sm"
       disabled={currentPage === 1}
       onClick={() => onPageChange(currentPage - 1)}
+      className="h-7 px-3 text-xs"
     >
       Previous
     </Button>
-    <span className="text-sm text-gray-600">
+    <span className="text-xs text-gray-600">
       Page {currentPage} of {totalPages}
     </span>
     <Button
@@ -30,6 +31,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: nu
       size="sm"
       disabled={currentPage >= totalPages}
       onClick={() => onPageChange(currentPage + 1)}
+      className="h-7 px-3 text-xs"
     >
       Next
     </Button>
@@ -39,6 +41,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: nu
 export default function MyArtworksPage() {
   const [page, setPage] = useState(1);
   const limit = 12;
+  const navigate = useNavigate();
   const { data, isLoading, error } = useMyArtworks(page, limit);
   const { deleteArtwork, isDeleting } = useDeleteArtwork();
   const queryClient = useQueryClient();
@@ -60,47 +63,61 @@ export default function MyArtworksPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50">
+          <div className="container mx-auto px-4 py-4 max-w-7xl">
+            <div className="flex items-center justify-center py-12">
+              <div className="h-6 w-6 animate-spin rounded-full border-3 border-gray-300 border-t-gray-600" />
+            </div>
+          </div>
+        </div>
+      </ProtectedRoute>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <EmptyState
-          icon={Palette}
-          title="Error Loading Artworks"
-          description="Failed to load your artworks. Please try again later."
-        />
-      </div>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50">
+          <div className="container mx-auto px-4 py-4 max-w-7xl">
+            <EmptyState
+              icon={Palette}
+              title="Error Loading Artworks"
+              description="Failed to load your artworks. Please try again later."
+            />
+          </div>
+        </div>
+      </ProtectedRoute>
     );
   }
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="container mx-auto px-4 py-4 max-w-7xl">
           {/* Header */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="bg-white border-b border-gray-200 py-3 mb-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <Palette className="h-6 w-6 text-red-700" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">My Artworks</h1>
-                  <p className="text-gray-500 mt-1">
-                    {pagination.total} {pagination.total === 1 ? "artwork" : "artworks"} total
-                  </p>
-                </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/profile")}
+                  className="h-8 w-8"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h1 className="text-xl font-semibold text-gray-900">My Artworks</h1>
+                <span className="text-sm text-gray-500">
+                  ({pagination.total})
+                </span>
               </div>
-              <Button className="bg-red-700 hover:bg-red-800 text-white" asChild>
-                <Link to="/sellart">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New Artwork
-                </Link>
+              <Button 
+                onClick={() => navigate("/sellart")}
+                className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Artwork
               </Button>
             </div>
           </div>
@@ -108,7 +125,7 @@ export default function MyArtworksPage() {
           {/* Artworks Grid */}
           {artworks.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {artworks.map((artwork) => (
                   <div key={artwork.id} className="relative group">
                     <ArtworkCard
@@ -122,35 +139,35 @@ export default function MyArtworksPage() {
                       dimensions={`${artwork.dimensions?.height || 0}x${artwork.dimensions?.width || 0} cm`}
                       seller={artwork.user?.name || "Unknown"}
                     />
-                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="secondary"
                         size="icon"
-                        className="h-8 w-8 bg-white hover:bg-gray-100"
+                        className="h-7 w-7 bg-white hover:bg-gray-100"
                         asChild
                       >
                         <Link to={`/artwork/${artwork.id}`}>
-                          <Eye className="h-4 w-4 text-gray-700" />
+                          <Eye className="h-3.5 w-3.5 text-gray-700" />
                         </Link>
                       </Button>
                       <Button
                         variant="secondary"
                         size="icon"
-                        className="h-8 w-8 bg-white hover:bg-gray-100"
+                        className="h-7 w-7 bg-white hover:bg-gray-100"
                         asChild
                       >
                         <Link to={`/artwork/${artwork.id}/edit`}>
-                          <Edit className="h-4 w-4 text-gray-700" />
+                          <Edit className="h-3.5 w-3.5 text-gray-700" />
                         </Link>
                       </Button>
                       <Button
                         variant="destructive"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7"
                         onClick={() => handleDelete(artwork.id)}
                         disabled={isDeleting}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -159,7 +176,7 @@ export default function MyArtworksPage() {
 
               {/* Pagination */}
               {pagination.pages > 1 && (
-                <div className="mt-8 flex justify-center">
+                <div className="mt-4 flex justify-center">
                   <Pagination
                     currentPage={pagination.page}
                     totalPages={pagination.pages}

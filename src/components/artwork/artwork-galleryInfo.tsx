@@ -17,17 +17,17 @@ export const ArtworkGalleryInfo = ({ artwork, isOwner = false }: ArtworkGalleryI
   };
 
   return (
-    <div className="border-t pt-6">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="border-t border-gray-200 pt-3">
+      <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-bold">{artwork.user?.name || artwork.artist || "Gallery"}</h3>
-          <p className="text-muted-foreground text-sm">{artwork.user?.email || "Contact information"}</p>
+          <h3 className="text-sm font-semibold text-gray-900">{artwork.user?.name || artwork.artist || "Gallery"}</h3>
+          <p className="text-gray-500 text-xs">{artwork.user?.email || "Contact information"}</p>
         </div>
         {!isOwner && (
           <Button
             variant="outline"
-            size="lg"
-            className="rounded-full border-black bg-white px-8 py-3 text-black hover:bg-gray-100"
+            size="sm"
+            className="rounded-full border-gray-300 bg-white px-4 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
             onClick={handleContactGallery}
           >
             Contact Gallery

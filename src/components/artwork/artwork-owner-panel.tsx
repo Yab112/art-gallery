@@ -136,45 +136,45 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Status Badge */}
-      <Card className={`p-4 border-2 ${statusInfo.borderColor} ${statusInfo.bgColor}`}>
+      <Card className={`p-2.5 border border-gray-100 bg-gray-50/50 ${statusInfo.bgColor}`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <StatusIcon className={`h-5 w-5 ${statusInfo.color}`} />
+          <div className="flex items-center gap-2">
+            <StatusIcon className={`h-4 w-4 ${statusInfo.color}`} />
             <div>
-              <p className="text-sm text-gray-600">Status</p>
-              <p className={`font-semibold ${statusInfo.color}`}>
+              <p className="text-xs text-gray-500">Status</p>
+              <p className={`text-sm font-semibold ${statusInfo.color}`}>
                 {statusInfo.label}
               </p>
             </div>
           </div>
           {artwork.status === "APPROVED" && (
-            <div className="flex items-center gap-2 text-sm text-green-700">
-              <CheckCircle className="h-4 w-4" />
-              <span>Live on marketplace</span>
+            <div className="flex items-center gap-1.5 text-xs text-green-600">
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span>Live</span>
             </div>
           )}
         </div>
       </Card>
 
       {/* Statistics */}
-      <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="h-5 w-5 text-gray-700" />
-          <h3 className="text-lg font-semibold text-gray-900">Statistics</h3>
+      <Card className="p-3 border border-gray-100 bg-gray-50/30">
+        <div className="flex items-center gap-1.5 mb-3">
+          <BarChart3 className="h-4 w-4 text-gray-500" />
+          <h3 className="text-sm font-semibold text-gray-700">Statistics</h3>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
               <div
                 key={stat.label}
-                className="flex flex-col items-center p-4 bg-gray-50 rounded-lg"
+                className="flex flex-col items-center p-2 bg-white/50 rounded-md border border-gray-100"
               >
-                <Icon className={`h-6 w-6 ${stat.color} mb-2`} />
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                <p className="text-sm text-gray-600">{stat.label}</p>
+                <Icon className={`h-4 w-4 ${stat.color} mb-1 opacity-80`} />
+                <p className="text-lg font-bold text-gray-800">{stat.value}</p>
+                <p className="text-xs text-gray-500">{stat.label}</p>
               </div>
             );
           })}
@@ -182,26 +182,28 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <Card className="p-3 border border-gray-100 bg-gray-50/30">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2.5">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <Button
             variant="outline"
-            className="w-full justify-start"
+            size="sm"
+            className="w-full justify-start h-8 text-xs"
             asChild
           >
             <Link to={`/artwork/${artwork.id}/edit`}>
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-3.5 w-3.5 mr-1.5" />
               Edit Artwork
             </Link>
           </Button>
 
           <Button
             variant="outline"
-            className="w-full justify-start"
+            size="sm"
+            className="w-full justify-start h-8 text-xs"
             onClick={handleShare}
           >
-            <Share2 className="h-4 w-4 mr-2" />
+            <Share2 className="h-3.5 w-3.5 mr-1.5" />
             Share Artwork
           </Button>
 
@@ -213,9 +215,10 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
-                className="w-full justify-start"
+                size="sm"
+                className="w-full justify-start h-8 text-xs"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                 Delete Artwork
               </Button>
             </DialogTrigger>
@@ -255,55 +258,55 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
       </Card>
 
       {/* Artwork Details Summary */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Artwork Details</h3>
-        <div className="space-y-3 text-sm">
+      <Card className="p-3 border border-gray-100 bg-gray-50/30">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2.5">Artwork Details</h3>
+        <div className="space-y-1.5 text-xs">
           <div className="flex justify-between">
-            <span className="text-gray-600">Price:</span>
-            <span className="font-semibold">${artwork.desiredPrice?.toLocaleString() || "0"}</span>
+            <span className="text-gray-500">Price:</span>
+            <span className="font-semibold text-gray-800">${artwork.desiredPrice?.toLocaleString() || "0"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Price Negotiation:</span>
+            <span className="text-gray-500">Price Negotiation:</span>
             <span className={artwork.acceptPriceNegotiation ? "text-green-600" : "text-gray-400"}>
               {artwork.acceptPriceNegotiation ? "Enabled" : "Disabled"}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Created:</span>
-            <span>{new Date(artwork.createdAt).toLocaleDateString()}</span>
+            <span className="text-gray-500">Created:</span>
+            <span className="text-gray-600">{new Date(artwork.createdAt).toLocaleDateString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Last Updated:</span>
-            <span>{new Date(artwork.updatedAt).toLocaleDateString()}</span>
+            <span className="text-gray-500">Last Updated:</span>
+            <span className="text-gray-600">{new Date(artwork.updatedAt).toLocaleDateString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Photos:</span>
-            <span>{artwork.photos?.length || 0} photo(s)</span>
+            <span className="text-gray-500">Photos:</span>
+            <span className="text-gray-600">{artwork.photos?.length || 0} photo(s)</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Proof of Origin:</span>
-            <span>{artwork.proofOfOrigin ? "✓ Provided" : "✗ Not provided"}</span>
+            <span className="text-gray-500">Proof of Origin:</span>
+            <span className="text-gray-600">{artwork.proofOfOrigin ? "✓ Provided" : "✗ Not provided"}</span>
           </div>
         </div>
       </Card>
 
       {/* Comments & Reviews Preview */}
       {(artwork.commentCount > 0 || artwork.reviewCount > 0) && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Engagement</h3>
+        <Card className="p-3 border border-gray-100 bg-gray-50/30">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2.5">Engagement</h3>
           <div className="space-y-2">
             {artwork.comments && artwork.comments.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Recent Comments:</p>
-                <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-500 mb-1.5">Recent Comments:</p>
+                <div className="space-y-1.5">
                   {artwork.comments.slice(0, 3).map((comment: any) => (
                     <div
                       key={comment.id}
-                      className="p-3 bg-gray-50 rounded-lg"
+                      className="p-2 bg-white/50 rounded-md border border-gray-100"
                     >
-                      <p className="text-sm font-medium text-gray-900">{comment.authorName}</p>
-                      <p className="text-sm text-gray-600">{comment.content}</p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs font-medium text-gray-700">{comment.authorName}</p>
+                      <p className="text-xs text-gray-500">{comment.content}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
                         {new Date(comment.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -313,32 +316,32 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
             )}
             {artwork.reviews && artwork.reviews.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Recent Reviews:</p>
-                <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-500 mb-1.5">Recent Reviews:</p>
+                <div className="space-y-1.5">
                   {artwork.reviews.slice(0, 3).map((review: any) => (
                     <div
                       key={review.id}
-                      className="p-3 bg-gray-50 rounded-lg"
+                      className="p-2 bg-white/50 rounded-md border border-gray-100"
                     >
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-1.5 mb-0.5">
                         <div className="flex">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${
+                              className={`h-3 w-3 ${
                                 i < review.rating
-                                  ? "fill-yellow-400 text-yellow-400"
+                                  ? "fill-yellow-400 text-yellow-400 opacity-80"
                                   : "text-gray-300"
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-xs font-medium text-gray-700">
                           {review.user?.name || "Anonymous"}
                         </span>
                       </div>
                       {review.comment && (
-                        <p className="text-sm text-gray-600">{review.comment}</p>
+                        <p className="text-xs text-gray-500">{review.comment}</p>
                       )}
                     </div>
                   ))}
