@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
 
     try {
       // Better-auth verify-email endpoint expects GET request with token as query parameter
-      const backendUrl = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3000";
+      const backendUrl = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3099";
       
       // Better-auth verification endpoint format: GET /api/auth/verify-email?token=xxx
       const response = await fetch(

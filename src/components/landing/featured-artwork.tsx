@@ -2,69 +2,27 @@ import { ArtworkCard } from "@/components/artwork-card";
 import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
-
-const artworks = [
-  {
-    id: "1",
-    image: "/artwork-1.jpg",
-    title: "City of Boxes - Auroraville",
-    artist: "WERNER ROELANDT",
-    price: "€1,300.00",
-    year: "2024",
-    medium: "Photography",
-    dimensions: "60 x 90 x 0.2 cm",
-    seller: "Werner Roelandt",
-  },
-  {
-    id: "2",
-    image: "/artwork-1.jpg",
-    title: "Water lilies on Lake Bled",
-    artist: "OXYPOINT",
-    price: "€390.00",
-    year: "2025",
-    medium: "Painting",
-    dimensions: "30 x 30 x 0.3 cm",
-    seller: "OXYPOINT",
-  },
-  {
-    id: "3",
-    image: "/artwork-1.jpg",
-    title: "Kaws is in LOVE",
-    artist: "PATRICK CORNÉE",
-    price: "€1,200.00",
-    year: "2025",
-    medium: "Painting",
-    dimensions: "30 x 30 x 3 cm",
-    seller: "Cornee Patrick",
-  },
-  {
-    id: "4",
-    image: "/artwork-1.jpg",
-    title: "Le vieux pot de peinture",
-    artist: "YANNICK BOUILLAULT",
-    price: "€380.00",
-    year: "2024",
-    medium: "Sculpture",
-    dimensions: "30 x 14 x 16 cm",
-    seller: "Yannick Bouillault",
-  },
-  {
-    id: "5",
-    image: "/artwork-1.jpg",
-    title: "Abstract Dreams",
-    artist: "MARIE DUBOIS",
-    price: "€750.00",
-    year: "2024",
-    medium: "Painting",
-    dimensions: "40 x 50 x 2 cm",
-    seller: "Marie Dubois",
-  },
-];
+import { useState, useMemo } from "react";
+import { useArtworks } from "@/queries/artworkQueries";
+import { mapArtworkToCardProps } from "@/lib/utils/artwork-mapper";
 
 export function FeaturedArtworks() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 4;
+
+  // Fetch approved artworks for featured section
+  const { data: artworksData, isLoading } = useArtworks({
+    limit: 12,
+    page: 1,
+    isApproved: true,
+    sortBy: "createdAt",
+    orderBy: "desc",
+  });
+
+  const artworks = useMemo(() => {
+    if (!artworksData?.artworks) return [];
+    return artworksData.artworks.map(mapArtworkToCardProps);
+  }, [artworksData]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) =>
@@ -92,6 +50,46 @@ export function FeaturedArtworks() {
     currentIndex,
     currentIndex + itemsPerPage
   );
+
+  if (isLoading) {
+    return (
+      <section className="px-4 py-10">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle
+            title="FEATURED ARTWORKS"
+            subtitle="Artalistic Selection"
+            className="mb-8"
+          />
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[4/5] bg-gray-200 rounded" />
+                <div className="mt-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!artworks || artworks.length === 0) {
+    return (
+      <section className="px-4 py-10">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle
+            title="FEATURED ARTWORKS"
+            subtitle="Artalistic Selection"
+            className="mb-8"
+          />
+          <p className="text-center text-gray-500">No featured artworks available at the moment.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 py-10">
