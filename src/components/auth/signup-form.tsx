@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
-import { signUp, signInWithGoogle, signInWithFacebook } from "@/lib/auth";
+import { signUp, signInWithGoogle } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 
 interface SignupFormData {
@@ -42,17 +42,6 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
     }
   };
 
-  // Handler for Facebook sign-up
-  const handleFacebookSignUp = async () => {
-    setIsSocialLoading(true);
-    setError(null);
-    try {
-      await signInWithFacebook();
-    } catch (err: any) {
-      setError(err?.message || "Failed to sign up with Facebook");
-      setIsSocialLoading(false);
-    }
-  };
 
   const form = useForm<SignupFormData>({
     defaultValues: {
@@ -87,17 +76,12 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
         },
         {
           onSuccess: () => {
-            // Success - redirect to verify email page
+            // Success - show email sent message
             setSuccess(
-              "Account created successfully! Redirecting to verification..."
+              "Account created successfully! Please check your email to verify your account."
             );
             reset();
             setIsLoading(false);
-
-            // Redirect to email verification page
-            setTimeout(() => {
-              navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
-            }, 1500);
           },
           onError: (ctx) => {
             setError(ctx.error?.message || "Failed to create account. Please try again.");
@@ -296,11 +280,11 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
       </div>
 
       {/* Social Login Buttons */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex justify-center">
         <Button
           type="button"
           variant="outline"
-          className="h-12 border-gray-300 hover:bg-gray-50"
+          className="h-12 w-full border-gray-300 hover:bg-gray-50"
           disabled={isLoading || isSocialLoading}
           onClick={handleGoogleSignUp}
         >
@@ -322,20 +306,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
               fill="#EA4335"
             />
           </svg>
-          {isSocialLoading ? "..." : "Google"}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="h-12 border-gray-300 hover:bg-gray-50"
-          disabled={isLoading || isSocialLoading}
-          onClick={handleFacebookSignUp}
-        >
-          <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="#1877F2">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-          </svg>
-          {isSocialLoading ? "..." : "Facebook"}
+          {isSocialLoading ? "Signing up..." : "Continue with Google"}
         </Button>
       </div>
 

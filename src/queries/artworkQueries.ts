@@ -1,21 +1,36 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { artworkKeys } from "./queryKeys";
-import type { Artwork, ArtworkListResponse, ArtworkQueryParams } from "@/types/artwork.types";
+import type {
+  Artwork,
+  ArtworkListResponse,
+  ArtworkQueryParams,
+} from "@/types/artwork.types";
 import useAxiosAuth from "@/hooks/use-axios-auth";
+import { useFetchData } from "@/hooks/use-query";
 
 // Query Hooks
 export const useArtworks = (params?: ArtworkQueryParams) => {
-  const queryString = params ? new URLSearchParams(
-    Object.entries(params).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null) {
-        acc[key] = String(value);
-      }
-      return acc;
-    }, {} as Record<string, string>)
-  ).toString() : "";
-  
+  const queryString = params
+    ? (() => {
+        const searchParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            if (Array.isArray(value)) {
+              // For arrays, add each item as a separate query param (NestJS will parse as array)
+              value.forEach((item) => {
+                searchParams.append(key, String(item));
+              });
+            } else {
+              searchParams.append(key, String(value));
+            }
+          }
+        });
+        return searchParams.toString();
+      })()
+    : "";
+
   const axiosAuth = useAxiosAuth();
-  
+
   return useQuery<ArtworkListResponse>({
     queryKey: artworkKeys.list(params),
     queryFn: async () => {
@@ -28,7 +43,7 @@ export const useArtworks = (params?: ArtworkQueryParams) => {
           pages: number;
         };
       }>(`artworks${queryString ? `?${queryString}` : ""}`);
-      
+
       // Transform backend response to match ArtworkListResponse format
       const data = response.data;
       if (data.pagination) {
@@ -41,7 +56,7 @@ export const useArtworks = (params?: ArtworkQueryParams) => {
           pages: data.pagination.pages,
         };
       }
-      
+
       // Fallback if pagination is not present (shouldn't happen, but just in case)
       return {
         success: true,
@@ -52,7 +67,7 @@ export const useArtworks = (params?: ArtworkQueryParams) => {
         pages: 1,
       };
     },
-      refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
   });

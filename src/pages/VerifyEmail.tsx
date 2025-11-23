@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { OTPInput } from "@/components/ui/otp-input";
-import { Mail, CheckCircle, ArrowLeft } from "lucide-react";
+import { Mail, CheckCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthLayout } from "@/components/auth/auth-layout";
 
 export default function VerifyEmailPage() {
-  const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,41 +16,67 @@ export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
 
   const email = searchParams.get("email");
+  const token = searchParams.get("token");
 
   useEffect(() => {
-    // Redirect if no email provided
-    if (!email) {
+    // If token is provided, verify automatically
+    if (token && email) {
+      handleVerifyWithToken(token);
+    } else if (!email && !token) {
+      // Redirect if no email provided and no token
       navigate("/signup", { replace: true });
     }
-  }, [email, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, email]);
 
-  useEffect(() => {
-    // Countdown timer for resend button
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendTimer]);
-
-  const handleVerify = async (otpValue: string) => {
-    if (otpValue.length !== 6) return;
-
+  const handleVerifyWithToken = async (verificationToken: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Use Better Auth verifyEmail
-      const result = await authClient.verifyEmail({
-        email: email!,
-        code: otpValue,
-      });
+      // Better-auth verify-email endpoint expects GET request with token as query parameter
+      const backendUrl = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3000";
+      
+      // Better-auth verification endpoint format: GET /api/auth/verify-email?token=xxx
+      const response = await fetch(
+        `${backendUrl}/api/auth/verify-email?token=${encodeURIComponent(verificationToken)}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Accept": "application/json",
+          },
+        }
+      );
 
-      if (result.error) {
+      // Better-auth might return HTML redirect or JSON
+      const contentType = response.headers.get("content-type");
+      let data: any = {};
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json().catch(() => ({}));
+      } else {
+        // If HTML response, check status code
+        const text = await response.text().catch(() => "");
+        if (response.ok) {
+          // Success - better-auth might redirect or return HTML
+          setSuccess(true);
+          setTimeout(() => {
+            navigate("/login", { replace: true });
+          }, 2000);
+          return;
+        } else {
+          setError("Invalid or expired verification link. Please request a new one.");
+          return;
+        }
+      }
+
+      if (!response.ok || data.error) {
         setError(
-          result.error.message ||
-            "Invalid verification code. Please try again."
+          data.error?.message ||
+            data.message ||
+            "Invalid or expired verification link. Please request a new one."
         );
-        setOtp("");
         return;
       }
 
@@ -65,11 +89,18 @@ export default function VerifyEmailPage() {
       }, 2000);
     } catch (err: any) {
       setError(err?.message || "Verification failed. Please try again.");
-      setOtp("");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Countdown timer for resend button
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const handleResend = async () => {
     if (!email || resendTimer > 0) return;
@@ -84,20 +115,24 @@ export default function VerifyEmailPage() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Failed to resend code.");
+        setError(result.error.message || "Failed to resend verification email.");
         return;
       }
 
+      // Show success message
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      
       // Start countdown
       setResendTimer(60);
     } catch (err: any) {
-      setError(err?.message || "Failed to resend code.");
+      setError(err?.message || "Failed to resend verification email.");
     } finally {
       setIsResending(false);
     }
   };
 
-  if (success) {
+  if (success && token) {
     return (
       <AuthLayout>
         <div className="w-full space-y-6 text-center">
@@ -116,6 +151,27 @@ export default function VerifyEmailPage() {
             </p>
           </div>
           <div className="text-sm text-gray-600">Redirecting to login...</div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Show loading state while verifying with token
+  if (isLoading && token) {
+    return (
+      <AuthLayout>
+        <div className="w-full space-y-6 text-center">
+          <div className="flex justify-center">
+            <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Verifying Email...
+            </h1>
+            <p className="text-gray-500">
+              Please wait while we verify your email address.
+            </p>
+          </div>
         </div>
       </AuthLayout>
     );
@@ -141,11 +197,11 @@ export default function VerifyEmailPage() {
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold text-gray-900">Verify Your Email</h1>
           <p className="text-gray-500">
-            We've sent a verification code to
+            We've sent a verification link to
           </p>
           <p className="text-gray-900 font-medium">{email}</p>
           <p className="text-sm text-gray-500">
-            Enter the 6-digit code to verify your email address
+            Please check your email and click the verification link to verify your account.
           </p>
         </div>
 
@@ -155,28 +211,28 @@ export default function VerifyEmailPage() {
           </Alert>
         )}
 
+        {success && !token && (
+          <Alert className="border-green-200 bg-green-50">
+            <AlertDescription className="text-green-800">
+              Verification email sent! Please check your inbox.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-6">
-          <div className="flex justify-center">
-            <OTPInput
-              length={6}
-              value={otp}
-              onChange={setOtp}
-              onComplete={handleVerify}
-              disabled={isLoading}
-            />
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+            <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-700 mb-2">
+              Click the link in your email to verify your account
+            </p>
+            <p className="text-sm text-gray-500">
+              The verification link will expire in 24 hours
+            </p>
           </div>
 
-          <Button
-            onClick={() => handleVerify(otp)}
-            className="w-full h-12 bg-red-700 hover:bg-red-800 text-white font-medium"
-            disabled={isLoading || otp.length !== 6}
-          >
-            {isLoading ? "Verifying..." : "Verify Email"}
-          </Button>
-
           <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Didn't receive the code?{" "}
+            <p className="text-sm text-gray-600 mb-2">
+              Didn't receive the email?{" "}
               <button
                 type="button"
                 onClick={handleResend}
@@ -187,7 +243,7 @@ export default function VerifyEmailPage() {
                   ? `Resend in ${resendTimer}s`
                   : isResending
                   ? "Sending..."
-                  : "Resend Code"}
+                  : "Resend Email"}
               </button>
             </p>
           </div>

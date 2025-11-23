@@ -2,7 +2,6 @@ import { Input } from "@/components/ui/input";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import type { ArtworkFormData } from "@/lib/schemas/artwork.schema";
 import {
-  ARTWORK_TYPES,
   SUPPORT_TYPES,
   ARTWORK_STATES,
   YES_NO_OPTIONS,
@@ -10,6 +9,10 @@ import {
 } from "@/lib/constants/srtsell.constant";
 import { FormField } from "./formField";
 import { SelectField } from "./selectField";
+import { useGetCategories } from "@/services/category/useGetCategories";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 interface ArtworkInfoSectionProps {
   control: Control<ArtworkFormData>;
@@ -25,6 +28,8 @@ export function ArtworkInfoSection({
   control,
   errors,
 }: ArtworkInfoSectionProps) {
+  const { data: categories, isLoading: isLoadingCategories } = useGetCategories();
+
   return (
     <div className="space-y-6">
       <div>
@@ -34,42 +39,58 @@ export function ArtworkInfoSection({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
-            label="Type of artwork"
+            label="Categories"
             required
-            htmlFor="typeOfArtwork"
-            description={errors.typeOfArtwork?.message}
+            htmlFor="categoryIds"
+            description={errors.categoryIds?.message}
           >
             <Controller
-              name="typeOfArtwork"
+              name="categoryIds"
               control={control}
-              render={({ field }) => (
-                <SelectField
-                  id="typeOfArtwork"
-                  value={field.value}
-                  onChange={field.onChange}
-                  options={ARTWORK_TYPES}
-                />
-              )}
-            />
-          </FormField>
+              render={({ field }) => {
+                const selectedIds = field.value || [];
+                
+                if (isLoadingCategories) {
+                  return (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading categories...</span>
+                    </div>
+                  );
+                }
 
-          <FormField
-            label="Technique"
-            required
-            htmlFor="technique"
-            description={errors.technique?.message}
-          >
-            <Controller
-              name="technique"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="technique"
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="e.g., Oil on canvas, Bronze casting"
-                />
-              )}
+                return (
+                  <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                    {categories && categories.length > 0 ? (
+                      categories.map((category) => (
+                        <div key={category.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`category-${category.id}`}
+                            checked={selectedIds.includes(category.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange([...selectedIds, category.id]);
+                              } else {
+                                field.onChange(
+                                  selectedIds.filter((id) => id !== category.id)
+                                );
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor={`category-${category.id}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {category.name}
+                          </Label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No categories available</p>
+                    )}
+                  </div>
+                );
+              }}
             />
           </FormField>
 
