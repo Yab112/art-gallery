@@ -6,7 +6,7 @@ import { SearchFilters } from "@/components/ArtMarketplace/search-filters";
 import { CallToAction } from "@/components/call-to-action";
 import { useSearchParams } from "react-router-dom";
 import { useArtworks } from "@/queries/artworkQueries";
-import { useCollections, useCollectionArtworks } from "@/queries/collectionQueries";
+import { useGetCategories } from "@/services/category/useGetCategories";
 import { useAddFavorite } from "@/services/favorites/useAddFavorite";
 
 export default function ArtMarketplace() {
@@ -21,22 +21,30 @@ export default function ArtMarketplace() {
   const priceRange = searchParams.get("priceRange") || "price";
   const medium = searchParams.get("medium") || "medium";
   const rarity = searchParams.get("rarity") || "rarity";
-  const category = searchParams.get("category") || "";
+  // Get category IDs from URL - can be comma-separated string or multiple params
+  const categoryParam = searchParams.get("categories") || "";
+  const selectedCategoryIds = categoryParam
+    ? categoryParam.split(",").filter((id) => id.trim() !== "")
+    : [];
 
   // Update URL query params
   const updateSearchParams = (
-    updates: Record<string, string | number | null>
+    updates: Record<string, string | number | string[] | null>
   ) => {
     const newParams = new URLSearchParams(searchParams);
     Object.entries(updates).forEach(([key, value]) => {
       if (
         value === null ||
         value === "" ||
+        (Array.isArray(value) && value.length === 0) ||
         value === "price" ||
         value === "medium" ||
         value === "rarity"
       ) {
         newParams.delete(key);
+      } else if (Array.isArray(value)) {
+        // For arrays, join with comma
+        newParams.set(key, value.join(","));
       } else {
         newParams.set(key, String(value));
       }
@@ -49,8 +57,8 @@ export default function ArtMarketplace() {
   };
 
   const setSearchQuery = (query: string) => {
-    // Clear category when user searches manually
-    updateSearchParams({ search: query || null, category: null, page: 1 });
+    // Clear categories when user searches manually
+    updateSearchParams({ search: query || null, categories: [], page: 1 });
   };
 
   const setSortBy = (value: string) => {
@@ -72,37 +80,16 @@ export default function ArtMarketplace() {
     updateSearchParams({ rarity: value === "rarity" ? null : value, page: 1 });
   };
 
-  // Fetch collections from backend to use as categories
-  // Using default (public) - only public collections will be shown
-  const { data: collectionsData, isLoading: isLoadingCollections } = useCollections(1, 20, "all");
+  // Fetch categories from backend
+  const { data: categoriesData, isLoading: isLoadingCategories } = useGetCategories();
   
-  // Handle backend response format: { success: true, collections: [...], pagination: {...} }
-  // or transformed format: { collections: [...], page, limit, total, pages }
-  const collections = collectionsData?.collections || [];
-  
-  // Transform collections to categories format
-  const categories = collections.map((collection) => ({
-    id: collection.id,
-    name: collection.name,
-    image: collection.coverImage || "/placeholder.svg",
-    count: (collection.artworkCount || 0).toLocaleString(),
+  // Transform categories to CategoryGrid format
+  const categories = (categoriesData || []).map((category) => ({
+    id: category.id,
+    name: category.name,
+    image: category.image || "/placeholder.svg",
+    count: (category.artworkCount || 0).toLocaleString(),
   }));
-
-  // Map category (collection) to backend query parameters
-  // When a collection is selected, we'll filter by collection name in the search
-  const getCategoryFilter = (categoryId: string) => {
-    // Find the collection by ID
-    const selectedCollection = collections.find(
-      (c) => c.id === categoryId
-    );
-    
-    if (selectedCollection) {
-      // Use collection name for search filtering
-      return { search: selectedCollection.name };
-    }
-    
-    return null;
-  };
 
   // Build query params from filters
   const buildQueryParams = () => {
@@ -112,14 +99,13 @@ export default function ArtMarketplace() {
       // status: "APPROVED",
     };
 
-    // Handle category filter - if category is selected, use it; otherwise use search query
-    if (category) {
-      const categoryFilter = getCategoryFilter(category);
-      if (categoryFilter?.search) {
-        params.search = categoryFilter.search;
-      }
-    } else if (searchQuery) {
-      // Only use search query if no category is selected
+    // Handle category filter - if categories are selected, use categoryIds array
+    if (selectedCategoryIds.length > 0) {
+      params.categoryIds = selectedCategoryIds;
+    }
+    
+    // Use search query if provided (can be combined with category filter)
+    if (searchQuery) {
       params.search = searchQuery;
     }
 
@@ -166,33 +152,24 @@ export default function ArtMarketplace() {
         break;
     }
 
-    // Map medium filter to technique (only if category doesn't already set technique)
-    if (medium !== "medium" && !category) {
-      params.technique = medium;
+    // Map medium filter to support (removed technique, using support instead)
+    if (medium !== "medium" && medium) {
+      params.support = medium;
     }
 
     return params;
   };
 
-  // Fetch artworks from backend
-  // If a collection is selected, fetch artworks from that collection
-  // Otherwise, fetch artworks with filters
-  const {
-    data: collectionArtworksData,
-    isLoading: isLoadingCollectionArtworks,
-    error: collectionArtworksError,
-  } = useCollectionArtworks(category || "", page, 8);
-
+  // Fetch artworks from backend with filters (including category filter)
   const {
     data: filteredArtworksData,
     isLoading: isLoadingFilteredArtworks,
     error: filteredArtworksError,
   } = useArtworks(buildQueryParams());
 
-  // Use collection artworks if category is selected, otherwise use filtered artworks
-  const artworksData = category ? collectionArtworksData : filteredArtworksData;
-  const isLoading = category ? isLoadingCollectionArtworks : isLoadingFilteredArtworks;
-  const error = category ? collectionArtworksError : filteredArtworksError;
+  const artworksData = filteredArtworksData;
+  const isLoading = isLoadingFilteredArtworks;
+  const error = filteredArtworksError;
 
   const { addFavorite } = useAddFavorite();
 
@@ -207,13 +184,15 @@ export default function ArtMarketplace() {
   };
 
   const handleCategorySelect = (categoryId: string) => {
-    // Update URL with category filter and clear search query
-    // If clicking the same category, clear it (toggle off)
-    const newCategory = categoryId === category ? null : categoryId;
-    updateSearchParams({ category: newCategory || null, search: null, page: 1 });
+    // Toggle category selection - add if not selected, remove if already selected
+    const newSelectedIds = selectedCategoryIds.includes(categoryId)
+      ? selectedCategoryIds.filter((id) => id !== categoryId)
+      : [...selectedCategoryIds, categoryId];
     
-    // Scroll to artworks section if a collection is selected (user-initiated)
-    if (newCategory && artworksSectionRef.current) {
+    updateSearchParams({ categories: newSelectedIds, page: 1 });
+    
+    // Scroll to artworks section if a category is selected (user-initiated)
+    if (newSelectedIds.length > 0 && artworksSectionRef.current) {
       requestAnimationFrame(() => {
         if (artworksSectionRef.current) {
           const elementPosition = artworksSectionRef.current.getBoundingClientRect().top;
@@ -253,7 +232,7 @@ export default function ArtMarketplace() {
       artist: artwork.artist,
       price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
       year: artwork.yearOfArtwork,
-      medium: artwork.technique,
+      medium: artwork.support, // Changed from technique to support
       dimensions: artwork.dimensions
         ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
         : "N/A",
@@ -269,7 +248,7 @@ export default function ArtMarketplace() {
         buttonText="Browse by collection"
       />
 
-      {isLoadingCollections ? (
+      {isLoadingCategories ? (
         <div className="px-4 pb-8">
           <div className="mx-auto max-w-7xl">
             <div className="mb-16 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -284,10 +263,11 @@ export default function ArtMarketplace() {
           </div>
         </div>
       ) : categories.length > 0 ? (
-      <CategoryGrid
-        categories={categories}
-        onCategorySelect={handleCategorySelect}
-      />
+        <CategoryGrid
+          categories={categories}
+          onCategorySelect={handleCategorySelect}
+          selectedCategoryIds={selectedCategoryIds}
+        />
       ) : null}
 
       <SearchFilters

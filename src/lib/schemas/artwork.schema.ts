@@ -6,8 +6,7 @@ import { z } from "zod";
  */
 export const artworkFormSchema = z.object({
   // Section 1: Information about the artwork
-  typeOfArtwork: z.string().min(1, "Type of artwork is required"),
-  technique: z.string().min(1, "Technique is required"),
+  categoryIds: z.array(z.string()).min(1, "At least one category is required"),
   artist: z.string().min(1, "Artist name is required"),
   support: z.string().min(1, "Support is required"),
   titleOfArtwork: z.string().optional(),

@@ -3,7 +3,6 @@ export interface Artwork {
   id: string;
   title: string;
   artist: string;
-  technique: string;
   support: string;
   state: string;
   yearOfArtwork: string;
@@ -41,6 +40,12 @@ export interface Artwork {
   commentCount?: number;
   reviewCount?: number;
   isLiked?: boolean;
+  categories?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    image?: string;
+  }>;
   interactions?: Array<{
     id: string;
     type: string;
@@ -82,7 +87,7 @@ export interface ArtworkQueryParams {
   status?: string;
   search?: string;
   artist?: string;
-  technique?: string;
+  categoryIds?: string[];
   support?: string;
   origin?: string;
   yearOfArtwork?: string;
@@ -96,7 +101,7 @@ export interface ArtworkQueryParams {
 export interface CreateArtworkDto {
   title?: string;
   artist: string;
-  technique: string;
+  categoryIds: string[];
   support: string;
   state: string;
   yearOfArtwork: string;

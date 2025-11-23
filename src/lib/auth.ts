@@ -33,17 +33,6 @@ export const signInWithGoogle = async () => {
   }
 };
 
-export const signInWithFacebook = async () => {
-  try {
-    await authClient.signIn.social({
-      provider: "facebook",
-      callbackURL: "/", // Redirect to home after successful sign-in
-    });
-  } catch (error) {
-    console.error("Facebook sign-in error:", error);
-    throw error;
-  }
-};
 
 // Export types
 export type Session = typeof authClient.$Infer.Session;

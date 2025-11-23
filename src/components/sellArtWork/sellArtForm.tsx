@@ -29,8 +29,7 @@ import { useEffect } from "react";
  * Note: artist and accountHolder will be prefilled from user data if available
  */
 const getDefaultValues = (userName?: string): ArtworkFormData => ({
-  typeOfArtwork: "",
-  technique: "",
+  categoryIds: [],
   artist: userName || "", // Prefill with user's name if available
   support: "",
   titleOfArtwork: "",
@@ -156,7 +155,7 @@ export function SellArtForm() {
       const artworkData: CreateArtworkDto = {
         title: data.titleOfArtwork || undefined,
         artist: data.artist,
-        technique: data.technique,
+        categoryIds: data.categoryIds,
         support: data.support,
         state: data.state,
         yearOfArtwork: data.yearOfArtwork,
