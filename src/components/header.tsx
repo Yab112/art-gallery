@@ -44,38 +44,36 @@ export default function Header() {
             </Link>
             <div className="flex items-center gap-8 text-sm">
               <nav className="flex items-center gap-6">
-                <span className="cursor-pointer text-gray-700 hover:text-gray-900">
-                  Painting
-                </span>
-                <span className="cursor-pointer text-gray-700 hover:text-gray-900">
-                  Edition
-                </span>
-                <span className="cursor-pointer text-gray-700 hover:text-gray-900">
-                  Drawing
-                </span>
-
+                <Link
+                  to="/buyart"
+                  className="text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  Artworks
+                </Link>
+                <Link
+                  to="/profile/collections"
+                  className="text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  Collections
+                </Link>
                 <Link
                   to="/"
                   className="flex items-center text-2xl font-bold text-red-700"
                 >
                   artalistic
                 </Link>
-
-                <span className="cursor-pointer text-gray-700 hover:text-gray-900">
-                  Photography
-                </span>
-                <span className="cursor-pointer text-gray-700 hover:text-gray-900">
-                  Sculpture
-                </span>
                 <Link
                   to="/artists"
-                  className="cursor-pointer text-gray-700 hover:text-gray-900"
+                  className="text-gray-700 hover:text-gray-900 transition-colors"
                 >
                   Artists
                 </Link>
-                <span className="cursor-pointer text-gray-700 hover:text-gray-900">
+                <Link
+                  to="/blog"
+                  className="text-gray-700 hover:text-gray-900 transition-colors"
+                >
                   Blog
-                </span>
+                </Link>
               </nav>
             </div>
 

@@ -1,47 +1,48 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
-import { Link } from "react-router-dom";
-import { ArtistCard } from "../artist-card";
+import { useRef, useState } from "react";
+import { ArtistCard } from "@/components/artist/artist-circle-card";
 import { SectionTitle } from "../section-title";
-
-const artists = [
-  {
-    name: "Daniel Roibal",
-    image: "/artwork-1.jpg",
-  },
-  {
-    name: "Alex Katz",
-    nationality: "American",
-    birthYear: "1927",
-    image: "/artwork-2.jpg",
-  },
-  {
-    name: "Salvo",
-    nationality: "Italian",
-    birthYear: "1947",
-    deathYear: "2015",
-    image: "/artwork-3.jpg",
-  },
-  {
-    name: "Andy Warhol",
-    nationality: "American",
-    birthYear: "1928",
-    deathYear: "1987",
-    image: "/artwork-4.jpg",
-  },
-  {
-    name: "Katherine",
-    image: "/artwork-5.jpg",
-  },
-];
+import { useGetTrendingArtists } from "@/services/artwork/useGetTrendingArtists";
 
 export function TrendingArtists() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [hasDragged, setHasDragged] = useState(false);
+
+  // Fetch trending artists based on engagement metrics (limit: 10)
+  const { data: trendingData, isLoading, error, isError } = useGetTrendingArtists(10);
+
+  const artists = trendingData?.artists || [];
+
+  // Debug logging
+  console.log("Trending Artists Component State:", {
+    isLoading,
+    isError,
+    hasData: !!trendingData,
+    artistsCount: artists.length,
+    error: error ? {
+      message: (error as any)?.message,
+      response: (error as any)?.response?.data,
+      status: (error as any)?.response?.status,
+    } : null,
+  });
+  
+  if (error) {
+    console.error("Error loading trending artists:", error);
+  }
+  
+  if (trendingData) {
+    console.log("Trending artists data:", trendingData);
+    console.log("Artists array:", artists);
+  }
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
-      const scrollAmount = 320; // Width of one card plus gap
+      const scrollAmount = 280; // Width of one card plus gap
       scrollRef.current.scrollBy({
         left: direction === "left" ? -scrollAmount : scrollAmount,
         behavior: "smooth",
@@ -49,13 +50,105 @@ export function TrendingArtists() {
     }
   };
 
-  const handleFollow = (artistName: string) => {
-    console.log(`Following ${artistName}`);
+  // Drag to scroll handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setHasDragged(false);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+    scrollRef.current.style.cursor = "grabbing";
+    scrollRef.current.style.userSelect = "none";
   };
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Scroll speed multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+    if (Math.abs(walk) > 5) {
+      setHasDragged(true); // Only set if actually moved
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!scrollRef.current) return;
+    setIsDragging(false);
+    scrollRef.current.style.cursor = "grab";
+    scrollRef.current.style.userSelect = "auto";
+    // Reset hasDragged after a short delay to allow click events
+    setTimeout(() => setHasDragged(false), 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (!scrollRef.current) return;
+    setIsDragging(false);
+    scrollRef.current.style.cursor = "grab";
+    scrollRef.current.style.userSelect = "auto";
+    setTimeout(() => setHasDragged(false), 100);
+  };
+
+  // Map trending artists data to the Artist interface expected by ArtistCard
+  const mappedArtists = artists.map((artist) => ({
+    id: artist.userId,
+    name: artist.name,
+    country: "Unknown", // We don't have country data from backend yet
+    followers: 0, // We don't have followers data from backend yet
+    artworks: artist.artworkCount || 0,
+    avatar: artist.avatar || "/placeholder.svg",
+    sales: artist.totalSales || 0,
+    views: artist.totalViews || 0,
+    rating: artist.salesCount > 0 ? 4.5 : undefined, // Optional rating based on sales
+    isTopSelling: artist.salesCount > 0,
+    isMostViewed: (artist.totalViews || 0) > 100,
+  }));
+
+  if (isLoading) {
+    return (
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle
+            title="TRENDING ARTISTS"
+            subtitle="Discover popular creators"
+            className="mb-8"
+          />
+          <div className="flex gap-4 overflow-x-auto">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex-shrink-0 w-64 animate-pulse">
+                <div className="bg-white rounded-lg border p-3 lg:p-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 bg-gray-200 rounded-full mx-auto mb-3" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto mb-2" />
+                  <div className="h-3 bg-gray-200 rounded w-full mb-1" />
+                  <div className="h-3 bg-gray-200 rounded w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!artists || artists.length === 0) {
+    return (
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle
+            title="TRENDING ARTISTS"
+            subtitle="Discover popular creators"
+            className="mb-8"
+          />
+          <p className="text-center text-gray-500">No trending artists available at the moment.</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className=" px-4 py-16">
-      <div className="mx-auto max-w-7xl ">
+    <section className="px-4 py-16">
+      <div className="mx-auto max-w-7xl">
         <div className="relative mb-12">
           <SectionTitle
             title="TRENDING ARTISTS"
@@ -83,24 +176,36 @@ export function TrendingArtists() {
           </Button>
         </div>
 
+        {/* Horizontal Scrollable Artists */}
         <div className="relative">
           <div
             ref={scrollRef}
-            className="scrollbar-hide flex gap-4 overflow-x-auto px-2"
+            className="scrollbar-hide flex gap-4 overflow-x-auto px-2 cursor-grab active:cursor-grabbing"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
           >
-            {artists.map((artist, index) => (
-              <Link key={index} to={`/artist/${artist.name}`}>
-                <ArtistCard
-                  key={index}
-                  name={artist.name}
-                  nationality={artist.nationality}
-                  birthYear={artist.birthYear}
-                  deathYear={artist.deathYear}
-                  image={artist.image}
-                  onFollow={() => handleFollow(artist.name)}
-                />
-              </Link>
+            {mappedArtists.map((artist) => (
+              <div key={artist.id} className="flex-shrink-0 w-64">
+                <Link
+                  to={`/artist/${artist.id}`}
+                  className="block"
+                  onClick={(e) => {
+                    // Prevent navigation if user was dragging
+                    if (hasDragged) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <ArtistCard
+                    artist={artist}
+                    showSales={true}
+                    showViews={true}
+                  />
+                </Link>
+              </div>
             ))}
           </div>
         </div>

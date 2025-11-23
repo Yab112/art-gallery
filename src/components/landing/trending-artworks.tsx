@@ -1,32 +1,25 @@
-import { SectionTitle } from "@/components/section-title";
 import { ArtworkCard } from "@/components/artwork-card";
+import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useArtworks } from "@/queries/artworkQueries";
-import { mapArtworkToCardProps } from "@/lib/utils/artwork-mapper";
 import { useRef, useMemo, useState } from "react";
+import { useGetTrendingArtworks } from "@/services/artwork/useGetTrendingArtworks";
+import { mapArtworkToCardProps } from "@/lib/utils/artwork-mapper";
 
-export function NewArrivals() {
+export function TrendingArtworks() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [hasDragged, setHasDragged] = useState(false);
+  
+  // Fetch trending artworks based on engagement metrics (limit: 12)
+  const { data: trendingData, isLoading, error } = useGetTrendingArtworks(12);
 
-  // Fetch recently created approved artworks (limit to 8 for display)
-  const { data: artworksData, isLoading } = useArtworks({
-    limit: 8,
-    page: 1,
-    isApproved: true,
-    sortBy: "createdAt",
-    orderBy: "desc",
-  });
-
-  const newArtworks = useMemo(() => {
-    if (!artworksData?.artworks) return [];
-    // Limit to 8 artworks for the new arrivals section
-    return artworksData.artworks.slice(0, 8).map(mapArtworkToCardProps);
-  }, [artworksData]);
+  const artworks = useMemo(() => {
+    if (!trendingData?.artworks) return [];
+    return trendingData.artworks.map(mapArtworkToCardProps);
+  }, [trendingData]);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -92,8 +85,8 @@ export function NewArrivals() {
       <section className="px-4 py-10">
         <div className="mx-auto max-w-7xl">
           <SectionTitle
-            title="NEW ARRIVALS"
-            subtitle="The latest arrivals"
+            title="TRENDING ARTWORKS"
+            subtitle="Most popular pieces right now"
             className="mb-8"
           />
           <div className="flex gap-8 overflow-x-auto">
@@ -112,17 +105,21 @@ export function NewArrivals() {
     );
   }
 
-  if (!newArtworks || newArtworks.length === 0) {
+  if (error) {
+    console.error("Error loading trending artworks:", error);
+  }
+
+  if (!artworks || artworks.length === 0) {
     return (
       <section className="px-4 py-10">
         <div className="mx-auto max-w-7xl">
           <SectionTitle
-            title="NEW ARRIVALS"
-            subtitle="The latest arrivals"
+            title="TRENDING ARTWORKS"
+            subtitle="Most popular pieces right now"
             className="mb-8"
           />
           <p className="text-center text-gray-500">
-            No new arrivals at the moment.
+            No trending artworks available at the moment.
           </p>
         </div>
       </section>
@@ -134,8 +131,8 @@ export function NewArrivals() {
       <div className="mx-auto max-w-7xl">
         <div className="relative mb-12">
           <SectionTitle
-            title="NEW ARRIVALS"
-            subtitle="The latest arrivals"
+            title="TRENDING ARTWORKS"
+            subtitle="Most popular pieces right now"
             className="mb-8"
           />
 
@@ -170,9 +167,9 @@ export function NewArrivals() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
           >
-            {newArtworks.map((artwork) => (
-              <div
-                key={artwork.id}
+            {artworks.map((artwork) => (
+              <div 
+                key={artwork.id} 
                 className="flex-shrink-0 w-80"
                 onClick={(e) => {
                   // Prevent navigation if user was dragging
@@ -195,3 +192,4 @@ export function NewArrivals() {
     </section>
   );
 }
+
