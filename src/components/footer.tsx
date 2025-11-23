@@ -72,7 +72,9 @@ export function Footer() {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="mb-6">
-              <img src="/mainlogo.png" alt="Logo" className="h-12 w-auto mb-4" />
+              <h2 className="text-3xl font-bold text-red-500 mb-4">
+                artalistic
+              </h2>
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
                 Your gateway to the world of contemporary art. Discover,
                 collect, and connect with exceptional artworks and talented
