@@ -80,13 +80,34 @@ export function SigninForm({
             window.location.href = "/";
           },
           onError: (ctx) => {
+            // Check if error is due to unverified email (status 403)
+            // Better Auth returns 403 when requireEmailVerification is true and email is not verified
+            if (ctx.error?.status === 403 || 
+                ctx.error?.message?.toLowerCase().includes("verify") ||
+                ctx.error?.message?.toLowerCase().includes("verification")) {
+              // Redirect to verify email page with the email parameter
+              navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+              setIsLoading(false);
+              return;
+            }
+            
             setError(ctx.error?.message || "Failed to sign in. Please try again.");
             setIsLoading(false);
           },
         }
       );
     } catch (err: any) {
-      setError(err?.message || "An error occurred. Please try again.");
+      // Also check catch block for verification errors
+      const errorMessage = err?.message || "An error occurred. Please try again.";
+      if (err?.status === 403 || 
+          errorMessage.toLowerCase().includes("verify") ||
+          errorMessage.toLowerCase().includes("verification")) {
+        navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        setIsLoading(false);
+        return;
+      }
+      
+      setError(errorMessage);
       setIsLoading(false);
     }
   };
