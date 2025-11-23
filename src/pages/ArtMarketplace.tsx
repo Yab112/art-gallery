@@ -12,13 +12,15 @@ import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkT
 import { useQueryClient } from "@tanstack/react-query";
 import { collectionKeys } from "@/queries/queryKeys";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Square, Loader2 } from "lucide-react";
+import { CheckSquare, Square, Loader2, Image, Plus, Palette } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ArtMarketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const artworksSectionRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   
   // Check if we're in "add to collection" mode
   const collectionId = searchParams.get("addToCollection");
@@ -327,6 +329,45 @@ export default function ArtMarketplace() {
           selectedCategoryIds={selectedCategoryIds}
         />
       ) : null}
+
+      {/* Artworks Header Section */}
+      <div className="px-4 py-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <Palette className="h-4 w-4 text-red-700" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Artworks</h1>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {artworksData?.total || 0}{" "}
+                  {artworksData?.total === 1 ? "artwork" : "artworks"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {user && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/profile/my-artworks")}
+                  className="rounded-full flex items-center gap-2"
+                >
+                  <Palette className="h-4 w-4" />
+                  My Artworks
+                </Button>
+              )}
+              <Button
+                onClick={() => navigate("/sellart")}
+                className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Artwork
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <SearchFilters
         searchQuery={searchQuery}
