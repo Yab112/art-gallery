@@ -6,6 +6,8 @@ interface NavigationTabsProps {
 const tabs = [
   { id: "artworks", label: "Artworks" },
   { id: "about", label: "About" },
+  { id: "blog", label: "Blog" },
+  { id: "collections", label: "Collections" },
 ];
 
 export function NavigationTabs({

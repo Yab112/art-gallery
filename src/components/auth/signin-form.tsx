@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState} from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn, signInWithGoogle } from "@/lib/auth";
-import { useNavigate } from "react-router-dom";
 
 interface SigninFormData {
   email: string;
@@ -82,16 +81,22 @@ export function SigninForm({
           onError: (ctx) => {
             // Check if error is due to unverified email (status 403)
             // Better Auth returns 403 when requireEmailVerification is true and email is not verified
-            if (ctx.error?.status === 403 || 
-                ctx.error?.message?.toLowerCase().includes("verify") ||
-                ctx.error?.message?.toLowerCase().includes("verification")) {
+            if (
+              ctx.error?.status === 403 ||
+              ctx.error?.message?.toLowerCase().includes("verify") ||
+              ctx.error?.message?.toLowerCase().includes("verification")
+            ) {
               // Redirect to verify email page with the email parameter
-              navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+              window.location.href = `/verify-email?email=${encodeURIComponent(
+                data.email
+              )}`;
               setIsLoading(false);
               return;
             }
-            
-            setError(ctx.error?.message || "Failed to sign in. Please try again.");
+
+            setError(
+              ctx.error?.message || "Failed to sign in. Please try again."
+            );
             setIsLoading(false);
           },
         }

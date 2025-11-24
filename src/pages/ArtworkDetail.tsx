@@ -5,6 +5,8 @@ import { ArtworkGalleryInfo } from "@/components/artwork/artwork-galleryInfo";
 import { ArtworkImage } from "@/components/artwork/artwork-image";
 import { ArtworkPurchase } from "@/components/artwork/artwork-purchase";
 import { RelatedArtworks } from "@/components/artwork/related-artwork";
+import { UserBlogs } from "@/components/artwork/user-blogs";
+import { CreateBlogModal } from "@/components/blog/create-blog-modal";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -195,7 +197,20 @@ export default function ArtworkDetailPage() {
                   </div>
                 </div>
                 <ArtworkAbout artwork={artwork} isOwner={isOwner} />
-                <RelatedArtworks artworkId={id || ""} />
+                <RelatedArtworks 
+                  artworkId={id || ""} 
+                  artist={artwork.artist}
+                  categoryIds={artwork.categories}
+                />
+                {artwork.userId && (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">Blog Posts</h3>
+                      {user && artwork.userId === user.id && <CreateBlogModal />}
+                    </div>
+                    <UserBlogs userId={artwork.userId} />
+                  </>
+                )}
               </div>
               {/* Right Column - Owner Panel */}
               <div className="lg:col-span-1">
@@ -237,7 +252,20 @@ export default function ArtworkDetailPage() {
           {!isOwner && (
             <div className="mt-4 space-y-3">
               <ArtworkAbout artwork={artwork} isOwner={isOwner} />
-              <RelatedArtworks artworkId={id || ""} />
+              <RelatedArtworks 
+                artworkId={id || ""} 
+                artist={artwork.artist}
+                categoryIds={artwork.categories}
+              />
+              {artwork.userId && (
+                <>
+                  <div className="flex items-center justify-between mb-4 mt-8">
+                    <h3 className="text-lg font-semibold">Blog Posts by This Artist</h3>
+                    {user && artwork.userId === user.id && <CreateBlogModal />}
+                  </div>
+                  <UserBlogs userId={artwork.userId} />
+                </>
+              )}
             </div>
           )}
         </div>

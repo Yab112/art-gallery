@@ -17,7 +17,7 @@ function Logo() {
 
   if (imageError) {
     return (
-      <span className="text-2xl font-bold text-gray-900 block mb-4">ARTOPIA</span>
+      <span className="text-4xl font-bold text-red-500 block mb-4">artopia</span>
     );
   }
 

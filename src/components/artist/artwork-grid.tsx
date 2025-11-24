@@ -2,6 +2,7 @@ import { ArtworkCard } from "@/components/artwork-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Palette } from "lucide-react";
 import type { Artwork } from "@/types/artwork.types";
+import { ArtworkGridSkeleton } from "./artwork-grid-skeleton";
 
 interface ArtworkGridProps {
   artworks: Artwork[];
@@ -12,11 +13,7 @@ interface ArtworkGridProps {
 export function ArtworkGrid({ artworks, isLoading, onImageClick }: ArtworkGridProps) {
   // Show loading state
   if (isLoading) {
-    return (
-      <div className="mt-12 flex justify-center py-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
-      </div>
-    );
+    return <ArtworkGridSkeleton />;
   }
 
   // Show empty state

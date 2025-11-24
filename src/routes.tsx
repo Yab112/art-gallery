@@ -25,6 +25,11 @@ import FavoritesPage from "./pages/Favorites";
 import OrdersPage from "./pages/Orders";
 import SettingsPage from "./pages/Settings";
 import PaymentSuccessPage from "./pages/PaymentSuccess";
+import BlogPage from "./pages/Blog";
+import BlogDetailPage from "./pages/BlogDetail";
+import MyBlogsPage from "./pages/MyBlogs";
+import BlogSuccessPage from "./pages/BlogSuccess";
+import EditBlogPage from "./pages/EditBlog";
 
 export const router = createBrowserRouter([
   {
@@ -106,6 +111,26 @@ export const router = createBrowserRouter([
       {
         path: "settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "blog",
+        element: <BlogPage />,
+      },
+      {
+        path: "blog/:slug",
+        element: <BlogDetailPage />,
+      },
+      {
+        path: "blog/:slug/edit",
+        element: <EditBlogPage />,
+      },
+      {
+        path: "blog/my-blogs",
+        element: <MyBlogsPage />,
+      },
+      {
+        path: "blog/success",
+        element: <BlogSuccessPage />,
       },
     ],
   },

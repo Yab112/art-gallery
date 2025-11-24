@@ -42,6 +42,7 @@ import {
 import { toast } from "sonner";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
+import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
 
 export default function ProfilePage() {
   const { user: sessionUser } = useAuth();
@@ -71,11 +72,7 @@ export default function ProfilePage() {
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error) {

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreditCard, Lock } from "lucide-react";
 import { useCheckout } from "@/contexts/CheckoutContext";
@@ -129,7 +128,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                 name="paymentMethod"
                 value="chapa"
                 checked={paymentMethod === "chapa"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                onChange={(e) => setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")}
                 className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
               />
               <Label
@@ -149,7 +148,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                 name="paymentMethod"
                 value="paypal"
                 checked={paymentMethod === "paypal"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                onChange={(e) => setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")}
                 className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
               />
               <Label htmlFor="paypal" className="cursor-pointer">
@@ -163,7 +162,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                 name="paymentMethod"
                 value="card"
                 checked={paymentMethod === "card"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                onChange={(e) => setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")}
                 className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
               />
               <Label
