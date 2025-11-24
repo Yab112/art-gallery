@@ -47,6 +47,7 @@ import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
 import { Upload } from "lucide-react";
 import { mapArtworkToCardProps } from "@/lib/utils/artwork-mapper";
+import { CollectionDetailSkeleton } from "@/components/skeletons/collection-detail-skeleton";
 
 export default function CollectionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -246,9 +247,9 @@ export default function CollectionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <CollectionDetailSkeleton />
+      </ProtectedRoute>
     );
   }
 

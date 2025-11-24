@@ -439,10 +439,6 @@ export default function ArtMarketplace() {
       {isLoading ? (
           <div className="px-4 py-8">
             <div className="mx-auto max-w-7xl">
-              <div className="mb-6 flex items-center justify-center gap-2">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-          <p className="text-gray-600">Loading artworks...</p>
-              </div>
               {/* Skeleton loader matching grid layout */}
               <div className={viewMode === "grid" ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "space-y-4"}>
                 {[...Array(4)].map((_, i) => (

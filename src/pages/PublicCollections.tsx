@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PublicCollectionsSkeleton } from "@/components/skeletons/public-collections-skeleton";
 
 // Simple pagination component
 const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => (
@@ -305,15 +306,7 @@ export default function PublicCollectionsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-          </div>
-        </div>
-      </div>
-    );
+    return <PublicCollectionsSkeleton />;
   }
 
   if (error) {

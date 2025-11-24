@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
+import { EditProfileSkeleton } from "@/components/skeletons/edit-profile-skeleton";
 
 interface EditProfileFormData {
   name: string;
@@ -174,9 +175,9 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <EditProfileSkeleton />
+      </ProtectedRoute>
     );
   }
 
