@@ -5,6 +5,9 @@ export interface User {
   email: string;
   image?: string;
   coverImage?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
   role: string;
   score: number;
   emailVerified: boolean;

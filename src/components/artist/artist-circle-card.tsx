@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Star, TrendingUp, Eye } from "lucide-react";
+import { Star } from "lucide-react";
+import { getAvatarUrl } from "@/utils/avatar";
+import { useState } from "react";
 
 interface Artist {
   id: string;
@@ -19,102 +20,67 @@ interface Artist {
 
 interface ArtistCardProps {
   artist: Artist;
-  showSales?: boolean;
-  showViews?: boolean;
 }
 
 export function ArtistCard({
   artist,
-  showSales = false,
-  showViews = false,
 }: ArtistCardProps) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Get avatar URL with fallback to placeholder service
+  const avatarUrl = getAvatarUrl(artist.avatar, artist.name, 80);
+  const displayUrl = imageError ? getAvatarUrl(null, artist.name, 80) : avatarUrl;
+
+  const handleImageError = () => {
+    if (!imageError) {
+      setImageError(true);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg border p-3 lg:p-4 transition-none w-full">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-5 w-full">
       {/* Avatar */}
-      <div className="relative mb-3 lg:mb-4">
+      <div className="relative mb-4 flex justify-center">
+        <div className="relative">
         <img
-          src={artist.avatar}
+            src={displayUrl}
           alt={artist.name}
-          className="w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 rounded-full mx-auto object-cover border-2 border-gray-200"
+            onError={handleImageError}
+            className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-100"
         />
         {artist.rating && (
-          <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full flex items-center gap-1">
-            <Star className="h-2.5 w-2.5 lg:h-3 lg:w-3 fill-current" />
-            <span className="text-xs">{artist.rating}</span>
+            <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+              <Star className="h-3 w-3 fill-current" />
+              <span className="text-xs font-semibold">{artist.rating}</span>
           </div>
         )}
       </div>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full mb-2 lg:mb-3 text-xs h-7 lg:h-8 text-red-700 hover:text-red-800 hover:bg-transparent"
-      >
-        <Plus className="h-2.5 w-2.5 lg:h-3 lg:w-3 mr-1" />
-        <span className="hidden sm:inline">Follow </span>({artist.followers}{" "}
-        fans)
-      </Button>
+      </div>
 
       {/* Artist name */}
-      <h3 className="font-semibold text-xs sm:text-sm lg:text-sm mb-2 text-center truncate">
+      <h3 className="font-bold text-sm lg:text-base mb-3 text-center text-gray-900 line-clamp-1">
         {artist.name}
       </h3>
 
-      {artist.tags && (
-        <div className="flex flex-wrap gap-1 mb-2 lg:mb-3 justify-center">
-          {artist.tags.slice(0, 2).map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs px-1.5 py-0.5"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <div className="text-xs text-gray-600 space-y-1.5 lg:space-y-2">
-        <div className="flex justify-between items-center">
-          <span>Country:</span>
-          <span className="text-gray-800 font-medium truncate ml-1">
-            {artist.country}
-          </span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span>Artworks:</span>
-          <span className="text-gray-800 font-medium">{artist.artworks}</span>
+      {/* Stats */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+          <span className="font-medium text-gray-900">{artist.artworks}</span>
+          <span>artworks</span>
         </div>
 
-        {showSales && artist.sales && (
-          <div className="flex justify-between items-center text-red-700">
-            <div className="flex items-center gap-1">
-              <TrendingUp className="h-2.5 w-2.5 lg:h-3 lg:w-3" />
-              <span>Sales:</span>
-            </div>
-            <span className="font-medium text-xs">
-              ${artist.sales.toLocaleString()}
-            </span>
-          </div>
-        )}
-
-        {showViews && artist.views && (
-          <div className="flex justify-between items-center text-red-700">
-            <div className="flex items-center gap-1">
-              <Eye className="h-2.5 w-2.5 lg:h-3 lg:w-3" />
-              <span>Views:</span>
-            </div>
-            <span className="font-medium text-xs">
-              {artist.views.toLocaleString()}
-            </span>
+        {artist.country && artist.country !== "Unknown" && (
+          <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+            <span>{artist.country}</span>
           </div>
         )}
       </div>
 
+      {/* View Profile Button */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
-        className="w-full mt-2 lg:mt-3 text-xs h-6 lg:h-7 text-gray-600"
+        className="w-full text-xs h-9 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 transition-colors"
       >
         View Profile
       </Button>

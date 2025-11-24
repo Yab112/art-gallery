@@ -86,3 +86,109 @@
     display: none;
   }
 }
+
+/* Blog Content Styling */
+.blog-content {
+  @apply text-gray-700 leading-relaxed;
+}
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.blog-content h5,
+.blog-content h6 {
+  @apply font-bold text-gray-900 mt-8 mb-4;
+}
+
+.blog-content h1 {
+  @apply text-4xl;
+}
+
+.blog-content h2 {
+  @apply text-3xl;
+}
+
+.blog-content h3 {
+  @apply text-2xl;
+}
+
+.blog-content p {
+  @apply mb-6 leading-relaxed;
+}
+
+.blog-content a {
+  @apply text-red-700 no-underline hover:underline;
+}
+
+.blog-content ul,
+.blog-content ol {
+  @apply mb-6 ml-6;
+}
+
+.blog-content li {
+  @apply mb-2;
+}
+
+.blog-content img {
+  @apply rounded-lg shadow-md my-8 w-full;
+}
+
+.blog-content blockquote {
+  @apply border-l-4 border-red-700 pl-4 italic my-6 text-gray-600;
+}
+
+.blog-content code {
+  @apply bg-gray-100 px-2 py-1 rounded text-sm;
+}
+
+.blog-content pre {
+  @apply bg-gray-100 p-4 rounded-lg overflow-x-auto my-6;
+}
+
+.blog-content pre code {
+  @apply bg-transparent p-0;
+}
+
+.blog-content strong {
+  @apply font-bold text-gray-900;
+}
+
+.blog-content em {
+  @apply italic;
+}
+
+/* Fix for Radix UI Select dropdown page shift issue */
+/* Prevents margin/padding from being added when dropdowns open */
+body[data-scroll-locked],
+html[data-scroll-locked],
+body[data-radix-scroll-lock],
+html[data-radix-scroll-lock] {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Fix for Dialog overlay blocking page interactions */
+[data-radix-dialog-overlay][data-state="closed"] {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* Ensure body is always clickable when no dialog is open */
+body:not(:has([data-radix-dialog-overlay][data-state="open"])) {
+  pointer-events: auto !important;
+}
+
+/* Force cleanup - remove any stuck overlays */
+body:not(:has([data-radix-dialog-overlay][data-state="open"])) [data-radix-dialog-overlay] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Emergency fix - if body has pointer-events none, force it back */
+body[style*="pointer-events: none"]:not(:has([data-radix-dialog-overlay][data-state="open"])) {
+  pointer-events: auto !important;
+}
