@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,20 +44,26 @@ export function SigninForm({
     reset,
   } = form;
 
-  const navigate = useNavigate();
 
   // Handler for Google sign-in
   const handleGoogleSignIn = async () => {
     setIsSocialLoading(true);
     setError(null);
     try {
-      await signInWithGoogle();
+      // Redirect will happen automatically via Better Auth
+      await signInWithGoogle({
+        callbackURL: "/", // Redirect to home after successful sign-in
+        isSignUp: false,
+      });
+      // Note: If successful, Better Auth will redirect automatically
+      // We don't need to handle success here as the redirect happens
     } catch (err: any) {
-      setError(err?.message || "Failed to sign in with Google");
+      setError(
+        err?.message || "Failed to sign in with Google. Please try again."
+      );
       setIsSocialLoading(false);
     }
   };
-
 
   const onSubmit = async (data: SigninFormData) => {
     setIsLoading(true);
@@ -102,11 +107,10 @@ export function SigninForm({
       if (err?.status === 403 || 
           errorMessage.toLowerCase().includes("verify") ||
           errorMessage.toLowerCase().includes("verification")) {
-        navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}`;
         setIsLoading(false);
         return;
       }
-      
       setError(errorMessage);
       setIsLoading(false);
     }

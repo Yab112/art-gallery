@@ -77,9 +77,9 @@ export default function Header() {
                 </Link>
                 <Link
                   to="/"
-                  className="flex items-center"
+                  className="flex items-center text-2xl font-bold text-red-700"
                 >
-                  <Logo />
+                  artalistic
                 </Link>
                 <Link
                   to="/artists"
