@@ -6,6 +6,25 @@ import { useState } from "react";
 import { useCartSummary } from "@/queries/cartQueries";
 import { useNavigate } from "react-router-dom";
 
+function Logo() {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    return (
+      <span className="text-lg font-bold text-gray-900">ARTOPIA</span>
+    );
+  }
+
+  return (
+    <img 
+      src="/mainlogo.png" 
+      alt="Logo" 
+      className="h-8 w-auto"
+      onError={() => setImageError(true)}
+    />
+  );
+}
+
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,7 +70,7 @@ export default function Header() {
                   Artworks
                 </Link>
                 <Link
-                  to="/profile/collections"
+                  to="/collections"
                   className="text-gray-700 hover:text-gray-900 transition-colors"
                 >
                   Collections

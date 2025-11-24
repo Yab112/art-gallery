@@ -10,6 +10,26 @@ import {
   Brush,
   Camera,
 } from "lucide-react";
+import { useState } from "react";
+
+function Logo() {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    return (
+      <span className="text-2xl font-bold text-gray-900 block mb-4">ARTOPIA</span>
+    );
+  }
+
+  return (
+    <img 
+      src="/mainlogo.png" 
+      alt="Logo" 
+      className="h-12 w-auto mb-4"
+      onError={() => setImageError(true)}
+    />
+  );
+}
 
 const footerSections = [
   {

@@ -22,18 +22,18 @@ export const ArtworkCollapsibles: React.FC<ArtworkCollapsiblesProps> = ({
   isGuaranteeOpen,
   setIsGuaranteeOpen,
 }) => (
-  <div className="space-y-4">
+  <div className="space-y-2">
     <Collapsible open={isShippingOpen} onOpenChange={setIsShippingOpen}>
-      <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-3">
-        <span className="font-medium">Shipping and taxes</span>
+      <CollapsibleTrigger className="flex w-full items-center justify-between border-b border-gray-200 py-2">
+        <span className="text-sm font-medium text-gray-900">Shipping and taxes</span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform ${
+          className={`h-3.5 w-3.5 text-gray-500 transition-transform ${
             isShippingOpen ? "rotate-180" : ""
           }`}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-3">
-        <p className="mb-2 text-muted-foreground text-sm">
+      <CollapsibleContent className="pt-2">
+        <p className="text-gray-600 text-xs">
           <span className="cursor-pointer underline">
             Estimate Shipping Cost
           </span>
@@ -41,18 +41,18 @@ export const ArtworkCollapsibles: React.FC<ArtworkCollapsiblesProps> = ({
       </CollapsibleContent>
     </Collapsible>
     <Collapsible open={isGuaranteeOpen} onOpenChange={setIsGuaranteeOpen}>
-      <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-3">
-        <span className="font-medium">
+      <CollapsibleTrigger className="flex w-full items-center justify-between border-b border-gray-200 py-2">
+        <span className="text-sm font-medium text-gray-900">
           Be covered by the Artsy Guarantee when you check out with Artsy
         </span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform ${
+          className={`h-3.5 w-3.5 text-gray-500 transition-transform ${
             isGuaranteeOpen ? "rotate-180" : ""
           }`}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-3">
-        <p className="text-muted-foreground text-sm">
+      <CollapsibleContent className="pt-2">
+        <p className="text-gray-600 text-xs">
           Artsy's guarantee covers you in case the work is not as described or
           damaged during shipping.
         </p>

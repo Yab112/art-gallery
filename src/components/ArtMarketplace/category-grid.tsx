@@ -82,9 +82,9 @@ export function CategoryGrid({
   };
 
   return (
-    <section className="px-4 pb-8">
+    <section className="px-4 pb-0">
       <div className="mx-auto max-w-7xl">
-        <div className="relative mb-16">
+        <div className="relative mb-0">
           {/* Navigation Arrows - Centered relative to image section */}
           {/* Image is w-40 (160px) with aspect-[4/3], so height is 120px. Center is at 60px */}
           <Button

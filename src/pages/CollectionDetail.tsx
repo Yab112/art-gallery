@@ -80,9 +80,11 @@ export default function CollectionDetailPage() {
   // View mode state
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Add artwork - navigate to artworks page for now
+  // Add artwork - navigate to artworks page with collection ID
   const handleAddArtwork = () => {
-    navigate("/buyart");
+    if (id) {
+      navigate(`/buyart?addToCollection=${id}`);
+    }
   };
 
   // Initialize edit form when collection loads
@@ -272,7 +274,7 @@ export default function CollectionDetailPage() {
   // Map artworks using the mapper utility
   const mappedArtworks = artworks.map((artwork: any) => mapArtworkToCardProps(artwork));
 
-  // Split artworks: first 2-3 for right column, rest for continuous grid
+  // Split artworks: first 3 for right column, rest for continuous grid
   const featuredArtworks = mappedArtworks.slice(0, 3);
   const remainingArtworks = mappedArtworks.slice(3);
 
@@ -280,129 +282,149 @@ export default function CollectionDetailPage() {
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
-          {/* Back Button */}
-          <div className="mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/profile/collections")}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Collections
-            </Button>
-          </div>
-
-          {/* Newspaper Style Layout: Top Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Left Column: Collection Details */}
-            <div className="lg:col-span-1 bg-white rounded-lg border border-gray-200 p-6">
-              <div className="space-y-4">
-                {/* Visibility Badge */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      collection.visibility === "public"
-                        ? "bg-green-500 text-white"
-                        : collection.visibility === "unlisted"
-                        ? "bg-yellow-500 text-white"
-                        : "bg-gray-500 text-white"
-                    }`}
-                  >
-                    {collection.visibility}
-                  </span>
-                  {isOwner && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleEditClick}
-                        className="h-8 w-8"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleDelete}
-                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+          {/* Cover Image Section */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+            <div className="w-full h-48 md:h-64 bg-gray-100 relative overflow-hidden">
+              {collection.coverImage ? (
+                <img
+                  src={collection.coverImage}
+                  alt={collection.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                  <FolderOpen className="h-16 w-16 md:h-24 md:w-24 text-gray-400" />
                 </div>
+              )}
+              {/* Visibility Badge Overlay */}
+              <div className="absolute top-3 right-3">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
+                    collection.visibility === "public"
+                      ? "bg-green-500/90 text-white"
+                      : collection.visibility === "unlisted"
+                      ? "bg-yellow-500/90 text-white"
+                      : "bg-gray-500/90 text-white"
+                  }`}
+                >
+                  {collection.visibility}
+                </span>
+              </div>
+              {/* Back Button Overlay */}
+              <div className="absolute top-3 left-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/profile/collections")}
+                  className="bg-white/90 hover:bg-white backdrop-blur-sm h-8 w-8"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
 
-                {/* Collection Name */}
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+            {/* Collection Name Only */}
+            <div className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                   {collection.name}
                 </h1>
-
-                {/* Description */}
-                {collection.description && (
-                  <p className="text-gray-700 text-base leading-relaxed">
-                    {collection.description}
-                  </p>
-                )}
-
-                {/* Stats */}
-                <div className="flex items-center gap-4 text-sm text-gray-600 pt-2 border-t border-gray-200">
-                  <span className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4" />
-                    {artworks.length}{" "}
-                    {artworks.length === 1 ? "artwork" : "artworks"}
-                  </span>
-                </div>
-
-                {/* Owner Actions */}
                 {isOwner && (
-                  <div className="flex flex-col gap-2 pt-2">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handlePublishToggle}
-                      className="w-full"
+                      className="text-xs md:text-sm"
                     >
                       {collection.visibility === "public" ? "Unpublish" : "Publish"}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleAddArtwork}
-                      className="w-full"
+                      onClick={handleEditClick}
+                      className="text-xs md:text-sm"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Artwork
+                      <Edit2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDelete}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs md:text-sm"
+                    >
+                      <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                      Delete
                     </Button>
                   </div>
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Newspaper Style Layout: Description and Artworks */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            {/* Left Column: Description */}
+            <div className="lg:col-span-1">
+              {collection.description && (
+                <div className="border-l-2 border-gray-200 pl-4 py-2">
+                  <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2.5">Description</h2>
+                  <p className="text-sm text-gray-700 leading-relaxed break-words whitespace-normal">
+                    {collection.description}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Right Column: Featured Artworks */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>
+                    {artworks.length}{" "}
+                    {artworks.length === 1 ? "artwork" : "artworks"}
+                  </span>
+                </div>
+                {isOwner && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddArtwork}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Artwork
+                  </Button>
+                )}
+              </div>
               {featuredArtworks.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex justify-end gap-3">
                   {featuredArtworks.map((artwork) => (
-                    <div key={artwork.id} className="relative group">
+                    <div key={artwork.id} className="relative group w-1/3">
                       <ArtworkCard {...artwork} />
                       {isOwner && (
                         <Button
                           variant="destructive"
                           size="icon"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 z-10"
-                          onClick={() => handleRemoveArtwork(artwork.id)}
+                          className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-20"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleRemoveArtwork(artwork.id);
+                          }}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                  <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No artworks in this collection yet.</p>
+                <div className="bg-white rounded border border-gray-200 p-6 text-center">
+                  <FolderOpen className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-600">No artworks in this collection yet.</p>
                 </div>
               )}
             </div>
@@ -410,11 +432,11 @@ export default function CollectionDetailPage() {
 
           {/* Continuous Artworks Grid Below */}
           {remainingArtworks.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-gray-900 mb-3">
                 All Artworks
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {remainingArtworks.map((artwork) => (
                   <div key={artwork.id} className="relative group">
                     <ArtworkCard {...artwork} />
@@ -422,10 +444,10 @@ export default function CollectionDetailPage() {
                       <Button
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 z-10"
+                        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-10"
                         onClick={() => handleRemoveArtwork(artwork.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>

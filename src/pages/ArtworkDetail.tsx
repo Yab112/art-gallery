@@ -90,23 +90,26 @@ export default function ArtworkDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600">Loading artwork...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-3 border-gray-300 border-t-gray-600 mx-auto mb-2" />
+          <p className="text-gray-600 text-sm">Loading artwork...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 text-lg font-semibold mb-2">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center px-4">
+          <p className="text-red-600 text-base font-semibold mb-1.5">
             Failed to load artwork
           </p>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 text-sm mb-3">
             {error instanceof Error ? error.message : "Please try again."}
           </p>
-          <Button onClick={() => window.location.reload()}>
+          <Button size="sm" onClick={() => window.location.reload()} className="text-xs">
             Retry
           </Button>
         </div>
@@ -122,18 +125,15 @@ export default function ArtworkDetailPage() {
     console.log("Error:", error);
     
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 text-lg font-semibold mb-2">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center px-4">
+          <p className="text-red-600 text-base font-semibold mb-1.5">
             Artwork not found
           </p>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 text-sm mb-3">
             This artwork doesn't exist or has been removed.
           </p>
-          <p className="text-xs text-gray-400 mb-4">
-            Response: {JSON.stringify(artworkResponse, null, 2)}
-          </p>
-          <Button onClick={() => navigate("/buyart")}>
+          <Button size="sm" onClick={() => navigate("/buyart")} className="text-xs">
             Browse Artworks
           </Button>
         </div>
@@ -142,32 +142,32 @@ export default function ArtworkDetailPage() {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
-      <div className="border-b">
-        <div className="container mx-auto px-4 py-4">
+      <div className="border-b border-gray-200 bg-white">
+        <div className="container mx-auto px-4 py-2">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             <span>{artwork.artist || artwork.user?.name || "Artist"}</span>
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="l px-4 py-8">
+      <div className="px-4 py-4">
         <div className="mx-auto max-w-7xl">
           {isOwner ? (
             // Owner View - Two Column Layout with Owner Panel
-            <div className="grid gap-8 lg:grid-cols-3 lg:gap-12">
+            <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
               {/* Left Column - Artwork Image & Actions */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+              <div className="lg:col-span-2 space-y-3">
+                <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
                   {/* Left Column - Artwork Image */}
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     <ArtworkImage
                       src={artwork.photos?.[0] || "/placeholder.svg"}
                       alt={`${artwork.title || "Untitled"} by ${artwork.artist}`}
@@ -181,7 +181,7 @@ export default function ArtworkDetailPage() {
                     )}
                   </div>
                   {/* Right Column - Artwork Details */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <ArtworkDetails artwork={artwork} />
                     <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} />
                     <ArtworkCollapsibles
@@ -204,9 +204,9 @@ export default function ArtworkDetailPage() {
             </div>
           ) : (
             // Public View - Standard Layout
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+            <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
               {/* Left Column - Artwork Image */}
-              <div className="space-y-6">
+              <div className="space-y-3">
                 <ArtworkImage
                   src={artwork.photos?.[0] || "/placeholder.svg"}
                   alt={`${artwork.title || "Untitled"} by ${artwork.artist}`}
@@ -220,7 +220,7 @@ export default function ArtworkDetailPage() {
                 )}
               </div>
               {/* Right Column - Artwork Details */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <ArtworkDetails artwork={artwork} />
                 <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} />
                 <ArtworkCollapsibles
@@ -235,10 +235,10 @@ export default function ArtworkDetailPage() {
             </div>
           )}
           {!isOwner && (
-            <>
+            <div className="mt-4 space-y-3">
               <ArtworkAbout artwork={artwork} isOwner={isOwner} />
               <RelatedArtworks artworkId={id || ""} />
-            </>
+            </div>
           )}
         </div>
       </div>

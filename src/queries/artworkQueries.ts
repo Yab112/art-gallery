@@ -89,3 +89,23 @@ export const useMyArtworks = (page: number = 1, limit: number = 10) => {
     `artworks/my-artworks?page=${page}&limit=${limit}`
   );
 };
+
+/**
+ * Get artworks similar to a specific artwork
+ * Finds artworks that share categories with the given artwork
+ */
+export const useSimilarArtworks = (artworkId: string, limit: number = 12) => {
+  const axiosAuth = useAxiosAuth();
+  
+  return useQuery<{ success: boolean; artworks: Artwork[] }>({
+    queryKey: [...artworkKeys.detail(artworkId), "similar", limit],
+    queryFn: async () => {
+      const response = await axiosAuth.get<{ success: boolean; artworks: Artwork[] }>(
+        `artworks/${artworkId}/similar-artworks?limit=${limit}`
+      );
+      return response.data;
+    },
+    enabled: !!artworkId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
