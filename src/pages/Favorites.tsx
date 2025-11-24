@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { favoriteKeys } from "@/queries/queryKeys";
 import { toast } from "sonner";
+import { FavoritesSkeleton } from "@/components/skeletons/favorites-skeleton";
 
 export default function FavoritesPage() {
   const [page, setPage] = useState(1);
@@ -34,9 +35,9 @@ export default function FavoritesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <FavoritesSkeleton />
+      </ProtectedRoute>
     );
   }
 

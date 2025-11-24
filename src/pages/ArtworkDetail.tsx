@@ -5,6 +5,7 @@ import { ArtworkGalleryInfo } from "@/components/artwork/artwork-galleryInfo";
 import { ArtworkImage } from "@/components/artwork/artwork-image";
 import { ArtworkPurchase } from "@/components/artwork/artwork-purchase";
 import { RelatedArtworks } from "@/components/artwork/related-artwork";
+import { SimilarArtworks } from "@/components/artwork/similar-artworks";
 import { UserBlogs } from "@/components/artwork/user-blogs";
 import { CreateBlogModal } from "@/components/blog/create-blog-modal";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArtworkDetailSkeleton } from "@/components/skeletons/artwork-detail-skeleton";
 
 export default function ArtworkDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -91,14 +93,7 @@ export default function ArtworkDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-3 border-gray-300 border-t-gray-600 mx-auto mb-2" />
-          <p className="text-gray-600 text-sm">Loading artwork...</p>
-        </div>
-      </div>
-    );
+    return <ArtworkDetailSkeleton />;
   }
 
   if (error) {
@@ -202,6 +197,7 @@ export default function ArtworkDetailPage() {
                   artist={artwork.artist}
                   categoryIds={artwork.categories}
                 />
+                <SimilarArtworks artworkId={id || ""} />
                 {artwork.userId && (
                   <>
                     <div className="flex items-center justify-between mb-4">
@@ -257,6 +253,7 @@ export default function ArtworkDetailPage() {
                 artist={artwork.artist}
                 categoryIds={artwork.categories}
               />
+              <SimilarArtworks artworkId={id || ""} />
               {artwork.userId && (
                 <>
                   <div className="flex items-center justify-between mb-4 mt-8">

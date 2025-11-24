@@ -20,7 +20,7 @@ export const useDeleteArtwork = () => {
 
   const deleteArtwork = async (id: string) => {
     return mutateAsync({
-      url: `/artwork/${id}`,
+      url: `/artworks/${id}`,
       method: "DELETE",
     });
   };

@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCartItems } from "@/queries/cartQueries";
 import { useState } from "react";
+import { OrdersSkeleton } from "@/components/skeletons/orders-skeleton";
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
@@ -32,9 +33,9 @@ export default function OrdersPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <OrdersSkeleton />
+      </ProtectedRoute>
     );
   }
 
