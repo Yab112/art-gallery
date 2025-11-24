@@ -130,12 +130,11 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
             <Select
               value={field.value}
               onValueChange={field.onChange}
-              {...({ modal: false } as any)}
             >
               <SelectTrigger id="acceptPriceNegotiation">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent position="popper" sideOffset={4}>
+              <SelectContent>
                 {PRICE_NEGOTIATION_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}

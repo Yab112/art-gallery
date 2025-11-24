@@ -86,22 +86,3 @@
     display: none;
   }
 }
-
-/* Fix for Radix UI Select dropdown page shift issue */
-/* Prevents margin/padding from being added when dropdowns open */
-body[data-scroll-locked],
-html[data-scroll-locked] {
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-}
-
-/* Additional global fix for any Radix UI scroll lock */
-body[data-radix-scroll-lock],
-html[data-radix-scroll-lock] {
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-}

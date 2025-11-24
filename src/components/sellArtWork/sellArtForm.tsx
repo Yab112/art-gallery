@@ -83,59 +83,6 @@ export function SellArtForm() {
     }
   }, [userName, setValue]);
 
-  // Fix for Radix UI Select dropdown page shift issue
-  // Aggressively prevents margin/padding from being added to body/html
-  useEffect(() => {
-    const styleId = "prevent-select-margin-sellart";
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-    
-    if (!styleElement) {
-      styleElement = document.createElement("style");
-      styleElement.id = styleId;
-      styleElement.textContent = `
-        body[data-scroll-locked],
-        html[data-scroll-locked],
-        body[data-radix-scroll-lock],
-        html[data-radix-scroll-lock] {
-          margin-right: 0 !important;
-          margin-left: 0 !important;
-          padding-right: 0 !important;
-          padding-left: 0 !important;
-        }
-        body {
-          margin-right: 0 !important;
-          padding-right: 0 !important;
-        }
-        html {
-          margin-right: 0 !important;
-          padding-right: 0 !important;
-        }
-      `;
-      document.head.appendChild(styleElement);
-    }
-
-    // Use interval to continuously remove margin/padding (backup approach)
-    const interval = setInterval(() => {
-      const body = document.body;
-      const html = document.documentElement;
-      
-      // Force remove margin-right and padding-right from body and html
-      body.style.setProperty("margin-right", "0", "important");
-      body.style.setProperty("padding-right", "0", "important");
-      body.style.setProperty("margin-left", "0", "important");
-      body.style.setProperty("padding-left", "0", "important");
-      html.style.setProperty("margin-right", "0", "important");
-      html.style.setProperty("padding-right", "0", "important");
-      html.style.setProperty("margin-left", "0", "important");
-      html.style.setProperty("padding-left", "0", "important");
-    }, 16); // Check every frame (~60fps)
-
-    return () => {
-      clearInterval(interval);
-      // Don't remove style element as it should persist
-    };
-  }, []);
-
   const formData = watch(); 
 
   const { createArtwork, isCreating } = useCreateArtwork();

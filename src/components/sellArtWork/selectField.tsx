@@ -29,16 +29,11 @@ export function SelectField({
   disabled = false,
 }: SelectFieldProps) {
   return (
-    <Select 
-      value={value} 
-      onValueChange={onChange} 
-      disabled={disabled}
-      {...({ modal: false } as any)}
-    >
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent position="popper" sideOffset={4}>
+      <SelectContent>
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}

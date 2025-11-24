@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Handler for Google sign-up
@@ -33,21 +35,13 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
     setIsSocialLoading(true);
     setError(null);
     try {
-      // Better Auth will automatically create account if it doesn't exist
-      // Redirect will happen automatically via Better Auth
-      await signInWithGoogle({
-        callbackURL: "/", // Redirect to home after successful sign-up
-        isSignUp: true,
-      });
-      // Note: If successful, Better Auth will redirect automatically
-      // We don't need to handle success here as the redirect happens
+      await signInWithGoogle();
     } catch (err: any) {
-      setError(
-        err?.message || "Failed to sign up with Google. Please try again."
-      );
+      setError(err?.message || "Failed to sign up with Google");
       setIsSocialLoading(false);
     }
   };
+
 
   const form = useForm<SignupFormData>({
     defaultValues: {
@@ -69,6 +63,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       // Use Better Auth signUp with proper error handling
@@ -81,19 +76,15 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
         },
         {
           onSuccess: () => {
-            // Success - redirect to verify email page
+            // Success - show email sent message
+            setSuccess(
+              "Account created successfully! Please check your email to verify your account."
+            );
             reset();
             setIsLoading(false);
-            // Redirect to verify email page with email as query parameter
-            navigate(`/verify-email?email=${encodeURIComponent(data.email)}`, {
-              replace: true,
-            });
           },
           onError: (ctx) => {
-            setError(
-              ctx.error?.message ||
-                "Failed to create account. Please try again."
-            );
+            setError(ctx.error?.message || "Failed to create account. Please try again.");
             setIsLoading(false);
           },
         }
@@ -101,9 +92,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
 
       // Handle result if it's returned synchronously
       if (result?.error) {
-        setError(
-          result.error.message || "Failed to create account. Please try again."
-        );
+        setError(result.error.message || "Failed to create account. Please try again.");
         setIsLoading(false);
         return;
       }
@@ -123,6 +112,14 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {success && (
+        <Alert className="border-green-200 bg-green-50">
+          <AlertDescription className="text-green-800">
+            {success}
+          </AlertDescription>
         </Alert>
       )}
 
