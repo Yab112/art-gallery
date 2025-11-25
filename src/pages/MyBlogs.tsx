@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useGetBlogPosts } from "@/services/blog";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -41,15 +42,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 export default function MyBlogsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const axiosAuth = useAxiosAuth();
   const [metricsDialogOpen, setMetricsDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   // AGGRESSIVE cleanup - continuously monitor and remove stuck overlays
   useEffect(() => {
@@ -119,13 +140,38 @@ export default function MyBlogsPage() {
 
   // Restore filter state from location state if available
   const locationState = (location.state as any)?.returnState;
+
+  // Get values from URL params or defaults
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "12", 10);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "published" | "pending" | "draft"
-  >(locationState?.statusFilter || "all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [dateRange, setDateRange] = useState("all");
+  >(locationState?.statusFilter || searchParams.get("status") || "all");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || ""
+  );
+  const [sortBy, setSortBy] = useState(
+    searchParams.get("sortBy") || "createdAt"
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
+    (searchParams.get("sortOrder") as "asc" | "desc") || "desc"
+  );
+  const [dateRange, setDateRange] = useState(
+    searchParams.get("dateRange") || "all"
+  );
+
+  // Update URL params
+  const updateParams = (updates: Record<string, string | number | null>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(value));
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  };
 
   const deleteBlog = useDeleteBlogPost();
   const publishBlog = usePublishBlogPost();
@@ -165,7 +211,8 @@ export default function MyBlogsPage() {
   // Build query params for backend
   const queryParams: any = {
     authorId: user?.id,
-    limit: 100,
+    page,
+    limit,
     sortBy: sortBy as any,
     sortOrder: sortOrder,
   };
@@ -188,35 +235,48 @@ export default function MyBlogsPage() {
   }
   // "all" and "pending" don't filter by published
 
-  // Fetch posts from backend with filters
+  // Fetch posts from backend with filters and pagination
   const allPosts = useGetBlogPosts(queryParams);
 
   // Apply date range filter client-side (since backend doesn't support it yet)
+  // Note: This will affect pagination, but for now we'll keep it client-side
   const filteredPosts = getDateFilteredPosts(allPosts.data?.data) || [];
+
+  // Calculate pagination for filtered results
+  const totalFiltered = filteredPosts.length;
+  const totalPages = Math.ceil(totalFiltered / limit);
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
   const data = allPosts.data
     ? {
         ...allPosts.data,
-        data: filteredPosts,
-        total: filteredPosts.length,
+        data: paginatedPosts,
+        total: totalFiltered,
+        totalPages,
       }
     : undefined;
 
   const isLoading = allPosts.isLoading;
   const error = allPosts.error;
 
-  const handleDelete = async (postId: string) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this blog post? This action cannot be undone."
-      )
-    ) {
-      try {
-        await deleteBlog.mutateAsync(postId);
-      } catch (error) {
-        console.error("Failed to delete blog post:", error);
-        toast.error("Failed to delete blog post. Please try again.");
-      }
+  const handleDeleteClick = (postId: string) => {
+    setPostToDelete(postId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete) return;
+
+    try {
+      await deleteBlog.mutateAsync(postToDelete);
+      setDeleteDialogOpen(false);
+      setPostToDelete(null);
+      toast.success("Blog post deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete blog post:", error);
+      toast.error("Failed to delete blog post. Please try again.");
     }
   };
 
@@ -250,6 +310,44 @@ export default function MyBlogsPage() {
       console.error("Failed to share blog post:", error);
       toast.error("Failed to share blog post. Please try again.");
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    updateParams({ page: newPage });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLimitChange = (newLimit: string) => {
+    updateParams({ limit: parseInt(newLimit, 10), page: 1 });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    updateParams({ search: query || null, page: 1 });
+  };
+
+  const handleStatusChange = (
+    value: "all" | "published" | "pending" | "draft"
+  ) => {
+    setStatusFilter(value);
+    updateParams({ status: value !== "all" ? value : null, page: 1 });
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value);
+    updateParams({ sortBy: value, page: 1 });
+  };
+
+  const handleSortOrderChange = (value: string) => {
+    const order = value as "asc" | "desc";
+    setSortOrder(order);
+    updateParams({ sortOrder: order, page: 1 });
+  };
+
+  const handleDateRangeChange = (value: string) => {
+    setDateRange(value);
+    updateParams({ dateRange: value !== "all" ? value : null, page: 1 });
   };
 
   const formatDate = (dateString?: string) => {
@@ -304,17 +402,15 @@ export default function MyBlogsPage() {
             <div className="sticky top-8">
               <MyBlogsFilters
                 searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
+                onSearchChange={handleSearchChange}
                 statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
+                onStatusChange={handleStatusChange}
                 sortBy={sortBy}
-                onSortChange={setSortBy}
+                onSortChange={handleSortChange}
                 sortOrder={sortOrder}
-                onSortOrderChange={(value) =>
-                  setSortOrder(value as "asc" | "desc")
-                }
+                onSortOrderChange={handleSortOrderChange}
                 dateRange={dateRange}
-                onDateRangeChange={setDateRange}
+                onDateRangeChange={handleDateRangeChange}
               />
             </div>
           </aside>
@@ -346,19 +442,53 @@ export default function MyBlogsPage() {
               </div>
             ) : (
               <>
-                {/* Results Count */}
-                <div className="mb-6 flex items-center justify-between">
+                {/* Results Count and Page Size Selector */}
+                <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <p className="text-gray-600">
                     Showing{" "}
                     <span className="font-semibold text-gray-900">
-                      {data.data.length}
+                      {data.data.length > 0 ? (page - 1) * limit + 1 : 0}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-semibold text-gray-900">
+                      {Math.min(page * limit, data.total)}
                     </span>{" "}
                     of{" "}
                     <span className="font-semibold text-gray-900">
                       {data.total}
                     </span>{" "}
                     posts
+                    {data.totalPages > 1 && (
+                      <span className="ml-2 text-gray-500">
+                        (Page {page} of {data.totalPages})
+                      </span>
+                    )}
                   </p>
+
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="page-size"
+                      className="text-sm text-gray-600 whitespace-nowrap"
+                    >
+                      Show per page:
+                    </label>
+                    <Select
+                      value={limit.toString()}
+                      onValueChange={handleLimitChange}
+                    >
+                      <SelectTrigger id="page-size" className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6</SelectItem>
+                        <SelectItem value="12">12</SelectItem>
+                        <SelectItem value="24">24</SelectItem>
+                        <SelectItem value="36">36</SelectItem>
+                        <SelectItem value="48">48</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Blog Posts List - Medium Style */}
@@ -485,7 +615,7 @@ export default function MyBlogsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleDelete(post.id)}
+                              onClick={() => handleDeleteClick(post.id)}
                               disabled={deleteBlog.isPending}
                               className="text-red-700"
                             >
@@ -498,6 +628,126 @@ export default function MyBlogsPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Pagination - Always show if there are posts */}
+                {data && data.total > 0 && (
+                  <div className="flex flex-col items-center justify-center gap-4 mt-8">
+                    {data.totalPages > 1 ? (
+                      <>
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 1}
+                            className="min-w-[80px]"
+                          >
+                            Previous
+                          </Button>
+
+                          <div className="flex items-center gap-1">
+                            {/* Show first page if not in initial range */}
+                            {data.totalPages > 5 && page > 3 && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePageChange(1)}
+                                  className="min-w-[40px]"
+                                >
+                                  1
+                                </Button>
+                                {page > 4 && (
+                                  <span className="px-2 text-gray-500">
+                                    ...
+                                  </span>
+                                )}
+                              </>
+                            )}
+
+                            {/* Show page numbers */}
+                            {Array.from(
+                              { length: Math.min(5, data.totalPages) },
+                              (_, i) => {
+                                let pageNum;
+                                if (data.totalPages <= 5) {
+                                  pageNum = i + 1;
+                                } else if (page <= 3) {
+                                  pageNum = i + 1;
+                                } else if (page >= data.totalPages - 2) {
+                                  pageNum = data.totalPages - 4 + i;
+                                } else {
+                                  pageNum = page - 2 + i;
+                                }
+
+                                return (
+                                  <Button
+                                    key={pageNum}
+                                    variant={
+                                      page === pageNum ? "default" : "outline"
+                                    }
+                                    size="sm"
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={
+                                      page === pageNum
+                                        ? "bg-red-700 hover:bg-red-800 min-w-[40px]"
+                                        : "min-w-[40px]"
+                                    }
+                                  >
+                                    {pageNum}
+                                  </Button>
+                                );
+                              }
+                            )}
+
+                            {/* Show last page if not in final range */}
+                            {data.totalPages > 5 &&
+                              page < data.totalPages - 2 && (
+                                <>
+                                  {page < data.totalPages - 3 && (
+                                    <span className="px-2 text-gray-500">
+                                      ...
+                                    </span>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handlePageChange(data.totalPages)
+                                    }
+                                    className="min-w-[40px]"
+                                  >
+                                    {data.totalPages}
+                                  </Button>
+                                </>
+                              )}
+                          </div>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page === data.totalPages}
+                            className="min-w-[80px]"
+                          >
+                            Next
+                          </Button>
+                        </div>
+
+                        {/* Page info */}
+                        <p className="text-sm text-gray-500">
+                          Page {page} of {data.totalPages} • {data.total} total
+                          posts
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        Showing all {data.total} post
+                        {data.total !== 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </main>
@@ -607,6 +857,31 @@ export default function MyBlogsPage() {
             })()}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Blog Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this blog post? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPostToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteBlog.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteBlog.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

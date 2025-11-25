@@ -1,5 +1,5 @@
 import { AboutSection } from "@/components/artist/about-section";
-import { ArtistProfile } from "@/components/artist/artist-profile";
+import { ArtistProfileEnhanced } from "@/components/artist/artist-profile-enhanced";
 import { ArtworkGrid } from "@/components/artist/artwork-grid";
 import { FilterControls } from "@/components/artist/filter-controls";
 import { ImageModal } from "@/components/artist/image-modal";
@@ -198,7 +198,12 @@ export default function ArtistDetailPage() {
           </Button>
         </div>
         
-        <ArtistProfile user={user} />
+        <ArtistProfileEnhanced 
+          user={user} 
+          artworks={artworks}
+          collectionsCount={collectionsTotal}
+          blogsCount={blogsTotal}
+        />
         <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {activeTab === "artworks" && (

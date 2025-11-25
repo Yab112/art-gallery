@@ -145,7 +145,7 @@ function CheckoutContent() {
               <ArrowLeft className="h-4 w-4" />
               <span>Continue Shopping</span>
             </Link>
-            <div className="text-2xl font-bold text-red-700">artalistic</div>
+            <div className="text-2xl font-bold text-red-700">artopia</div>
             <div className="w-24"></div> {/* Spacer for centering */}
           </div>
         </div>

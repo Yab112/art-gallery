@@ -57,7 +57,7 @@ export function FeaturedArtworks() {
         <div className="mx-auto max-w-7xl">
           <SectionTitle
             title="FEATURED ARTWORKS"
-            subtitle="Artalistic Selection"
+            subtitle="Artopia Selection"
             className="mb-8"
           />
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -82,7 +82,7 @@ export function FeaturedArtworks() {
         <div className="mx-auto max-w-7xl">
           <SectionTitle
             title="FEATURED ARTWORKS"
-            subtitle="Artalistic Selection"
+            subtitle="Artopia Selection"
             className="mb-8"
           />
           <p className="text-center text-gray-500">No featured artworks available at the moment.</p>
@@ -97,7 +97,7 @@ export function FeaturedArtworks() {
         <div className="relative mb-12">
           <SectionTitle
             title="FEATURED ARTWORKS"
-            subtitle="Artalistic Selection"
+            subtitle="Artopia Selection"
             className="mb-8"
           />
 

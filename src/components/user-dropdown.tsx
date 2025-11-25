@@ -90,7 +90,7 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border z-50">
           <div className="py-2">
             {isLoggedIn ? (
               <>
@@ -101,7 +101,13 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                       <img
                         src={user.image}
                         alt={user.name || "User"}
-                        className="w-8 h-8 rounded-full object-cover"
+                        className="w-8 h-8 aspect-square rounded-full object-cover object-center border-2 border-white"
+                        style={{
+                          borderRadius: "50%",
+                          width: "2rem",
+                          height: "2rem",
+                          objectFit: "cover",
+                        }}
                       />
                     ) : (
                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -178,7 +184,7 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
               <>
                 {/* Not Logged In */}
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm text-gray-600">Welcome to Artalistic</p>
+                  <p className="text-sm text-gray-600">Welcome to Artopia</p>
                 </div>
 
                 <div className="py-1">

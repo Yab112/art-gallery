@@ -10,7 +10,16 @@ import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork";
 import { useQueryClient } from "@tanstack/react-query";
 import { artworkKeys } from "@/queries/queryKeys";
 import { toast } from "sonner";
-import { MyArtworksSkeleton } from "@/components/skeletons/my-artworks-skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Simple pagination component
 const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => (
@@ -46,19 +55,28 @@ export default function MyArtworksPage() {
   const { data, isLoading, error } = useMyArtworks(page, limit);
   const { deleteArtwork, isDeleting } = useDeleteArtwork();
   const queryClient = useQueryClient();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [artworkToDelete, setArtworkToDelete] = useState<string | null>(null);
 
   const artworks = data?.artworks || [];
   const pagination = data?.pagination || { page: 1, limit, total: 0, pages: 1 };
 
-  const handleDelete = async (artworkId: string) => {
-    if (window.confirm("Are you sure you want to delete this artwork?")) {
-      try {
-        await deleteArtwork(artworkId);
-        queryClient.invalidateQueries({ queryKey: artworkKeys.myArtworks() });
-        toast.success("Artwork deleted successfully");
-      } catch (error: any) {
-        toast.error("Failed to delete artwork: " + (error?.message || "An error occurred"));
-      }
+  const handleDeleteClick = (artworkId: string) => {
+    setArtworkToDelete(artworkId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!artworkToDelete) return;
+    
+    try {
+      await deleteArtwork(artworkToDelete);
+      queryClient.invalidateQueries({ queryKey: artworkKeys.myArtworks() });
+      setDeleteDialogOpen(false);
+      setArtworkToDelete(null);
+      toast.success("Artwork deleted successfully");
+    } catch (error: any) {
+      toast.error("Failed to delete artwork: " + (error?.message || "An error occurred"));
     }
   };
 
@@ -159,7 +177,7 @@ export default function MyArtworksPage() {
                         variant="destructive"
                         size="icon"
                         className="h-7 w-7"
-                        onClick={() => handleDelete(artwork.id)}
+                        onClick={() => handleDeleteClick(artwork.id)}
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -191,6 +209,30 @@ export default function MyArtworksPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Artwork</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this artwork? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setArtworkToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ProtectedRoute>
   );
 }

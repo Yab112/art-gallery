@@ -33,6 +33,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +91,11 @@ export default function CollectionDetailPage() {
   // View mode state
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Delete and remove confirmation dialogs
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [removeArtworkDialogOpen, setRemoveArtworkDialogOpen] = useState(false);
+  const [artworkToRemove, setArtworkToRemove] = useState<string | null>(null);
+
   // Add artwork - navigate to artworks page with collection ID
   const handleAddArtwork = () => {
     if (id) {
@@ -94,28 +109,32 @@ export default function CollectionDetailPage() {
       setEditForm({
         name: collection.name || "",
         description: collection.description || "",
-        visibility: (collection.visibility as "public" | "private" | "unlisted") || "private",
+        visibility:
+          (collection.visibility as "public" | "private" | "unlisted") ||
+          "private",
         coverImage: collection.coverImage || "",
       });
     }
   }, [collection]);
 
-  const handleRemoveArtwork = async (artworkId: string) => {
-    if (!id) return;
-    if (
-      window.confirm(
-        "Are you sure you want to remove this artwork from the collection?"
-      )
-    ) {
-      try {
-        await removeArtworkFromCollection(id, artworkId);
-        queryClient.invalidateQueries({ queryKey: collectionKeys.detail(id) });
-        toast.success("Artwork removed from collection");
-      } catch (error: any) {
-        toast.error(
-          "Failed to remove artwork: " + (error?.message || "An error occurred")
-        );
-      }
+  const handleRemoveArtworkClick = (artworkId: string) => {
+    setArtworkToRemove(artworkId);
+    setRemoveArtworkDialogOpen(true);
+  };
+
+  const handleRemoveArtworkConfirm = async () => {
+    if (!id || !artworkToRemove) return;
+
+    try {
+      await removeArtworkFromCollection(id, artworkToRemove);
+      queryClient.invalidateQueries({ queryKey: collectionKeys.detail(id) });
+      setRemoveArtworkDialogOpen(false);
+      setArtworkToRemove(null);
+      toast.success("Artwork removed from collection");
+    } catch (error: any) {
+      toast.error(
+        "Failed to remove artwork: " + (error?.message || "An error occurred")
+      );
     }
   };
 
@@ -150,24 +169,24 @@ export default function CollectionDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!id) return;
-    if (
-      window.confirm(
-        "Are you sure you want to delete this collection? This action cannot be undone."
-      )
-    ) {
-      try {
-        await deleteCollection(id);
-        queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
-        toast.success("Collection deleted successfully");
-        navigate("/profile/collections");
-      } catch (error: any) {
-        toast.error(
-          "Failed to delete collection: " +
-            (error?.message || "An error occurred")
-        );
-      }
+
+    try {
+      await deleteCollection(id);
+      queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
+      setDeleteDialogOpen(false);
+      toast.success("Collection deleted successfully");
+      navigate("/profile/collections");
+    } catch (error: any) {
+      toast.error(
+        "Failed to delete collection: " +
+          (error?.message || "An error occurred")
+      );
     }
   };
 
@@ -176,7 +195,9 @@ export default function CollectionDetailPage() {
       setEditForm({
         name: collection.name || "",
         description: collection.description || "",
-        visibility: (collection.visibility as "public" | "private" | "unlisted") || "private",
+        visibility:
+          (collection.visibility as "public" | "private" | "unlisted") ||
+          "private",
         coverImage: collection.coverImage || "",
       });
       setCoverImageFile(null);
@@ -222,7 +243,10 @@ export default function CollectionDetailPage() {
           await uploadFileToS3(presignedResponse.presignedUrl, coverImageFile);
           coverImageUrl = presignedResponse.publicUrl;
         } catch (error: any) {
-          toast.error("Failed to upload cover image: " + (error?.message || "An error occurred"));
+          toast.error(
+            "Failed to upload cover image: " +
+              (error?.message || "An error occurred")
+          );
           setIsUploadingCover(false);
           return;
         } finally {
@@ -273,7 +297,9 @@ export default function CollectionDetailPage() {
     : [];
 
   // Map artworks using the mapper utility
-  const mappedArtworks = artworks.map((artwork: any) => mapArtworkToCardProps(artwork));
+  const mappedArtworks = artworks.map((artwork: any) =>
+    mapArtworkToCardProps(artwork)
+  );
 
   // Split artworks: first 3 for right column, rest for continuous grid
   const featuredArtworks = mappedArtworks.slice(0, 3);
@@ -338,7 +364,9 @@ export default function CollectionDetailPage() {
                       onClick={handlePublishToggle}
                       className="text-xs md:text-sm"
                     >
-                      {collection.visibility === "public" ? "Unpublish" : "Publish"}
+                      {collection.visibility === "public"
+                        ? "Unpublish"
+                        : "Publish"}
                     </Button>
                     <Button
                       variant="outline"
@@ -352,7 +380,7 @@ export default function CollectionDetailPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleDelete}
+                      onClick={handleDeleteClick}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs md:text-sm"
                     >
                       <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
@@ -370,7 +398,9 @@ export default function CollectionDetailPage() {
             <div className="lg:col-span-1">
               {collection.description && (
                 <div className="border-l-2 border-gray-200 pl-4 py-2">
-                  <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2.5">Description</h2>
+                  <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2.5">
+                    Description
+                  </h2>
                   <p className="text-sm text-gray-700 leading-relaxed break-words whitespace-normal">
                     {collection.description}
                   </p>
@@ -413,7 +443,7 @@ export default function CollectionDetailPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            handleRemoveArtwork(artwork.id);
+                            handleRemoveArtworkClick(artwork.id);
                           }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -425,7 +455,9 @@ export default function CollectionDetailPage() {
               ) : (
                 <div className="bg-white rounded border border-gray-200 p-6 text-center">
                   <FolderOpen className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                  <p className="text-xs text-gray-600">No artworks in this collection yet.</p>
+                  <p className="text-xs text-gray-600">
+                    No artworks in this collection yet.
+                  </p>
                 </div>
               )}
             </div>
@@ -446,7 +478,7 @@ export default function CollectionDetailPage() {
                         variant="destructive"
                         size="icon"
                         className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-10"
-                        onClick={() => handleRemoveArtwork(artwork.id)}
+                        onClick={() => handleRemoveArtworkClick(artwork.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -598,6 +630,57 @@ export default function CollectionDetailPage() {
             </DialogContent>
           </Dialog>
 
+          {/* Delete Collection Confirmation Dialog */}
+          <AlertDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this collection? This action
+                  cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteConfirm}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Remove Artwork Confirmation Dialog */}
+          <AlertDialog
+            open={removeArtworkDialogOpen}
+            onOpenChange={setRemoveArtworkDialogOpen}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove Artwork</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to remove this artwork from the
+                  collection?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setArtworkToRemove(null)}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleRemoveArtworkConfirm}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Remove
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </ProtectedRoute>

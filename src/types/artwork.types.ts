@@ -3,6 +3,7 @@ export interface Artwork {
   id: string;
   title: string;
   artist: string;
+  technique?: string;
   support: string;
   state: string;
   yearOfArtwork: string;

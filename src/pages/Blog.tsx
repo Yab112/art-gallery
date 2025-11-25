@@ -8,6 +8,13 @@ import { Loader2, BookOpen, Sparkles, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { CreateBlogModal } from "@/components/blog/create-blog-modal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function BlogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -52,6 +59,7 @@ export default function BlogPage() {
   
   // Get filter values from URL
   const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "12", 10);
   const searchQuery = searchParams.get("search") || "";
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") || "desc";
@@ -73,7 +81,7 @@ export default function BlogPage() {
   // Fetch blog posts
   const { data, isLoading, error } = useGetBlogPosts({
     page,
-    limit: 12,
+    limit,
     published: true,
     search: searchQuery || undefined,
     authorId: authorId || undefined,
@@ -108,6 +116,11 @@ export default function BlogPage() {
 
   const handlePageChange = (newPage: number) => {
     updateParams({ page: newPage });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLimitChange = (newLimit: string) => {
+    updateParams({ limit: parseInt(newLimit, 10), page: 1 });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -198,12 +211,41 @@ export default function BlogPage() {
               </div>
             ) : (
               <>
-                {/* Results Count */}
-                <div className="mb-6 flex items-center justify-between">
+                {/* Results Count and Page Size Selector */}
+                <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <p className="text-gray-600">
-                    Showing <span className="font-semibold text-gray-900">{data.data.length}</span> of{" "}
+                    Showing <span className="font-semibold text-gray-900">
+                      {data.data.length > 0 ? ((page - 1) * data.limit + 1) : 0}
+                    </span> to{" "}
+                    <span className="font-semibold text-gray-900">
+                      {Math.min(page * data.limit, data.total)}
+                    </span> of{" "}
                     <span className="font-semibold text-gray-900">{data.total}</span> posts
+                    {data.totalPages > 1 && (
+                      <span className="ml-2 text-gray-500">
+                        (Page {page} of {data.totalPages})
+                      </span>
+                    )}
                   </p>
+                  
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="page-size" className="text-sm text-gray-600 whitespace-nowrap">
+                      Show per page:
+                    </label>
+                    <Select value={limit.toString()} onValueChange={handleLimitChange}>
+                      <SelectTrigger id="page-size" className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6</SelectItem>
+                        <SelectItem value="12">12</SelectItem>
+                        <SelectItem value="24">24</SelectItem>
+                        <SelectItem value="36">36</SelectItem>
+                        <SelectItem value="48">48</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Blog Posts List - Medium Style */}
@@ -213,53 +255,109 @@ export default function BlogPage() {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {data.totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-8">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
-                    >
-                      Previous
-                    </Button>
-                    
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (data.totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (page <= 3) {
-                          pageNum = i + 1;
-                        } else if (page >= data.totalPages - 2) {
-                          pageNum = data.totalPages - 4 + i;
-                        } else {
-                          pageNum = page - 2 + i;
-                        }
-                        
-                        return (
+                {/* Pagination - Always show if there are posts */}
+                {data && data.total > 0 && (
+                  <div className="flex flex-col items-center justify-center gap-4 mt-8">
+                    {data.totalPages > 1 ? (
+                      <>
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
                           <Button
-                            key={pageNum}
-                            variant={page === pageNum ? "default" : "outline"}
+                            variant="outline"
                             size="sm"
-                            onClick={() => handlePageChange(pageNum)}
-                            className={page === pageNum ? "bg-red-700 hover:bg-red-800" : ""}
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 1}
+                            className="min-w-[80px]"
                           >
-                            {pageNum}
+                            Previous
                           </Button>
-                        );
-                      })}
-                    </div>
+                          
+                          <div className="flex items-center gap-1">
+                            {/* Show first page if not in initial range */}
+                            {data.totalPages > 5 && page > 3 && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePageChange(1)}
+                                  className="min-w-[40px]"
+                                >
+                                  1
+                                </Button>
+                                {page > 4 && (
+                                  <span className="px-2 text-gray-500">...</span>
+                                )}
+                              </>
+                            )}
+                            
+                            {/* Show page numbers */}
+                            {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (data.totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (page <= 3) {
+                                pageNum = i + 1;
+                              } else if (page >= data.totalPages - 2) {
+                                pageNum = data.totalPages - 4 + i;
+                              } else {
+                                pageNum = page - 2 + i;
+                              }
+                              
+                              return (
+                                <Button
+                                  key={pageNum}
+                                  variant={page === pageNum ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handlePageChange(pageNum)}
+                                  className={
+                                    page === pageNum
+                                      ? "bg-red-700 hover:bg-red-800 min-w-[40px]"
+                                      : "min-w-[40px]"
+                                  }
+                                >
+                                  {pageNum}
+                                </Button>
+                              );
+                            })}
+                            
+                            {/* Show last page if not in final range */}
+                            {data.totalPages > 5 && page < data.totalPages - 2 && (
+                              <>
+                                {page < data.totalPages - 3 && (
+                                  <span className="px-2 text-gray-500">...</span>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePageChange(data.totalPages)}
+                                  className="min-w-[40px]"
+                                >
+                                  {data.totalPages}
+                                </Button>
+                              </>
+                            )}
+                          </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page + 1)}
-                      disabled={page === data.totalPages}
-                    >
-                      Next
-                    </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page === data.totalPages}
+                            className="min-w-[80px]"
+                          >
+                            Next
+                          </Button>
+                        </div>
+                        
+                        {/* Page info */}
+                        <p className="text-sm text-gray-500">
+                          Page {page} of {data.totalPages} • {data.total} total posts
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        Showing all {data.total} post{data.total !== 1 ? 's' : ''}
+                      </p>
+                    )}
                   </div>
                 )}
               </>

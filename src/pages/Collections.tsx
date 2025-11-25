@@ -20,6 +20,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -85,6 +95,10 @@ export default function CollectionsPage() {
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string>("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
 
   const collections = data?.collections || [];
   const pagination = data ? {
@@ -94,15 +108,22 @@ export default function CollectionsPage() {
     pages: data.pages || 1,
   } : { page: 1, limit, total: 0, pages: 1 };
 
-  const handleDelete = async (collectionId: string) => {
-    if (window.confirm("Are you sure you want to delete this collection? This action cannot be undone.")) {
-      try {
-        await deleteCollection(collectionId);
-        queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
-        toast.success("Collection deleted successfully");
-      } catch (error: any) {
-        toast.error("Failed to delete collection: " + (error?.message || "An error occurred"));
-      }
+  const handleDeleteClick = (collectionId: string) => {
+    setCollectionToDelete(collectionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!collectionToDelete) return;
+    
+    try {
+      await deleteCollection(collectionToDelete);
+      queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
+      setDeleteDialogOpen(false);
+      setCollectionToDelete(null);
+      toast.success("Collection deleted successfully");
+    } catch (error: any) {
+      toast.error("Failed to delete collection: " + (error?.message || "An error occurred"));
     }
   };
 
@@ -333,10 +354,10 @@ export default function CollectionsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  await handleDelete(collection.id);
+                                  handleDeleteClick(collection.id);
                                 }}
                                 disabled={isDeleting}
                                 className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -427,10 +448,10 @@ export default function CollectionsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  await handleDelete(collection.id);
+                                  handleDeleteClick(collection.id);
                                 }}
                                 disabled={isDeleting}
                                 className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -605,6 +626,30 @@ export default function CollectionsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this collection? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCollectionToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ProtectedRoute>
   );
 }

@@ -5,6 +5,7 @@ import { UserDropdown } from "./user-dropdown";
 import { useState } from "react";
 import { useCartSummary } from "@/queries/cartQueries";
 import { useNavigate } from "react-router-dom";
+import { MegaMenu } from "./mega-menu";
 
 function Logo() {
   const [imageError, setImageError] = useState(false);
@@ -16,9 +17,9 @@ function Logo() {
   }
 
   return (
-    <img 
-      src="/mainlogo.png" 
-      alt="Logo" 
+    <img
+      src="/mainlogo.png"
+      alt="Logo"
       className="h-8 w-auto"
       onError={() => setImageError(true)}
     />
@@ -29,7 +30,7 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  
+
   // Fetch cart summary for count
   const { data: cartSummary } = useCartSummary();
   const cartCount = cartSummary?.totalItems || 0;
@@ -63,30 +64,17 @@ export default function Header() {
             </Link>
             <div className="flex items-center gap-8 text-sm">
               <nav className="flex items-center gap-6">
-                <Link
-                  to="/buyart"
-                  className="text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  Artworks
-                </Link>
+                <MegaMenu type="artwork" label="Artworks" />
                 <Link
                   to="/collections"
                   className="text-gray-700 hover:text-gray-900 transition-colors"
                 >
                   Collections
                 </Link>
-                <Link
-                  to="/"
-                  className="flex items-center"
-                >
+                <Link to="/" className="flex items-center">
                   <Logo />
                 </Link>
-                <Link
-                  to="/artists"
-                  className="text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  Artists
-                </Link>
+                <MegaMenu type="artist" label="Artists" />
                 <Link
                   to="/blog"
                   className="text-gray-700 hover:text-gray-900 transition-colors"
