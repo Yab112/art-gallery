@@ -8,6 +8,7 @@ import { EditArtworkForm } from "@/components/sellArtWork/editArtworkForm";
 import { useAuth } from "@/hooks/use-auth";
 import type { Artwork } from "@/types/artwork.types";
 import { useEffect } from "react";
+import { EditArtworkSkeleton } from "@/components/skeletons/edit-artwork-skeleton";
 
 export default function EditArtworkPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,9 +36,9 @@ export default function EditArtworkPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <EditArtworkSkeleton />
+      </ProtectedRoute>
     );
   }
 

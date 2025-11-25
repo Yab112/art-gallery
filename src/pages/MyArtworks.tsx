@@ -83,13 +83,7 @@ export default function MyArtworksPage() {
   if (isLoading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50">
-          <div className="container mx-auto px-4 py-4 max-w-7xl">
-            <div className="flex items-center justify-center py-12">
-              <div className="h-6 w-6 animate-spin rounded-full border-3 border-gray-300 border-t-gray-600" />
-            </div>
-          </div>
-        </div>
+        <MyArtworksSkeleton />
       </ProtectedRoute>
     );
   }

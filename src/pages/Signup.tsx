@@ -3,6 +3,7 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
+import { AuthSkeleton } from "@/components/skeletons/auth-skeleton";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -16,11 +17,7 @@ export default function SignupPage() {
   }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
-    );
+    return <AuthSkeleton />;
   }
 
   if (isAuthenticated) {

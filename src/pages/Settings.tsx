@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { EarningsDashboard } from "@/components/settings/EarningsDashboard";
 import { WithdrawalSection } from "@/components/settings/WithdrawalSection";
 import { PaymentMethodSection } from "@/components/settings/PaymentMethodSection";
+import { SettingsSkeleton } from "@/components/skeletons/settings-skeleton";
 
 interface SettingsFormData {
   name: string;
@@ -75,9 +76,9 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <SettingsSkeleton />
+      </ProtectedRoute>
     );
   }
 

@@ -15,6 +15,7 @@ import {
   Trash2,
   Upload,
   X,
+  Plus,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -26,9 +27,10 @@ import { useCreateCollection } from "@/services/collections/useCreateCollection"
 import { useDeleteCollection } from "@/services/collections/useDeleteCollection";
 import { usePublishCollection } from "@/services/collections/usePublishCollection";
 import { useUnpublishCollection } from "@/services/collections/useUnpublishCollection";
-import { useState } from "react";
+import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork";
+import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { collectionKeys } from "@/queries/queryKeys";
+import { collectionKeys, artworkKeys } from "@/queries/queryKeys";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,9 +70,22 @@ export default function ProfilePage() {
   const { deleteCollection, isDeleting } = useDeleteCollection();
   const { publishCollection } = usePublishCollection();
   const { unpublishCollection } = useUnpublishCollection();
+  const { deleteArtwork, isDeleting: isDeletingArtwork } = useDeleteArtwork();
   const { mutateAsync: getPresignedUrl } = useGetPresignedImageUploadUrl();
   const queryClient = useQueryClient();
   const [showCreateCollection, setShowCreateCollection] = useState(false);
+
+  const handleDeleteArtwork = async (artworkId: string) => {
+    if (window.confirm("Are you sure you want to delete this artwork?")) {
+      try {
+        await deleteArtwork(artworkId);
+        queryClient.invalidateQueries({ queryKey: artworkKeys.myArtworks() });
+        toast.success("Artwork deleted successfully");
+      } catch (error: any) {
+        toast.error("Failed to delete artwork: " + (error?.message || "An error occurred"));
+      }
+    }
+  };
   const [newCollection, setNewCollection] = useState({
     name: "",
     description: "",
@@ -80,6 +95,7 @@ export default function ProfilePage() {
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string>("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
 
   // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -246,9 +262,7 @@ export default function ProfilePage() {
 
               {/* My Artworks */}
               {isLoadingArtworks ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                </div>
+                <ProfileSectionSkeleton />
               ) : artworksData?.artworks && artworksData.artworks.length > 0 ? (
                 <>
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -272,12 +286,11 @@ export default function ProfilePage() {
                     {/* Artworks Preview Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                       {artworksData.artworks.slice(0, 3).map((artwork) => (
-                        <Link
-                          key={artwork.id}
-                          to={`/artwork/${artwork.id}`}
-                          className="block"
-                        >
-                          <div className="relative group">
+                        <div key={artwork.id} className="relative group">
+                          <Link
+                            to={`/artwork/${artwork.id}`}
+                            className="block"
+                          >
                             <ArtworkCard
                               id={artwork.id}
                               image={artwork.photos?.[0] || "/placeholder.svg"}
@@ -287,7 +300,7 @@ export default function ProfilePage() {
                                 artwork.desiredPrice?.toLocaleString() || "0"
                               }`}
                               year={artwork.yearOfArtwork || "N/A"}
-                              medium={artwork.technique || "N/A"}
+                              medium={artwork.support || "N/A"}
                               dimensions={
                                 artwork.dimensions &&
                                 typeof artwork.dimensions === "object"
@@ -298,8 +311,37 @@ export default function ProfilePage() {
                               }
                               seller={artwork.user?.name || "Unknown"}
                             />
+                          </Link>
+                          {/* Edit and Delete Buttons */}
+                          <div 
+                            className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="h-7 w-7 bg-white hover:bg-gray-100"
+                              asChild
+                            >
+                              <Link to={`/artwork/${artwork.id}/edit`}>
+                                <Edit className="h-3.5 w-3.5 text-gray-700" />
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteArtwork(artwork.id);
+                              }}
+                              disabled={isDeletingArtwork}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
-                        </Link>
+                        </div>
                       ))}
                     </div>
                     {/* View All Button */}
@@ -351,7 +393,30 @@ export default function ProfilePage() {
                     <Link to="/profile/my-artworks">View All My Artworks</Link>
                   </Button>
                 </div>
-              ) : null}
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      My Artworks
+                    </h2>
+                    <Button
+                      onClick={() => navigate("/sellart")}
+                      className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create Artwork
+                    </Button>
+                  </div>
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+                      <Palette className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <h3 className="mb-2 text-xl font-semibold text-gray-500">
+                      No Artworks Yet
+                    </h3>
+                  </div>
+                </div>
+              )}
 
               {/* My Collections */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -363,12 +428,10 @@ export default function ProfilePage() {
                     </h2>
                   </div>
                   <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() =>
                       setShowCreateCollection(!showCreateCollection)
                     }
-                    className="flex items-center gap-2"
+                    className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
                   >
                     <FolderPlus className="h-4 w-4" />
                     {showCreateCollection ? "Cancel" : "New Collection"}
@@ -445,7 +508,10 @@ export default function ProfilePage() {
                               </Button>
                             </div>
                           ) : (
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                            <div 
+                              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+                              onClick={() => coverImageInputRef.current?.click()}
+                            >
                               <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                               <Label
                                 htmlFor="coverImageInput"
@@ -454,6 +520,7 @@ export default function ProfilePage() {
                                 Click to upload cover image
                               </Label>
                               <Input
+                                ref={coverImageInputRef}
                                 id="coverImageInput"
                                 type="file"
                                 accept="image/*"
@@ -602,9 +669,7 @@ export default function ProfilePage() {
 
                 {/* Collections List */}
                 {isLoadingCollections ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                  </div>
+                  <ProfileSectionSkeleton />
                 ) : collectionsData?.collections &&
                   collectionsData.collections.length > 0 ? (
                   <>
@@ -738,13 +803,14 @@ export default function ProfilePage() {
                     )}
                   </>
                 ) : (
-                  <EmptyState
-                    icon={FolderOpen}
-                    title="No Collections Yet"
-                    description="Create your first collection to organize your favorite artworks."
-                    actionLabel="Create Collection"
-                    onAction={() => setShowCreateCollection(true)}
-                  />
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+                      <FolderOpen className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <h3 className="mb-2 text-xl font-semibold text-gray-500">
+                      No Collections Yet
+                    </h3>
+                  </div>
                 )}
               </div>
             </div>

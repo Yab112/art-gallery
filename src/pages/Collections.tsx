@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
+import { CollectionsSkeleton } from "@/components/skeletons/collections-skeleton";
 
 // Simple pagination component
 const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => (
@@ -211,9 +212,9 @@ export default function CollectionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600" />
-      </div>
+      <ProtectedRoute>
+        <CollectionsSkeleton />
+      </ProtectedRoute>
     );
   }
 
