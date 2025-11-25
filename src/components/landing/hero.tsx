@@ -94,11 +94,11 @@ export function HeroCarousel() {
             Buying and selling pieces of art online
           </h2>
           <h3 className="mb-6 font-semibold text-lg">
-            Artalistic: the art marketplace
+            Artopia: the art marketplace
           </h3>
           <p className="mx-auto text-pretty text-gray-600 leading-relaxed">
             You are an amateur, collector, professional or artist and you wish
-            to sell or purchase Modern and Contemporary Art Artalistic will help
+            to sell or purchase Modern and Contemporary Art Artopia will help
             you and give you expert advise.
           </p>
         </div>

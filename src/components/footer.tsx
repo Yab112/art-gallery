@@ -71,14 +71,14 @@ const socialLinks = [
   {
     name: "Instagram",
     icon: Instagram,
-    href: "https://instagram.com/artalistic",
+    href: "https://instagram.com/artopia",
   },
-  { name: "Twitter", icon: Twitter, href: "https://twitter.com/artalistic" },
-  { name: "Facebook", icon: Facebook, href: "https://facebook.com/artalistic" },
+  { name: "Twitter", icon: Twitter, href: "https://twitter.com/artopia" },
+  { name: "Facebook", icon: Facebook, href: "https://facebook.com/artopia" },
 ];
 
 const contactInfo = [
-  { icon: Mail, text: "hello@artalistic.com" },
+  { icon: Mail, text: "hello@artopia.com" },
   { icon: Phone, text: "+1 (555) 123-4567" },
   { icon: MapPin, text: "123 Art District, Creative City, NY 10001" },
 ];
@@ -170,7 +170,7 @@ export function Footer() {
           <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
             <div className="text-center lg:text-left">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Stay Updated with Artalistic
+                Stay Updated with Artopia
               </h3>
               <p className="text-gray-600">
                 Get the latest art news, new artist features, and exclusive
@@ -197,7 +197,7 @@ export function Footer() {
           <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
             <div className="text-center lg:text-left">
               <p className="text-gray-600">
-                © 2024 Artalistic. All rights reserved. Making art accessible to
+                © 2024 Artopia. All rights reserved. Making art accessible to
                 everyone.
               </p>
             </div>

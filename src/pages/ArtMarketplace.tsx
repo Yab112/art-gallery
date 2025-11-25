@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid";
 import { CategoryGrid } from "@/components/ArtMarketplace/category-grid";
 import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section";
@@ -41,7 +41,9 @@ export default function ArtMarketplace() {
   const priceRange = searchParams.get("priceRange") || "price";
   const medium = searchParams.get("medium") || "medium";
   const rarity = searchParams.get("rarity") || "rarity";
-  // Get category IDs from URL - can be comma-separated string or multiple params
+  
+  // Get category from URL - can be slug (from mega menu) or IDs (from filters)
+  const categorySlug = searchParams.get("category") || "";
   const categoryParam = searchParams.get("categories") || "";
   const selectedCategoryIds = categoryParam
     ? categoryParam.split(",").filter((id) => id.trim() !== "")
@@ -110,6 +112,22 @@ export default function ArtMarketplace() {
     image: category.image || "/placeholder.svg",
     count: (category.artworkCount || 0).toLocaleString(),
   }));
+
+  // Convert category slug to category ID if category slug is provided (from mega menu)
+  useEffect(() => {
+    if (categorySlug && categoriesData && categoriesData.length > 0) {
+      const category = categoriesData.find((cat) => cat.slug === categorySlug);
+      if (category && !selectedCategoryIds.includes(category.id)) {
+        // Update URL to use category ID instead of slug
+        updateSearchParams({ 
+          category: null, // Remove slug param
+          categories: [category.id], // Add category ID
+          page: 1 
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categorySlug, categoriesData]);
 
   // Build query params from filters
   const buildQueryParams = () => {

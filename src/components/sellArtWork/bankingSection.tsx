@@ -148,7 +148,7 @@ export function BankingSection({ control, errors, formData }: BankingSectionProp
               <a href="#" className="text-primary underline">
                 sales mandate
               </a>{" "}
-              to Artalistic
+              to Artopia
               <span className="text-destructive">*</span>
             </Label>
           </div>

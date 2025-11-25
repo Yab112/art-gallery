@@ -10,7 +10,7 @@ export function CTASection() {
           Ready to Start Your Art Journey?
         </h2>
         <p className="text-xl text-red-100 mb-8 max-w-2xl mx-auto">
-          Join thousands of art lovers who trust Artalistic for their collecting
+          Join thousands of art lovers who trust Artopia for their collecting
           needs
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

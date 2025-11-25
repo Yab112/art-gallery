@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { useGetTopSellingArtists } from "@/services/artist/useGetTopSellingArtis
 import { useGetMostViewedArtists } from "@/services/artist/useGetMostViewedArtists";
 import { ArtistsPageSkeleton } from "@/components/artist/artists-page-skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useGetTalentTypes } from "@/services/talent-type/useGetTalentTypes";
 import {
   Select,
   SelectContent,
@@ -152,6 +154,9 @@ const ALL_COUNTRIES = [
 ];
 
 export default function ArtistsPage() {
+  const [searchParams] = useSearchParams();
+  const talentTypeSlug = searchParams.get("talentType") || "";
+
   const [searchTerm, setSearchTerm] = useState("");
   // Debounce search term to avoid API calls on every keystroke
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -159,6 +164,9 @@ export default function ArtistsPage() {
   const [selectedTag, setSelectedTag] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Fetch talent types to filter by talent type slug
+  const { data: talentTypes = [] } = useGetTalentTypes();
 
   // Fetch artists data from backend - use debounced search term
   const {
@@ -261,16 +269,41 @@ export default function ArtistsPage() {
 
   // Filter artists based on selected filters
   // Note: Search is now handled by backend via debouncedSearchTerm
-  // This local filter is for client-side filters (country, tags)
+  // This local filter is for client-side filters (country, tags, talent type)
   const filteredArtists = useMemo(() => {
-    return allArtists.filter((artist) => {
+    let filtered = allArtists;
+
+    // Filter by talent type if provided in query params
+    if (talentTypeSlug && talentTypes.length > 0) {
+      const talentType = talentTypes.find((tt) => tt.slug === talentTypeSlug);
+      if (talentType && allArtistsData?.artists) {
+        // Filter artists that have this talent type
+        filtered = allArtistsData.artists
+          .filter((artist: any) => {
+            return artist.talentTypes?.some(
+              (tt: any) => tt.talentType?.id === talentType.id
+            );
+          })
+          .map(transformArtist);
+      }
+    }
+
+    // Apply other filters
+    return filtered.filter((artist) => {
       const countryMatch =
         selectedCountry === "" || artist.country === selectedCountry;
       // Tags are not available in current API, so skip tag filtering
       const tagMatch = selectedTag === "";
       return countryMatch && tagMatch;
     });
-  }, [allArtists, selectedCountry, selectedTag]);
+  }, [
+    allArtists,
+    selectedCountry,
+    selectedTag,
+    talentTypeSlug,
+    talentTypes,
+    allArtistsData,
+  ]);
 
   // Combine all countries: comprehensive list + countries from artist data
   const countries = useMemo(() => {

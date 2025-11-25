@@ -43,6 +43,16 @@ import { toast } from "sonner";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ProfilePage() {
   const { user: sessionUser } = useAuth();
@@ -70,6 +80,12 @@ export default function ProfilePage() {
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string>("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [collectionToDelete, setCollectionToDelete] = useState<string | null>(
+    null
+  );
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -662,16 +678,12 @@ export default function ProfilePage() {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     try {
-                                      if (
-                                        collection.visibility === "public"
-                                      ) {
+                                      if (collection.visibility === "public") {
                                         await unpublishCollection(
                                           collection.id
                                         );
                                       } else {
-                                        await publishCollection(
-                                          collection.id
-                                        );
+                                        await publishCollection(collection.id);
                                       }
                                       queryClient.invalidateQueries({
                                         queryKey: collectionKeys.lists(),
@@ -697,23 +709,11 @@ export default function ProfilePage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    if (
-                                      window.confirm(
-                                        "Are you sure you want to delete this collection?"
-                                      )
-                                    ) {
-                                      try {
-                                        await deleteCollection(collection.id);
-                                        queryClient.invalidateQueries({
-                                          queryKey: collectionKeys.lists(),
-                                        });
-                                      } catch (error) {
-                                        // Error handled by hook
-                                      }
-                                    }
+                                    setCollectionToDelete(collection.id);
+                                    setDeleteDialogOpen(true);
                                   }}
                                   disabled={isDeleting}
                                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -804,6 +804,44 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Collection Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this collection? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCollectionToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!collectionToDelete) return;
+                try {
+                  await deleteCollection(collectionToDelete);
+                  queryClient.invalidateQueries({
+                    queryKey: collectionKeys.lists(),
+                  });
+                  setDeleteDialogOpen(false);
+                  setCollectionToDelete(null);
+                  toast.success("Collection deleted successfully");
+                } catch (error) {
+                  // Error handled by hook
+                }
+              }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ProtectedRoute>
   );
 }
