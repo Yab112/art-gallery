@@ -25,6 +25,7 @@ import FavoritesPage from "./pages/Favorites";
 import OrdersPage from "./pages/Orders";
 import SettingsPage from "./pages/Settings";
 import PaymentSuccessPage from "./pages/PaymentSuccess";
+import PaymentCancelPage from "./pages/PaymentCancel";
 import BlogPage from "./pages/Blog";
 import BlogDetailPage from "./pages/BlogDetail";
 import MyBlogsPage from "./pages/MyBlogs";
@@ -67,6 +68,10 @@ export const router = createBrowserRouter([
       {
         path: "payment/success",
         element: <PaymentSuccessPage />,
+      },
+      {
+        path: "payment/cancel",
+        element: <PaymentCancelPage />,
       },
       {
         path: "how-it-works",

@@ -49,6 +49,7 @@ export function ArtworkGrid({ artworks, isLoading, onImageClick }: ArtworkGridPr
                   : "N/A"
               }
               seller={artwork.user?.name || "Unknown"}
+              status={artwork.status}
               onImageClick={onImageClick}
             />
           </div>

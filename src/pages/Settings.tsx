@@ -13,6 +13,7 @@ import {
   DollarSign,
   Wallet,
   CreditCard,
+  Receipt,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useForm } from "react-hook-form";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 import { EarningsDashboard } from "@/components/settings/EarningsDashboard";
 import { WithdrawalSection } from "@/components/settings/WithdrawalSection";
 import { PaymentMethodSection } from "@/components/settings/PaymentMethodSection";
+import { TransactionsSection } from "@/components/settings/TransactionsSection";
 import { SettingsSkeleton } from "@/components/skeletons/settings-skeleton";
 
 interface SettingsFormData {
@@ -34,7 +36,7 @@ export default function SettingsPage() {
   const { data: profileData, isLoading, error } = useMyProfile();
   const { updateProfile, isUpdating } = useUpdateProfile();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "notifications" | "security" | "earnings" | "withdrawals" | "payment-method"
+    "profile" | "notifications" | "security" | "earnings" | "withdrawals" | "payment-method" | "transactions"
   >("profile");
 
   const profile = profileData?.profile || sessionUser;
@@ -207,6 +209,23 @@ export default function SettingsPage() {
                     <CreditCard className="h-5 w-5" />
                     Payment Method
                   </button>
+
+                  <div className="border-t my-3"></div>
+
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
+                    Transactions
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("transactions")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeTab === "transactions"
+                        ? "bg-red-50 text-red-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Receipt className="h-5 w-5" />
+                    Transactions
+                  </button>
                 </nav>
               </div>
             </div>
@@ -359,6 +378,16 @@ export default function SettingsPage() {
                     Payment Method
                   </h2>
                   <PaymentMethodSection />
+                </div>
+              )}
+
+              {/* Transactions */}
+              {activeTab === "transactions" && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    Transactions
+                  </h2>
+                  <TransactionsSection />
                 </div>
               )}
             </div>

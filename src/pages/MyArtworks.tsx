@@ -151,6 +151,7 @@ export default function MyArtworksPage() {
                       medium={artwork.technique}
                       dimensions={`${artwork.dimensions?.height || 0}x${artwork.dimensions?.width || 0} cm`}
                       seller={artwork.user?.name || "Unknown"}
+                      status={artwork.status}
                     />
                     <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button

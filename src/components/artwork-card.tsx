@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Heart, Search } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +18,7 @@ interface ArtworkCardProps {
   medium: string;
   dimensions: string;
   seller: string;
+  status?: string;
   onFavorite?: (id: string) => void;
   onSearch?: (id: string) => void;
   isMasonry?: boolean;
@@ -24,6 +26,17 @@ interface ArtworkCardProps {
   artworks?: any[];
   disableNavigation?: boolean;
 }
+
+const statusConfig = {
+  APPROVED: {
+    label: "Available",
+    className: "bg-green-100 text-green-800 border-green-200",
+  },
+  SOLD: {
+    label: "Sold",
+    className: "bg-gray-100 text-gray-800 border-gray-200",
+  },
+};
 
 export function ArtworkCard({
   id,
@@ -35,11 +48,14 @@ export function ArtworkCard({
   medium,
   dimensions,
   seller,
+  status,
   onFavorite,
   onSearch,
   isMasonry = false,
   disableNavigation = false,
 }: ArtworkCardProps) {
+  const isSold = status === "SOLD";
+  const statusInfo = status ? statusConfig[status as keyof typeof statusConfig] : null;
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
@@ -79,11 +95,26 @@ export function ArtworkCard({
       <div
         className={cn(
           "relative mb-4 overflow-hidden bg-gray-100",
-          !isMasonry && "aspect-[4/5]"
+          !isMasonry && "aspect-[4/5]",
+          isSold && "opacity-75"
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
+        {/* Status Badge */}
+        {statusInfo && (
+          <div className="absolute top-2 left-2 z-20">
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-xs font-medium border",
+                statusInfo.className
+              )}
+            >
+              {statusInfo.label}
+            </Badge>
+          </div>
+        )}
         {imageError || !image ? (
           <div className="flex h-full w-full items-center justify-center bg-gray-200">
             <div className="text-center">
@@ -107,7 +138,10 @@ export function ArtworkCard({
           <img
             src={image}
             alt={`${title} by ${artist}`}
-            className="h-full w-full object-cover"
+            className={cn(
+              "h-full w-full object-cover",
+              isSold && "grayscale"
+            )}
             onError={() => setImageError(true)}
           />
         )}

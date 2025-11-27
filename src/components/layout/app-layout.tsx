@@ -17,7 +17,7 @@ export function AppLayout() {
   );
 }
 
-// Scroll to top on route change
+// Scroll to top on route change and page refresh
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -29,6 +29,15 @@ const ScrollToTop = () => {
       behavior: "instant", // Use instant for immediate scroll, or "smooth" for animated
     });
   }, [pathname]);
+
+  // Also scroll to top on initial page load/refresh
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, []);
 
   return null;
 };
