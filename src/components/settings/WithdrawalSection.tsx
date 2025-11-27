@@ -58,6 +58,28 @@ export function WithdrawalSection() {
   const { data: withdrawalsData, isLoading: isLoadingWithdrawals, refetch: refetchWithdrawals } = useGetWithdrawals(page, limit);
   const withdrawals = withdrawalsData?.data ?? [];
   const pagination = withdrawalsData?.pagination || { page: 1, limit, total: 0, pages: 1 };
+  
+  // Fetch all withdrawals to check for pending ones (not just current page)
+  const { data: allWithdrawalsData } = useGetWithdrawals(1, 1000); // Get all withdrawals to check for pending
+  const allWithdrawals = allWithdrawalsData?.data ?? [];
+  
+  // Check for pending withdrawals (INITIATED or PROCESSING) across all pages
+  const pendingWithdrawals = allWithdrawals.filter(
+    (w: any) => w.status === "INITIATED" || w.status === "PROCESSING"
+  );
+  const hasPendingWithdrawals = pendingWithdrawals.length > 0;
+  
+  // Create tooltip message for disabled button
+  const getDisabledTooltip = () => {
+    if (!hasPendingWithdrawals) return "";
+    const count = pendingWithdrawals.length;
+    const totalAmount = pendingWithdrawals.reduce(
+      (sum: number, w: any) => sum + (Number(w.amount) || 0),
+      0
+    );
+    const statuses = [...new Set(pendingWithdrawals.map((w: any) => w.status))].join(" and ");
+    return `You cannot request a withdrawal while you have ${count} pending withdrawal${count > 1 ? 's' : ''} (${statuses}) totaling $${totalAmount.toFixed(2)}. Please wait until all pending withdrawals are completed or rejected.`;
+  };
 
   // Get earnings for available balance
   const { data: earningsData, isLoading: isLoadingEarnings } = useGetEarnings();
@@ -109,9 +131,31 @@ export function WithdrawalSection() {
       setPage(1);
       refetchWithdrawals();
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || error?.message || "Failed to submit withdrawal request"
-      );
+      // Close modal first
+      setIsDialogOpen(false);
+      setWithdrawalAmount("");
+      setIban("");
+      
+      // Extract error message from NestJS BadRequestException response
+      let errorMessage = "Failed to submit withdrawal request";
+      
+      if (error?.response?.data) {
+        // NestJS BadRequestException returns message in response.data.message or response.data
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (Array.isArray(error.response.data) && error.response.data.length > 0) {
+          errorMessage = error.response.data[0];
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Show error toast after modal is closed
+      toast.error(errorMessage, {
+        duration: 5000, // Show for 5 seconds for longer error messages
+      });
     }
   };
 
@@ -218,14 +262,28 @@ export function WithdrawalSection() {
               ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Request Withdrawal
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
+          <div className="relative inline-block group">
+            <Dialog 
+              open={isDialogOpen} 
+              onOpenChange={(open) => {
+                // Prevent opening dialog if there are pending withdrawals
+                if (open && hasPendingWithdrawals) {
+                  toast.error(getDisabledTooltip());
+                  return;
+                }
+                setIsDialogOpen(open);
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-red-400 disabled:cursor-not-allowed disabled:hover:bg-red-400 disabled:opacity-70"
+                  disabled={hasPendingWithdrawals}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Request Withdrawal
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
               <DialogHeader>
                 <DialogTitle>Request Withdrawal</DialogTitle>
                 <DialogDescription>
@@ -300,8 +358,18 @@ export function WithdrawalSection() {
                   </Button>
                 </div>
               </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+            {hasPendingWithdrawals && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl whitespace-normal w-80 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                <div className="text-center font-semibold mb-2 text-white">⚠️ Cannot Request Withdrawal</div>
+                <div className="text-gray-200 leading-relaxed">{getDisabledTooltip()}</div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                  <div className="border-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

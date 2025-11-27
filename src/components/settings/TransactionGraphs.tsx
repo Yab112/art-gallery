@@ -3,8 +3,16 @@ import { BarChart3, PieChart, TrendingUp } from "lucide-react";
 import { useGetTransactionStats } from "@/services/transactions/useGetTransactionStats";
 import { Button } from "@/components/ui/button";
 
-// Simple bar chart component using CSS - Compact
-const SimpleBarChart = ({ data }: { data: Array<{ date: string; amount: number; count: number }> }) => {
+// Simple bar chart component using CSS - Compact (for single data series)
+const SimpleBarChart = ({ 
+  data, 
+  color = "bg-red-600",
+  hoverColor = "hover:bg-red-700"
+}: { 
+  data: Array<{ date: string; amount: number; count: number }>;
+  color?: string;
+  hoverColor?: string;
+}) => {
   if (data.length === 0) {
     return (
       <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
@@ -21,7 +29,7 @@ const SimpleBarChart = ({ data }: { data: Array<{ date: string; amount: number; 
         <div key={index} className="flex-1 flex flex-col items-center gap-1">
           <div className="w-full flex flex-col items-center justify-end h-36">
             <div
-              className="w-full bg-red-600 rounded-t transition-all hover:bg-red-700"
+              className={`w-full ${color} rounded-t transition-all ${hoverColor}`}
               style={{
                 height: `${(item.amount / maxAmount) * 100}%`,
                 minHeight: item.amount > 0 ? "3px" : "0",
@@ -35,6 +43,82 @@ const SimpleBarChart = ({ data }: { data: Array<{ date: string; amount: number; 
           </span>
         </div>
       ))}
+    </div>
+  );
+};
+
+// Dual bar chart for credits and debits
+const DualBarChart = ({ 
+  creditsData, 
+  debitsData 
+}: { 
+  creditsData: Array<{ date: string; amount: number; count: number }>;
+  debitsData: Array<{ date: string; amount: number; count: number }>;
+}) => {
+  if (creditsData.length === 0 && debitsData.length === 0) {
+    return (
+      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+        No data
+      </div>
+    );
+  }
+
+  // Combine dates from both datasets
+  const allDates = [...new Set([...creditsData.map(d => d.date), ...debitsData.map(d => d.date)])];
+  const maxAmount = Math.max(
+    ...creditsData.map(d => d.amount),
+    ...debitsData.map(d => d.amount),
+    1
+  );
+
+  return (
+    <div className="h-48 flex items-end justify-between gap-1.5">
+      {allDates.map((date, index) => {
+        const credit = creditsData.find(d => d.date === date) || { amount: 0, count: 0 };
+        const debit = debitsData.find(d => d.date === date) || { amount: 0, count: 0 };
+        
+        return (
+          <div key={index} className="flex-1 flex flex-col items-center gap-1">
+            <div className="w-full flex flex-col items-center justify-end h-36 gap-0.5">
+              {/* Credits bar (green) */}
+              {credit.amount > 0 && (
+                <div
+                  className="w-full bg-green-600 rounded-t transition-all hover:bg-green-700"
+                  style={{
+                    height: `${(credit.amount / maxAmount) * 100}%`,
+                    minHeight: "3px",
+                  }}
+                  title={`Credits: $${credit.amount.toFixed(2)}`}
+                />
+              )}
+              {/* Debits bar (red) */}
+              {debit.amount > 0 && (
+                <div
+                  className="w-full bg-red-600 rounded-t transition-all hover:bg-red-700"
+                  style={{
+                    height: `${(debit.amount / maxAmount) * 100}%`,
+                    minHeight: "3px",
+                  }}
+                  title={`Debits: $${debit.amount.toFixed(2)}`}
+                />
+              )}
+            </div>
+            <span className="text-[10px] text-gray-600 text-center leading-tight">{date}</span>
+            <div className="flex flex-col items-center gap-0.5">
+              {credit.amount > 0 && (
+                <span className="text-[10px] font-medium text-green-600">
+                  +${credit.amount.toFixed(0)}
+                </span>
+              )}
+              {debit.amount > 0 && (
+                <span className="text-[10px] font-medium text-red-600">
+                  -${debit.amount.toFixed(0)}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -153,14 +237,26 @@ export function TransactionGraphs() {
       </div>
 
       {/* Summary Cards - Compact */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-gray-200 rounded-md p-3">
           <div className="flex items-center gap-1.5 mb-1">
             <TrendingUp className="h-4 w-4 text-green-600" />
-            <p className="text-xs text-gray-600">Total</p>
+            <p className="text-xs text-gray-600">Credits</p>
           </div>
-          <p className="text-lg font-bold text-gray-900">
-            ${stats.totalAmount.toLocaleString("en-US", {
+          <p className="text-lg font-bold text-green-600">
+            +${(stats.totalCredits || 0).toLocaleString("en-US", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+          </p>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-md p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />
+            <p className="text-xs text-gray-600">Debits</p>
+          </div>
+          <p className="text-lg font-bold text-red-600">
+            -${(stats.totalDebits || 0).toLocaleString("en-US", {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
             })}
@@ -169,33 +265,80 @@ export function TransactionGraphs() {
         <div className="bg-white border border-gray-200 rounded-md p-3">
           <div className="flex items-center gap-1.5 mb-1">
             <BarChart3 className="h-4 w-4 text-blue-600" />
-            <p className="text-xs text-gray-600">Count</p>
+            <p className="text-xs text-gray-600">Net</p>
           </div>
-          <p className="text-lg font-bold text-gray-900">{stats.totalCount}</p>
+          <p className={`text-lg font-bold ${
+            (stats.totalCredits || 0) - (stats.totalDebits || 0) >= 0 
+              ? 'text-green-600' 
+              : 'text-red-600'
+          }`}>
+            ${((stats.totalCredits || 0) - (stats.totalDebits || 0)).toLocaleString("en-US", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+          </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-md p-3">
           <div className="flex items-center gap-1.5 mb-1">
             <PieChart className="h-4 w-4 text-purple-600" />
-            <p className="text-xs text-gray-600">Avg</p>
+            <p className="text-xs text-gray-600">Count</p>
           </div>
-          <p className="text-lg font-bold text-gray-900">
-            $
-            {stats.totalCount > 0
-              ? (stats.totalAmount / stats.totalCount).toLocaleString("en-US", {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })
-              : "0"}
-          </p>
+          <p className="text-lg font-bold text-gray-900">{stats.totalCount}</p>
         </div>
       </div>
 
       {/* Charts - Compact Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Transaction Amount Over Time */}
+        {/* Credits and Debits Over Time */}
         <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Amount Over Time</h3>
-          <SimpleBarChart data={stats.byDate} />
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Credits & Debits Over Time</h3>
+          {stats.byDateCredits && stats.byDateDebits ? (
+            <DualBarChart creditsData={stats.byDateCredits} debitsData={stats.byDateDebits} />
+          ) : (
+            <SimpleBarChart data={stats.byDate} />
+          )}
+          <div className="flex items-center justify-center gap-4 mt-3 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 bg-green-600 rounded"></div>
+              <span className="text-gray-600">Credits (Earnings)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 bg-red-600 rounded"></div>
+              <span className="text-gray-600">Debits (Purchases/Withdrawals)</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Credits Over Time */}
+        <div className="bg-white border border-gray-200 rounded-md p-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Credits (Earnings) Over Time</h3>
+          {stats.byDateCredits ? (
+            <SimpleBarChart 
+              data={stats.byDateCredits} 
+              color="bg-green-600" 
+              hoverColor="hover:bg-green-700"
+            />
+          ) : (
+            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+              No data
+            </div>
+          )}
+        </div>
+        
+        {/* Debits Over Time */}
+        <div className="bg-white border border-gray-200 rounded-md p-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Debits (Purchases/Withdrawals) Over Time</h3>
+          {stats.byDateDebits ? (
+            <SimpleBarChart 
+              data={stats.byDateDebits} 
+              color="bg-red-600" 
+              hoverColor="hover:bg-red-700"
+            />
+          ) : (
+            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+              No data
+            </div>
+          )}
         </div>
 
         {/* Transactions by Status */}

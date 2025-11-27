@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface BackendEarningsData {
+  earning: number; // From user table (source of truth)
+  totalEarnings: number; // Alias for earning
   totalSales: number;
   totalCommission: number;
-  totalEarnings: number;
   totalWithdrawn: number;
   availableBalance: number;
   salesCount: number;
@@ -31,7 +32,6 @@ interface EarningsResponse {
 
 interface EarningsData {
   totalEarnings: number;
-  pendingEarnings: number;
   availableForWithdrawal: number;
   totalWithdrawn: number;
   monthlyEarnings?: Array<{
@@ -51,14 +51,11 @@ export function EarningsDashboard() {
       const backendData = response.data.data;
       
       // Map backend response to component's expected format
-      // Note: pendingEarnings is not available from backend, using 0 for now
-      // monthlyEarnings would need to be calculated from sales array if needed
       return {
-        totalEarnings: backendData.totalEarnings,
-        pendingEarnings: 0, // Not available from backend currently
-        availableForWithdrawal: backendData.availableBalance,
-        totalWithdrawn: backendData.totalWithdrawn,
-        monthlyEarnings: undefined, // Could be calculated from sales array if needed
+        totalEarnings: backendData.earning || backendData.totalEarnings || 0, // Use earning from user table
+        availableForWithdrawal: backendData.availableBalance || 0,
+        totalWithdrawn: backendData.totalWithdrawn || 0,
+        monthlyEarnings: undefined, // Not available from endpoint currently
       };
     },
   });
@@ -90,7 +87,6 @@ export function EarningsDashboard() {
 
   const earnings = data || {
     totalEarnings: 0,
-    pendingEarnings: 0,
     availableForWithdrawal: 0,
     totalWithdrawn: 0,
   };
@@ -102,6 +98,7 @@ export function EarningsDashboard() {
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50",
+      description: "Total earnings from user table",
     },
     {
       label: "Available for Withdrawal",
@@ -109,6 +106,7 @@ export function EarningsDashboard() {
       icon: DollarSign,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
+      description: "Available balance after withdrawals",
     },
     {
       label: "Total Withdrawn",
@@ -116,6 +114,7 @@ export function EarningsDashboard() {
       icon: TrendingDown,
       color: "text-gray-600",
       bgColor: "bg-gray-50",
+      description: "Total amount withdrawn",
     },
   ];
 
@@ -165,6 +164,9 @@ export function EarningsDashboard() {
               <p className={`text-2xl font-bold ${stat.color}`}>
                 {stat.value}
               </p>
+              {stat.description && (
+                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+              )}
             </div>
           );
         })}

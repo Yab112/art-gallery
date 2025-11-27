@@ -41,9 +41,17 @@ export default function PaymentSuccessPage() {
               queryClient.invalidateQueries({ 
                 queryKey: ["user-orders"] 
               });
-              // Also invalidate cart summary if user is logged in
+              // Invalidate all cart-related queries
+              queryClient.invalidateQueries({ 
+                queryKey: ["cart"] 
+              });
+              // Also invalidate cart summary specifically
               queryClient.invalidateQueries({ 
                 queryKey: ["cart-summary"] 
+              });
+              // Invalidate cart items list
+              queryClient.invalidateQueries({ 
+                queryKey: ["cart", "list"] 
               });
             } else {
               setVerificationStatus('failed');

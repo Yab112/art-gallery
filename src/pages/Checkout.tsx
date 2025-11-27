@@ -159,7 +159,15 @@ function CheckoutContent() {
         orderId: orderResponse.data.orderId,
       });
 
-      // Payment hook will redirect to checkout URL automatically
+      console.log('Payment initialization response:', paymentResponse);
+
+      // Payment hook's onSuccess should redirect automatically, but if it doesn't, do it here
+      if (paymentResponse.success && paymentResponse.data?.checkoutUrl) {
+        console.log('Redirecting to checkout URL:', paymentResponse.data.checkoutUrl);
+        window.location.href = paymentResponse.data.checkoutUrl;
+        return; // Exit early since we're redirecting
+      }
+
       if (!paymentResponse.success) {
         throw new Error(paymentResponse.message || "Failed to initialize payment");
       }

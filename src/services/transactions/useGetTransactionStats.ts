@@ -5,11 +5,25 @@ export interface TransactionStats {
   byDate: Array<{
     date: string;
     amount: number;
+    credits: number;
+    debits: number;
+    count: number;
+  }>;
+  byDateCredits: Array<{
+    date: string;
+    amount: number;
+    count: number;
+  }>;
+  byDateDebits: Array<{
+    date: string;
+    amount: number;
     count: number;
   }>;
   byStatus: Record<string, { count: number; amount: number }>;
   byProvider: Record<string, { count: number; amount: number }>;
   totalAmount: number;
+  totalCredits: number;
+  totalDebits: number;
   totalCount: number;
 }
 

@@ -257,21 +257,37 @@ export function TransactionsSection() {
                       {getStatusIcon(transaction.status)}
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 text-sm truncate">
-                          {transaction.order.items.length > 0
-                            ? transaction.order.items[0].artwork.title
-                            : "Order Payment"}
-                          {transaction.order.items.length > 1 && (
+                          {transaction.type === 'CREDIT' 
+                            ? (transaction.order?.items && transaction.order.items.length > 0
+                                ? `Earning from: ${transaction.order.items[0].artwork?.title || "Artwork Sale"}`
+                                : "Earning from Artwork Sale")
+                            : transaction.typeLabel === 'Withdrawal'
+                            ? "Withdrawal"
+                            : (transaction.order?.items && transaction.order.items.length > 0
+                                ? `Purchase: ${transaction.order.items[0].artwork?.title || "Order Payment"}`
+                                : "Order Payment")}
+                          {transaction.order?.items && transaction.order.items.length > 1 && (
                             <span className="text-gray-500 ml-1 text-xs">
                               +{transaction.order.items.length - 1}
                             </span>
                           )}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-0.5">
-                          <span className="font-semibold text-gray-900">
-                            ${Number(transaction.amount).toLocaleString("en-US", {
+                          <span className={`font-semibold ${
+                            transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {transaction.type === 'CREDIT' ? '+' : '-'}$
+                            {Number(transaction.amount).toLocaleString("en-US", {
                               minimumFractionDigits: 0,
                               maximumFractionDigits: 0,
                             })}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            transaction.type === 'CREDIT' 
+                              ? 'bg-green-50 text-green-700' 
+                              : 'bg-red-50 text-red-700'
+                          }`}>
+                            {transaction.typeLabel || transaction.type}
                           </span>
                           <span
                             className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusColor(
@@ -317,22 +333,34 @@ export function TransactionsSection() {
                           {transaction.id}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-gray-500 text-[10px] mb-0.5">Order ID</p>
-                        <p className="font-mono text-xs text-gray-900 break-all">
-                          {transaction.orderId}
-                        </p>
-                      </div>
+                      {transaction.orderId && (
+                        <div>
+                          <p className="text-gray-500 text-[10px] mb-0.5">Order ID</p>
+                          <p className="font-mono text-xs text-gray-900 break-all">
+                            {transaction.orderId}
+                          </p>
+                        </div>
+                      )}
+                      {!transaction.orderId && transaction.type === 'DEBIT' && transaction.typeLabel === 'Withdrawal' && (
+                        <div>
+                          <p className="text-gray-500 text-[10px] mb-0.5">Transaction Type</p>
+                          <p className="text-xs text-gray-900">
+                            Withdrawal
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-gray-500 text-[10px] mb-0.5">Payment Provider</p>
                         <p className="text-gray-900 text-xs">
                           {getProviderLabel(transaction.provider)}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-gray-500 text-[10px] mb-0.5">Order Status</p>
-                        <p className="text-gray-900 text-xs">{transaction.order.status}</p>
-                      </div>
+                      {transaction.order && (
+                        <div>
+                          <p className="text-gray-500 text-[10px] mb-0.5">Order Status</p>
+                          <p className="text-gray-900 text-xs">{transaction.order.status}</p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-gray-500 text-[10px] mb-0.5">Transaction Reference</p>
                         <p className="font-mono text-xs text-gray-900 break-all">
@@ -354,7 +382,7 @@ export function TransactionsSection() {
                     </div>
 
                     {/* Order Items - Minimal */}
-                    {transaction.order.items.length > 0 && (
+                    {transaction.order?.items && transaction.order.items.length > 0 && (
                       <div className="mt-2">
                         <p className="text-xs font-medium text-gray-700 mb-1.5">
                           Items ({transaction.order.items.length})
@@ -389,22 +417,44 @@ export function TransactionsSection() {
                       </div>
                     )}
 
-                    {/* Order Total - Minimal */}
-                    <div className="flex justify-end pt-2 border-t border-gray-100">
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">Total</p>
-                        <p className="text-base font-bold text-gray-900">
-                          $
-                          {Number(transaction.order.totalAmount).toLocaleString(
-                            "en-US",
-                            {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            }
-                          )}
-                        </p>
+                    {/* Withdrawal Details */}
+                    {transaction.type === 'DEBIT' && transaction.typeLabel === 'Withdrawal' && transaction.metadata && (
+                      <div className="mt-2">
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <p className="text-gray-500 text-[10px] mb-0.5">Payout Account</p>
+                            <p className="text-gray-900 text-xs break-all">
+                              {(transaction.metadata as any)?.payoutAccount || 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 text-[10px] mb-0.5">Withdrawal ID</p>
+                            <p className="font-mono text-xs text-gray-900 break-all">
+                              {(transaction.metadata as any)?.withdrawalId || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Order Total - Minimal */}
+                    {transaction.order && (
+                      <div className="flex justify-end pt-2 border-t border-gray-100">
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">Total</p>
+                          <p className="text-base font-bold text-gray-900">
+                            $
+                            {Number(transaction.order.totalAmount).toLocaleString(
+                              "en-US",
+                              {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

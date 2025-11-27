@@ -3,13 +3,15 @@ import axios from "axios";
 
 export interface Transaction {
   id: string;
-  orderId: string;
+  orderId: string | null;
   amount: number;
-  status: "INITIATED" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
+  status: "INITIATED" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED" | "PROCESSING" | "REJECTED";
   createdAt: string;
   updatedAt: string;
   provider: string | null;
   metadata: any;
+  type: "CREDIT" | "DEBIT";
+  typeLabel: string;
   order: {
     id: string;
     buyerEmail: string;
@@ -28,7 +30,7 @@ export interface Transaction {
         photos: string[];
       };
     }>;
-  };
+  } | null;
   paymentGateway: {
     id: string;
     name: string;
