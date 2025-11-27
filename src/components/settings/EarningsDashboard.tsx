@@ -1,9 +1,33 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/hooks/use-axios-auth";
+import useAxiosAuth from "@/hooks/use-axios-auth";
 import { DollarSign, TrendingUp, TrendingDown, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+
+interface BackendEarningsData {
+  totalSales: number;
+  totalCommission: number;
+  totalEarnings: number;
+  totalWithdrawn: number;
+  availableBalance: number;
+  salesCount: number;
+  sales: Array<{
+    artworkId: string;
+    artworkTitle: string;
+    artworkImage: string;
+    salePrice: number;
+    commission: number;
+    earnings: number;
+    soldAt: string;
+    buyerEmail: string;
+  }>;
+}
+
+interface EarningsResponse {
+  success: boolean;
+  data: BackendEarningsData;
+}
 
 interface EarningsData {
   totalEarnings: number;
@@ -18,20 +42,32 @@ interface EarningsData {
 
 export function EarningsDashboard() {
   const [timeRange, setTimeRange] = useState<"all" | "month" | "year">("all");
+  const axiosAuth = useAxiosAuth();
 
   const { data, isLoading, error } = useQuery<EarningsData>({
     queryKey: ["earnings", timeRange],
     queryFn: async () => {
-      const response = await api.get(`/settings/earnings?range=${timeRange}`);
-      return response.data;
+      const response = await axiosAuth.get<EarningsResponse>(`/artist/earnings`);
+      const backendData = response.data.data;
+      
+      // Map backend response to component's expected format
+      // Note: pendingEarnings is not available from backend, using 0 for now
+      // monthlyEarnings would need to be calculated from sales array if needed
+      return {
+        totalEarnings: backendData.totalEarnings,
+        pendingEarnings: 0, // Not available from backend currently
+        availableForWithdrawal: backendData.availableBalance,
+        totalWithdrawn: backendData.totalWithdrawn,
+        monthlyEarnings: undefined, // Could be calculated from sales array if needed
+      };
     },
   });
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
             <div key={i} className="bg-gray-100 rounded-lg p-6 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
               <div className="h-8 bg-gray-200 rounded w-3/4" />
@@ -66,13 +102,6 @@ export function EarningsDashboard() {
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50",
-    },
-    {
-      label: "Pending Earnings",
-      value: `$${earnings.pendingEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      icon: TrendingUp,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50",
     },
     {
       label: "Available for Withdrawal",
@@ -121,7 +150,7 @@ export function EarningsDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (

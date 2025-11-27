@@ -72,6 +72,7 @@ export function RelatedArtworks({ artworkId, artist, categoryIds }: RelatedArtwo
               medium={artwork.support}
               dimensions={formatDimensions(artwork.dimensions)}
               seller={artwork.user?.name || artwork.artist}
+              status={artwork.status}
             />
           </div>
         ))}

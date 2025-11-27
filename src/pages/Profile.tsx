@@ -295,6 +295,7 @@ export default function ProfilePage() {
                                   : "N/A"
                               }
                               seller={artwork.user?.name || "Unknown"}
+                              status={artwork.status}
                             />
                           </Link>
                           {/* Edit and Delete Buttons */}

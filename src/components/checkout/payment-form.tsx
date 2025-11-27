@@ -420,7 +420,18 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
               <p className="text-blue-800 mb-4">
                 You will be redirected to PayPal to complete your payment.
               </p>
-              <Button type="button" className="bg-[#053352] hover:bg-[#042a47] text-white">
+              <Button 
+                type="button" 
+                className="bg-[#053352] hover:bg-[#042a47] text-white"
+                onClick={() => {
+                  // Save payment data and proceed
+                  setPaymentData({
+                    provider: 'paypal' as 'chapa' | 'paypal' | 'card',
+                    phoneNumber: formData.phoneNumber,
+                  });
+                  onNext();
+                }}
+              >
                 Continue with PayPal
               </Button>
             </div>

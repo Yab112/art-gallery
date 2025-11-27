@@ -13,6 +13,7 @@ interface Artwork {
   medium: string;
   dimensions: string;
   seller: string;
+  status?: string;
 }
 
 interface ArtworkGridProps {

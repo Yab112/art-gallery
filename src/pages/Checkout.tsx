@@ -23,7 +23,7 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { shippingData, paymentData } = useCheckout();
+  const { shippingData, paymentData, selectedCartItemIds } = useCheckout();
   const { data: cartData } = useCartItems(1, 50);
   const { mutateAsync: createOrder } = useCreateOrder();
   const { mutateAsync: initializePayment } = useInitializePayment();
@@ -55,9 +55,18 @@ function CheckoutContent() {
       return;
     }
 
+    // Get selected items only
+    const selectedItems = cartData?.items?.filter(item => selectedCartItemIds.has(item.id)) || [];
+
     if (!cartData?.items || cartData.items.length === 0) {
       setError("Your cart is empty");
       toast.error("Your cart is empty");
+      return;
+    }
+
+    if (selectedItems.length === 0) {
+      setError("Please select at least one item to checkout");
+      toast.error("Please select at least one item to checkout");
       return;
     }
 
@@ -65,11 +74,20 @@ function CheckoutContent() {
     setError(null);
 
     try {
-      // Prepare order items from cart with prices
-      const orderItems = cartData.items.map(item => {
-        const price = Number(item.artwork?.desiredPrice) || 0;
-        if (price <= 0) {
-          throw new Error(`Invalid price for artwork ${item.artwork?.title || item.artworkId}`);
+      // Prepare order items from SELECTED items only
+      const orderItems = selectedItems.map(item => {
+        const price = Number(item.artwork?.desiredPrice);
+        if (!item.artwork?.desiredPrice || isNaN(price) || price <= 0) {
+          throw new Error(
+            `Invalid or missing price for artwork "${item.artwork?.title || item.artworkId}". ` +
+            `Please remove this item from your cart and try again.`
+          );
+        }
+        if (!item.artworkId) {
+          throw new Error(`Missing artwork ID for item "${item.artwork?.title || 'Unknown'}"`);
+        }
+        if (!item.quantity || item.quantity <= 0) {
+          throw new Error(`Invalid quantity for artwork "${item.artwork?.title || item.artworkId}"`);
         }
         return {
           artworkId: item.artworkId,
@@ -78,22 +96,36 @@ function CheckoutContent() {
         };
       });
 
+      // Validate shipping data
+      if (!shippingData.email || !shippingData.firstName || !shippingData.lastName) {
+        throw new Error("Please complete all required shipping information");
+      }
+      if (!shippingData.address || !shippingData.city || !shippingData.state || !shippingData.zipCode) {
+        throw new Error("Please complete all required address fields");
+      }
+
       // Create shipping address object (not string)
       const shippingAddressObj = {
-        fullName: `${shippingData.firstName} ${shippingData.lastName}`,
-        phone: shippingData.phone,
-        address: `${shippingData.address}${shippingData.apartment ? ', ' + shippingData.apartment : ''}`,
-        city: shippingData.city,
-        state: shippingData.state,
-        zipCode: shippingData.zipCode,
-        country: shippingData.country || 'US',
+        fullName: `${shippingData.firstName.trim()} ${shippingData.lastName.trim()}`,
+        phone: shippingData.phone?.trim() || '',
+        address: `${shippingData.address.trim()}${shippingData.apartment ? ', ' + shippingData.apartment.trim() : ''}`,
+        city: shippingData.city.trim(),
+        state: shippingData.state.trim(),
+        zipCode: String(shippingData.zipCode).trim(), // Ensure it's a string
+        country: (shippingData.country || 'US').trim(),
       };
+
+      // Validate payment method
+      const validPaymentMethods = ['chapa', 'paypal', 'card'];
+      if (!paymentData.provider || !validPaymentMethods.includes(paymentData.provider)) {
+        throw new Error("Please select a valid payment method");
+      }
 
       // Step 1: Create order
       const orderResponse = await createOrder({
-        buyerEmail: shippingData.email,
+        buyerEmail: shippingData.email.trim(),
         shippingAddress: shippingAddressObj,
-        paymentMethod: paymentData.provider, // chapa, paypal, or card
+        paymentMethod: paymentData.provider as 'chapa' | 'paypal' | 'card',
         items: orderItems,
       });
 
@@ -107,15 +139,24 @@ function CheckoutContent() {
       const currency = paymentData.provider === 'chapa' ? 'ETB' : 'USD';
 
       // Step 2: Initialize payment
+      // Ensure provider is lowercase and amount is a number
+      const provider = (paymentData.provider || 'chapa').toLowerCase() as 'chapa' | 'paypal';
+      const amount = typeof totalAmount === 'string' ? parseFloat(totalAmount) : Number(totalAmount);
+      
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error(`Invalid payment amount: ${totalAmount}`);
+      }
+
       const paymentResponse = await initializePayment({
-        provider: paymentData.provider,
-        amount: totalAmount,
+        provider,
+        amount,
         currency,
-        email: shippingData.email,
-        firstName: shippingData.firstName,
-        lastName: shippingData.lastName,
-        phoneNumber: paymentData.phoneNumber || shippingData.phone,
-        txRef,
+        email: shippingData.email.trim(),
+        firstName: shippingData.firstName?.trim(),
+        lastName: shippingData.lastName?.trim(),
+        phoneNumber: (paymentData.phoneNumber || shippingData.phone)?.trim(),
+        txRef: txRef.trim(),
+        orderId: orderResponse.data.orderId,
       });
 
       // Payment hook will redirect to checkout URL automatically

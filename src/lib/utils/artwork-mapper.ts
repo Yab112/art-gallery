@@ -10,6 +10,7 @@ export interface ArtworkCardProps {
   medium: string;
   dimensions: string;
   seller: string;
+  status?: string;
 }
 
 /**
@@ -50,6 +51,7 @@ export function mapArtworkToCardProps(artwork: Artwork): ArtworkCardProps {
     medium,
     dimensions,
     seller,
+    status: artwork.status,
   };
 }
 
