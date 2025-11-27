@@ -16,6 +16,14 @@ import {
   Upload,
   X,
   Plus,
+  MapPin,
+  Globe,
+  Flame,
+  Circle,
+  Award,
+  Clock,
+  Languages,
+  BarChart3,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -45,6 +53,7 @@ import { toast } from "sonner";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
+import { ProfileSectionSkeleton } from "@/components/skeletons/profile-section-skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,7 +91,9 @@ export default function ProfilePage() {
         queryClient.invalidateQueries({ queryKey: artworkKeys.myArtworks() });
         toast.success("Artwork deleted successfully");
       } catch (error: any) {
-        toast.error("Failed to delete artwork: " + (error?.message || "An error occurred"));
+        toast.error(
+          "Failed to delete artwork: " + (error?.message || "An error occurred")
+        );
       }
     }
   };
@@ -103,11 +114,14 @@ export default function ProfilePage() {
     null
   );
 
-  if (isLoading) {
+  // Show loading only if we don't have any data at all
+  if (isLoading && !profileData) {
     return <ProfileSkeleton />;
   }
 
-  if (error) {
+  // Only show error if we don't have cached data
+  if (error && !profileData) {
+    console.error("Profile error:", error);
     return (
       <div className="container mx-auto px-4 py-8">
         <EmptyState
@@ -120,6 +134,14 @@ export default function ProfilePage() {
   }
 
   const profile = profileData?.profile || sessionUser;
+
+  // Debug: Log the profile data to see what we're getting
+  console.log("Profile Data:", profileData);
+  console.log("Profile Object:", profile);
+  console.log("Profile Bio:", (profile as any)?.bio);
+  console.log("Profile Heat Score:", (profile as any)?.heatScore);
+  console.log("Profile Views:", (profile as any)?.profileViews);
+  console.log("Profile Talent Types:", (profile as any)?.talentTypes);
 
   if (!profile) {
     return (
@@ -202,6 +224,120 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="md:col-span-2 space-y-6">
+              {/* Bio Section */}
+              {((profile as any)?.bio ||
+                (profile as any)?.location ||
+                (profile as any)?.website) && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    About
+                  </h2>
+                  {(profile as any)?.bio && (
+                    <p className="text-gray-700 leading-relaxed mb-4">
+                      {(profile as any).bio}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    {(profile as any)?.location && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin className="h-4 w-4" />
+                        <span>{(profile as any).location}</span>
+                      </div>
+                    )}
+                    {(profile as any)?.website && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-gray-600" />
+                        <a
+                          href={(profile as any).website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-600 hover:text-red-700 hover:underline"
+                        >
+                          Website
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Engagement Metrics - Always show */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="h-5 w-5 text-red-600" />
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Engagement Metrics
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Heat Score - Always show */}
+                  <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Flame className="h-5 w-5 text-orange-600 fill-orange-600" />
+                      <p className="text-sm font-medium text-gray-700">
+                        Heat Score
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {((profile as any)?.heatScore ?? 0).toFixed(1)}
+                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div
+                        className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            (((profile as any)?.heatScore ?? 0) / 100) * 100
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Profile Views - Always show */}
+                  <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Eye className="h-5 w-5 text-indigo-600" />
+                      <p className="text-sm font-medium text-gray-700">
+                        Profile Views
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {((profile as any)?.profileViews ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* Online Status */}
+                  {(profile as any)?.lastActiveAt &&
+                    (() => {
+                      try {
+                        const lastActive = new Date(
+                          (profile as any).lastActiveAt
+                        );
+                        const now = new Date();
+                        const diffMinutes =
+                          (now.getTime() - lastActive.getTime()) / (1000 * 60);
+                        const isOnline = diffMinutes < 5;
+                        return isOnline ? (
+                          <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Circle className="h-5 w-5 text-green-600 fill-green-600" />
+                              <p className="text-sm font-medium text-gray-700">
+                                Status
+                              </p>
+                            </div>
+                            <p className="text-lg font-bold text-gray-900">
+                              Online Now
+                            </p>
+                          </div>
+                        ) : null;
+                      } catch (e) {
+                        return null;
+                      }
+                    })()}
+                </div>
+              </div>
+
               {/* Account Information */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -224,6 +360,33 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
+                  {(profile as any)?.location && (
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500">Location</p>
+                        <p className="text-gray-900">
+                          {(profile as any).location}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {(profile as any)?.website && (
+                    <div className="flex items-center space-x-3">
+                      <Globe className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500">Website</p>
+                        <a
+                          href={(profile as any).website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-600 hover:text-red-700 hover:underline"
+                        >
+                          {(profile as any).website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   {profile.createdAt && (
                     <div className="flex items-center space-x-3">
                       <Calendar className="h-5 w-5 text-gray-400" />
@@ -260,6 +423,31 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Talent Types */}
+              {(profile as any)?.talentTypes &&
+                Array.isArray((profile as any).talentTypes) &&
+                (profile as any).talentTypes.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Award className="h-5 w-5 text-red-600" />
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Talent Types
+                      </h2>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(profile as any).talentTypes.map((tt: any) => (
+                        <span
+                          key={tt.id}
+                          className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-sm font-medium"
+                        >
+                          {tt.icon && <span className="mr-1">{tt.icon}</span>}
+                          {tt.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               {/* My Artworks */}
               {isLoadingArtworks ? (
                 <ProfileSectionSkeleton />
@@ -287,10 +475,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                       {artworksData.artworks.slice(0, 3).map((artwork) => (
                         <div key={artwork.id} className="relative group">
-                          <Link
-                            to={`/artwork/${artwork.id}`}
-                            className="block"
-                          >
+                          <Link to={`/artwork/${artwork.id}`} className="block">
                             <ArtworkCard
                               id={artwork.id}
                               image={artwork.photos?.[0] || "/placeholder.svg"}
@@ -314,7 +499,7 @@ export default function ProfilePage() {
                             />
                           </Link>
                           {/* Edit and Delete Buttons */}
-                          <div 
+                          <div
                             className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -509,9 +694,11 @@ export default function ProfilePage() {
                               </Button>
                             </div>
                           ) : (
-                            <div 
+                            <div
                               className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
-                              onClick={() => coverImageInputRef.current?.click()}
+                              onClick={() =>
+                                coverImageInputRef.current?.click()
+                              }
                             >
                               <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                               <Label
@@ -843,27 +1030,97 @@ export default function ProfilePage() {
               </div>
 
               {/* Account Stats */}
-              {"score" in profile && profile.score !== undefined && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Account Stats
-                  </h2>
-                  <div className="space-y-3">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Account Stats
+                </h2>
+                <div className="space-y-4">
+                  {"score" in profile && profile.score !== undefined && (
                     <div>
                       <p className="text-sm text-gray-500">Score</p>
                       <p className="text-2xl font-bold text-gray-900">
                         {profile.score || 0}
                       </p>
                     </div>
-                    {"artworkCount" in profile &&
-                      profile.artworkCount !== undefined && (
+                  )}
+                  {"artworkCount" in profile &&
+                    profile.artworkCount !== undefined && (
+                      <div>
+                        <p className="text-sm text-gray-500">Artworks</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {profile.artworkCount}
+                        </p>
+                      </div>
+                    )}
+                  {"reviewCount" in profile &&
+                    (profile as any).reviewCount !== undefined && (
+                      <div>
+                        <p className="text-sm text-gray-500">Reviews</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {(profile as any).reviewCount}
+                        </p>
+                      </div>
+                    )}
+                  {"collectionCount" in profile &&
+                    (profile as any).collectionCount !== undefined && (
+                      <div>
+                        <p className="text-sm text-gray-500">Collections</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {(profile as any).collectionCount}
+                        </p>
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Preferences Info */}
+              {((profile as any)?.timezone ||
+                (profile as any)?.languagePreference ||
+                (profile as any)?.emailSubscription !== undefined) && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    Preferences
+                  </h2>
+                  <div className="space-y-3">
+                    {(profile as any)?.timezone && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-gray-400" />
                         <div>
-                          <p className="text-sm text-gray-500">Artworks</p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {profile.artworkCount}
+                          <p className="text-xs text-gray-500">Timezone</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {(profile as any).timezone}
                           </p>
                         </div>
-                      )}
+                      </div>
+                    )}
+                    {(profile as any)?.languagePreference && (
+                      <div className="flex items-center gap-2">
+                        <Languages className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Language</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {(
+                              (profile as any).languagePreference || "en"
+                            ).toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {(profile as any)?.emailSubscription !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            Email Subscriptions
+                          </p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {(profile as any).emailSubscription
+                              ? "Enabled"
+                              : "Disabled"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

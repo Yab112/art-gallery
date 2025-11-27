@@ -1,11 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Users, Search, Filter, TrendingUp, Eye, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Users, Search, TrendingUp, Eye, Loader2, Mail } from "lucide-react";
 import { ArtistCard } from "@/components/artist/artist-circle-card";
 import { useGetAllArtists } from "@/services/artist/useGetAllArtists";
 import { useGetTopSellingArtists } from "@/services/artist/useGetTopSellingArtists";
@@ -154,27 +152,63 @@ const ALL_COUNTRIES = [
 ];
 
 export default function ArtistsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const talentTypeSlug = searchParams.get("talentType") || "";
+  
+  // Get page from URL params, default to 1
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = 24; // Show 24 artists per page
 
   const [searchTerm, setSearchTerm] = useState("");
   // Debounce search term to avoid API calls on every keystroke
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedTag, setSelectedTag] = useState("");
-  const [priceRange, setPriceRange] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [selectedTalentType, setSelectedTalentType] = useState("");
+  const [emailSearch, setEmailSearch] = useState("");
+
+  // Update URL search params
+  const updateSearchParams = (
+    updates: Record<string, string | number | null>
+  ) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(value));
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  };
+
+  // Reset to page 1 when filters change (but not on initial mount)
+  const prevFiltersRef = useRef({ debouncedSearchTerm, selectedCountry, selectedTalentType, emailSearch });
+  useEffect(() => {
+    const prevFilters = prevFiltersRef.current;
+    const filtersChanged = 
+      prevFilters.debouncedSearchTerm !== debouncedSearchTerm ||
+      prevFilters.selectedCountry !== selectedCountry ||
+      prevFilters.selectedTalentType !== selectedTalentType ||
+      prevFilters.emailSearch !== emailSearch;
+    
+    if (filtersChanged && page !== 1) {
+      updateSearchParams({ page: 1 });
+    }
+    
+    prevFiltersRef.current = { debouncedSearchTerm, selectedCountry, selectedTalentType, emailSearch };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, selectedCountry, selectedTalentType, emailSearch, page]);
 
   // Fetch talent types to filter by talent type slug
   const { data: talentTypes = [] } = useGetTalentTypes();
 
-  // Fetch artists data from backend - use debounced search term
+  // Fetch artists data from backend - use debounced search term and pagination
   const {
     data: allArtistsData,
     isLoading: isLoadingAll,
     isFetching: isFetchingAll,
     error: allArtistsError,
-  } = useGetAllArtists(1, 100, debouncedSearchTerm || undefined);
+  } = useGetAllArtists(page, limit, debouncedSearchTerm || undefined);
   const { data: topSellingData, isLoading: isLoadingTopSelling } =
     useGetTopSellingArtists(10);
   const { data: mostViewedData, isLoading: isLoadingMostViewed } =
@@ -238,9 +272,31 @@ export default function ArtistsPage() {
     const defaultAvatar = "/default-avatar.png";
     const avatar = artist.avatar || artist.image || defaultAvatar;
 
+    // Map talent types - handle both formats
+    let talentTypes = [];
+    if (artist.talentTypes && Array.isArray(artist.talentTypes)) {
+      talentTypes = artist.talentTypes.map((tt: any) => {
+        // Handle nested format: { talentType: { id, name, slug } }
+        if (tt.talentType) {
+          return {
+            id: tt.talentType.id,
+            name: tt.talentType.name,
+            slug: tt.talentType.slug,
+          };
+        }
+        // Handle direct format: { id, name, slug }
+        return {
+          id: tt.id,
+          name: tt.name,
+          slug: tt.slug,
+        };
+      });
+    }
+
     return {
       id: artist.id || artist.userId,
       name: artist.name,
+      email: artist.email,
       country: artist.country || "Unknown",
       followers: 0, // Not available in current API
       artworks: artist.artworks || artist.artworkCount || 0,
@@ -249,6 +305,7 @@ export default function ArtistsPage() {
       sales: artist.sales || artist.totalSales || 0,
       views: artist.views || artist.totalViews || 0,
       rating: undefined, // Not available in current API
+      talentTypes: talentTypes,
     };
   };
 
@@ -292,14 +349,31 @@ export default function ArtistsPage() {
     return filtered.filter((artist) => {
       const countryMatch =
         selectedCountry === "" || artist.country === selectedCountry;
-      // Tags are not available in current API, so skip tag filtering
-      const tagMatch = selectedTag === "";
-      return countryMatch && tagMatch;
+
+      // Filter by talent type
+      const talentTypeMatch =
+        selectedTalentType === "" ||
+        (artist.talentTypes &&
+          artist.talentTypes.length > 0 &&
+          artist.talentTypes.some((tt: any) => {
+            // Handle both formats: direct talentType object or nested talentType
+            const ttId = tt.id || tt.talentType?.id;
+            return ttId === selectedTalentType;
+          }));
+
+      // Filter by email search
+      const emailMatch =
+        emailSearch === "" ||
+        (artist.email &&
+          artist.email.toLowerCase().includes(emailSearch.toLowerCase()));
+
+      return countryMatch && talentTypeMatch && emailMatch;
     });
   }, [
     allArtists,
     selectedCountry,
-    selectedTag,
+    selectedTalentType,
+    emailSearch,
     talentTypeSlug,
     talentTypes,
     allArtistsData,
@@ -399,130 +473,108 @@ export default function ArtistsPage() {
                 )}
               </div>
             </div>
-            <Button
-              variant="secondary"
-              size="lg"
-              className="bg-white text-red-700 hover:bg-gray-100 flex items-center gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-5 w-5" />
-              {showFilters ? "Hide Filters" : "Show Filters"}
-            </Button>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Filters Section */}
-        {showFilters && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8 p-6 -mt-6 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Search */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Search Artists
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search by name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Country Filter */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Country
-                </label>
-                <Select
-                  value={selectedCountry || "all"}
-                  onValueChange={(value) =>
-                    setSelectedCountry(value === "all" ? "" : value)
-                  }
-                  {...({ modal: false } as any)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Countries" />
-                  </SelectTrigger>
-                  <SelectContent
-                    className="z-[200] max-h-[300px]"
-                    position="popper"
-                    sideOffset={4}
-                  >
-                    <SelectItem value="all">All Countries</SelectItem>
-                    {countries.length > 0 &&
-                      countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Art Style Tags */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Art Style
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "Digital Art",
-                    "Abstract",
-                    "Photography",
-                    "Geometric",
-                    "Renaissance",
-                    "Pixel Art",
-                  ].map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant={selectedTag === tag ? "default" : "outline"}
-                      className="cursor-pointer text-xs"
-                      onClick={() =>
-                        setSelectedTag(selectedTag === tag ? "" : tag)
-                      }
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Price Range
-                </label>
-                <Select
-                  value={priceRange || "any"}
-                  onValueChange={(value) =>
-                    setPriceRange(value === "any" ? "" : value)
-                  }
-                  {...({ modal: false } as any)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Any Price" />
-                  </SelectTrigger>
-                  <SelectContent
-                    className="z-[200]"
-                    position="popper"
-                    sideOffset={4}
-                  >
-                    <SelectItem value="any">Any Price</SelectItem>
-                    <SelectItem value="0-1000">$0 - $1,000</SelectItem>
-                    <SelectItem value="1000-5000">$1,000 - $5,000</SelectItem>
-                    <SelectItem value="5000-10000">$5,000 - $10,000</SelectItem>
-                    <SelectItem value="10000+">$10,000+</SelectItem>
-                  </SelectContent>
-                </Select>
+        {/* Filters Section - Always visible and sticky */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8 p-6 sticky top-4 z-50">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search by Name */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Search by Name
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
+
+            {/* Search by Email */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Search by Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by email..."
+                  value={emailSearch}
+                  onChange={(e) => setEmailSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Talent Type Filter */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Talent Type
+              </label>
+              <Select
+                value={selectedTalentType || "all"}
+                onValueChange={(value) =>
+                  setSelectedTalentType(value === "all" ? "" : value)
+                }
+                {...({ modal: false } as any)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Talent Types" />
+                </SelectTrigger>
+                <SelectContent
+                  className="z-[200] max-h-[300px]"
+                  position="popper"
+                  sideOffset={4}
+                >
+                  <SelectItem value="all">All Talent Types</SelectItem>
+                  {talentTypes.map((talentType) => (
+                    <SelectItem key={talentType.id} value={talentType.id}>
+                      {talentType.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Country Filter */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Country
+              </label>
+              <Select
+                value={selectedCountry || "all"}
+                onValueChange={(value) =>
+                  setSelectedCountry(value === "all" ? "" : value)
+                }
+                {...({ modal: false } as any)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Countries" />
+                </SelectTrigger>
+                <SelectContent
+                  className="z-[200] max-h-[300px]"
+                  position="popper"
+                  sideOffset={4}
+                >
+                  <SelectItem value="all">All Countries</SelectItem>
+                  {countries.length > 0 &&
+                    countries.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        )}
+        </div>
 
         {/* Top Selling Artists - Featured Section */}
         {topSellingArtists.length > 0 && (
@@ -551,15 +603,11 @@ export default function ArtistsPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {topSellingArtists.map((artist) => (
-                  <Link
-                    key={`top-${artist.id}`}
-                    to={`/artist/${artist.id}`}
-                    className="block"
-                  >
-                    <ArtistCard artist={artist} />
-                  </Link>
+                  <div key={`top-${artist.id}`}>
+                    <ArtistCard artist={artist} showSales={true} />
+                  </div>
                 ))}
               </div>
             )}
@@ -588,17 +636,42 @@ export default function ArtistsPage() {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {filteredArtists.map((artist) => (
-                <Link
-                  key={artist.id}
-                  to={`/artist/${artist.id}`}
-                  className="block transform transition-transform hover:scale-105"
-                >
-                  <ArtistCard artist={artist} />
-                </Link>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {filteredArtists.map((artist) => (
+                  <div key={artist.id}>
+                    <ArtistCard artist={artist} />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Pagination */}
+              {allArtistsData?.pagination && allArtistsData.pagination.total > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateSearchParams({ page: page - 1 })}
+                    disabled={page === 1 || allArtistsData.pagination.pages <= 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Page {page} of {allArtistsData.pagination.pages} (
+                    {allArtistsData.pagination.total}{" "}
+                    {allArtistsData.pagination.total === 1 ? "artist" : "artists"})
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateSearchParams({ page: page + 1 })}
+                    disabled={page >= allArtistsData.pagination.pages || allArtistsData.pagination.pages <= 1}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -629,15 +702,11 @@ export default function ArtistsPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {mostViewedArtists.map((artist) => (
-                  <Link
-                    key={`viewed-${artist.id}`}
-                    to={`/artist/${artist.id}`}
-                    className="block"
-                  >
+                  <div key={`viewed-${artist.id}`}>
                     <ArtistCard artist={artist} />
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

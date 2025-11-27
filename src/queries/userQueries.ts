@@ -16,6 +16,12 @@ export const useUser = (id: string) => {
 export const useMyProfile = () => {
   return useFetchData<{ success: boolean; profile: UserProfile }>(
     userKeys.me(),
-    "profile"
+    "profile",
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false, // Prevent refetch on window focus
+      refetchOnMount: true, // Always refetch on mount to get latest data
+      retry: 2, // Retry twice on failure
+    }
   );
 };

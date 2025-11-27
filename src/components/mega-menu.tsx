@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, Palette, Camera, Monitor, Hammer, PenTool, Shirt, Layers, Image as ImageIcon, Brush, Building2, Sparkles } from "lucide-react";
+import { ChevronDown, Palette, Camera, Monitor, Hammer, PenTool, Shirt, Layers, Image as ImageIcon, Brush, Building2, Sparkles, ChevronRight } from "lucide-react";
 import { useGetCategories, type Category } from "@/services/category/useGetCategories";
 import { useGetTalentTypes, type TalentType } from "@/services/talent-type/useGetTalentTypes";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,8 @@ interface MegaMenuProps {
   type: "artwork" | "artist";
   label: string;
   className?: string;
+  mobileMode?: boolean;
+  onItemClick?: () => void;
 }
 
 // Icon mapping for categories
@@ -43,7 +45,7 @@ const talentTypeIcons: Record<string, React.ComponentType<{ className?: string }
   other: Sparkles,
 };
 
-export function MegaMenu({ type, label, className }: MegaMenuProps) {
+export function MegaMenu({ type, label, className, mobileMode = false, onItemClick }: MegaMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,8 +54,10 @@ export function MegaMenu({ type, label, className }: MegaMenuProps) {
   const { data: categories = [], isLoading: categoriesLoading } = useGetCategories();
   const { data: talentTypes = [], isLoading: talentTypesLoading } = useGetTalentTypes();
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside (only for desktop)
   useEffect(() => {
+    if (mobileMode) return;
+    
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -67,7 +71,7 @@ export function MegaMenu({ type, label, className }: MegaMenuProps) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, mobileMode]);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -79,6 +83,7 @@ export function MegaMenu({ type, label, className }: MegaMenuProps) {
   }, []);
 
   const handleMouseEnter = () => {
+    if (mobileMode) return;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -86,6 +91,7 @@ export function MegaMenu({ type, label, className }: MegaMenuProps) {
   };
 
   const handleMouseLeave = () => {
+    if (mobileMode) return;
     // Small delay before closing to allow moving to menu
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false);
@@ -93,13 +99,30 @@ export function MegaMenu({ type, label, className }: MegaMenuProps) {
   };
 
   const handleMenuMouseEnter = () => {
+    if (mobileMode) return;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
   };
 
   const handleMenuMouseLeave = () => {
+    if (mobileMode) return;
     setIsOpen(false);
+  };
+
+  const handleToggle = () => {
+    if (mobileMode) {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  const handleItemClick = () => {
+    if (mobileMode) {
+      setIsOpen(false);
+      onItemClick?.();
+    } else {
+      setIsOpen(false);
+    }
   };
 
   const isLoading = categoriesLoading || talentTypesLoading;
@@ -113,6 +136,83 @@ export function MegaMenu({ type, label, className }: MegaMenuProps) {
 
   const navLink = type === "artwork" ? "/buyart" : "/artists";
 
+  // Mobile Accordion Mode
+  if (mobileMode) {
+    return (
+      <div className={cn("w-full", className)}>
+        <button
+          onClick={handleToggle}
+          className="flex items-center justify-between w-full text-left text-gray-700 hover:text-gray-900 transition-colors py-2"
+        >
+          <span className="font-medium">{label}</span>
+          <ChevronRight
+            className={cn(
+              "h-4 w-4 transition-transform duration-200",
+              isOpen && "rotate-90"
+            )}
+          />
+        </button>
+
+        {isOpen && (
+          <div className="mt-2 space-y-1">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              </div>
+            ) : type === "artwork" ? (
+              <>
+                {categories.map((category) => {
+                  const IconComponent = categoryIcons[category.slug] || Palette;
+                  return (
+                    <div key={category.id} className="ml-4 space-y-1">
+                      <Link
+                        to={`/buyart?category=${category.slug}`}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors py-1.5"
+                        onClick={handleItemClick}
+                      >
+                        <IconComponent className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <span>{category.name}</span>
+                      </Link>
+                      {category.artworkCount !== undefined && (
+                        <div className="ml-6 text-xs text-gray-500">
+                          {category.artworkCount} artworks
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <>
+                {talentTypes.map((talentType) => {
+                  const IconComponent = talentTypeIcons[talentType.slug] || Sparkles;
+                  return (
+                    <div key={talentType.id} className="ml-4 space-y-1">
+                      <Link
+                        to={`/artists?talentType=${talentType.slug}`}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors py-1.5"
+                        onClick={handleItemClick}
+                      >
+                        <IconComponent className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <span>{talentType.name}</span>
+                      </Link>
+                      {talentType.description && (
+                        <div className="ml-6 text-xs text-gray-500 line-clamp-1">
+                          {talentType.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop Mode
   return (
     <div
       ref={menuRef}

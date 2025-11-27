@@ -122,3 +122,4 @@ const debouncedSearchTerm = useDebounce(searchTerm, 500);
 2. `art-gallery/src/pages/Artists.tsx` - Fixed loading logic and added debouncing
 3. `art-gallery/src/services/artist/useGetAllArtists.ts` - Added placeholderData and refetch config
 
+

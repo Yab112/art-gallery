@@ -1,9 +1,10 @@
 import { useGetBlogPosts } from "@/services/blog";
 import { BlogCard } from "@/components/blog/blog-card";
 import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton";
-import { Loader2, BookOpen } from "lucide-react";
+import { BookOpen, FolderOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface UserBlogsProps {
   userId: string;
@@ -37,9 +38,7 @@ export function UserBlogs({ userId, limit = 6 }: UserBlogsProps) {
     );
   }
 
-  if (!data || data.data.length === 0) {
-    return null;
-  }
+  const hasBlogs = data && data.data.length > 0;
 
   return (
     <section className="py-8 border-t border-gray-200 mt-8">
@@ -48,19 +47,32 @@ export function UserBlogs({ userId, limit = 6 }: UserBlogsProps) {
           <BookOpen className="w-5 h-5 text-gray-700" />
           <h2 className="text-xl font-bold text-gray-900">Blog Posts by This Artist</h2>
         </div>
-        <Link to={`/blog?authorId=${userId}`}>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
-        </Link>
+        {hasBlogs && (
+          <Link to={`/blog?authorId=${userId}`}>
+            <Button variant="ghost" size="sm">
+              View All
+            </Button>
+          </Link>
+        )}
       </div>
 
-      {/* Blog List - Medium Style */}
-      <div className="space-y-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {data.data.map((post) => (
-          <BlogCard key={post.id} blogPost={post} />
-        ))}
-      </div>
+      {hasBlogs ? (
+        /* Blog List - Medium Style */
+        <div className="space-y-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+          {data.data.map((post) => (
+            <BlogCard key={post.id} blogPost={post} />
+          ))}
+        </div>
+      ) : (
+        /* Empty State */
+        <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <EmptyState
+            icon={FolderOpen}
+            title="No Blog Posts Yet"
+            description="This artist hasn't published any blog posts yet."
+          />
+        </div>
+      )}
     </section>
   );
 }

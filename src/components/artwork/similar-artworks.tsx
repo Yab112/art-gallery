@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { SectionTitle } from "@/components/section-title";
 import { ArtworkCard } from "../artwork-card";
 import { useSimilarArtworksByCategory } from "@/queries/useSimilarArtworksByCategory";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Artwork } from "@/types/artwork.types";
 
 interface SimilarArtworksProps {
@@ -22,32 +25,55 @@ const formatDimensions = (dimensions: Artwork["dimensions"]): string => {
 };
 
 export function SimilarArtworks({ artworkId }: SimilarArtworksProps) {
+  const [page, setPage] = useState(1);
+  const limit = 8; // 2 rows × 4 columns = 8 items per page
+  
   const { data: similarArtworks, isLoading } = useSimilarArtworksByCategory(
     artworkId,
-    8
+    limit,
+    page
   );
+
+  // Calculate pagination
+  const totalArtworks = similarArtworks?.length || 0;
+  const totalPages = Math.ceil(totalArtworks / limit);
+  const hasMore = totalArtworks >= limit;
 
   if (isLoading) {
     return (
       <section className="py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Section - Similar Artworks Skeleton */}
-          <div>
-            <SectionTitle title="Similar Artworks" />
-            {/* Masonry Grid Layout Skeleton */}
-            <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-2">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="break-inside-avoid space-y-3">
-                  <Skeleton className="aspect-[4/5] w-full rounded-lg" />
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-4 w-2/3" />
+        <SectionTitle title="Similar Artworks" />
+        {/* Grid Layout Skeleton - 4 columns responsive, matches ArtworkCard structure */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="group relative space-y-3">
+              {/* Image Skeleton */}
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-gray-200">
+                <Skeleton className="h-full w-full" />
+              </div>
+              
+              {/* Content Skeleton */}
+              <div className="space-y-2">
+                {/* Title */}
+                <Skeleton className="h-5 w-3/4" />
+                
+                {/* Artist */}
+                <Skeleton className="h-4 w-1/2" />
+                
+                {/* Price and Details */}
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
                 </div>
-              ))}
+                
+                {/* Year and Medium */}
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
             </div>
-          </div>
-          {/* Right Section - Empty */}
-          <div></div>
+          ))}
         </div>
       </section>
     );
@@ -57,36 +83,63 @@ export function SimilarArtworks({ artworkId }: SimilarArtworksProps) {
     return null;
   }
 
+  // Get artworks for current page
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedArtworks = similarArtworks.slice(startIndex, endIndex);
+
   return (
     <section className="py-16">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Section - Similar Artworks */}
-        <div>
-          <SectionTitle title="Similar Artworks" />
-          {/* Masonry Grid Layout */}
-          <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-2">
-            {similarArtworks.map((artwork) => (
-              <div key={artwork.id} className="break-inside-avoid">
-                <ArtworkCard
-                  isMasonry
-                  id={artwork.id}
-                  image={artwork.photos?.[0] || "/placeholder.svg"}
-                  title={artwork.title || "Untitled"}
-                  artist={artwork.artist}
-                  price={formatPrice(artwork.desiredPrice)}
-                  year={artwork.yearOfArtwork}
-                  medium={artwork.support}
-                  dimensions={formatDimensions(artwork.dimensions)}
-                  seller={artwork.user?.name || artwork.artist}
-                  status={artwork.status}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Right Section - Empty */}
-        <div></div>
+      <SectionTitle title="Similar Artworks" />
+      
+      {/* Grid Layout - 4 columns responsive, 2 rows */}
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {paginatedArtworks.map((artwork) => (
+          <ArtworkCard
+            key={artwork.id}
+            id={artwork.id}
+            image={artwork.photos?.[0] || "/placeholder.svg"}
+            title={artwork.title || "Untitled"}
+            artist={artwork.artist}
+            price={formatPrice(artwork.desiredPrice)}
+            year={artwork.yearOfArtwork}
+            medium={artwork.support}
+            dimensions={formatDimensions(artwork.dimensions)}
+            seller={artwork.user?.name || artwork.artist}
+          />
+        ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          
+          <span className="text-sm text-gray-600">
+            Page {page} of {totalPages} ({totalArtworks} artworks)
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={page >= totalPages}
+            className="flex items-center gap-2"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </section>
   );
 }
