@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,29 +8,23 @@ import {
   Clock,
   XCircle,
   ArrowRight,
+  Calendar,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCartItems } from "@/queries/cartQueries";
-import { useState } from "react";
+import { useUserOrders } from "@/queries/orderQueries";
 import { OrdersSkeleton } from "@/components/skeletons/orders-skeleton";
 
 export default function OrdersPage() {
-  const [page, setPage] = useState(1);
-  const limit = 10;
-  const { data, isLoading, error } = useCartItems(page, limit);
+  const { data: orders = [], isLoading, error } = useUserOrders();
 
-  // For now, we'll use cart items as orders since orders endpoint doesn't exist yet
-  // This can be updated when orders API is implemented
-  const orders = data?.items || [];
-  const pagination = data
-    ? {
-        page: data.page || 1,
-        limit: data.limit || limit,
-        total: data.total || 0,
-        pages: data.pages || 1,
-      }
-    : { page: 1, limit, total: 0, pages: 1 };
+  // Debug logging
+  useEffect(() => {
+    console.log("OrdersPage - Orders count:", orders.length);
+    if (orders.length > 0) {
+      console.log("OrdersPage - Sample order:", orders[0]);
+    }
+  }, [orders]);
 
   if (isLoading) {
     return (
@@ -68,8 +63,8 @@ export default function OrdersPage() {
                       My Orders
                     </h1>
                     <p className="text-gray-500 mt-1">
-                      {pagination.total}{" "}
-                      {pagination.total === 1 ? "order" : "orders"} total
+                      {orders.length}{" "}
+                      {orders.length === 1 ? "order" : "orders"} total
                     </p>
                   </div>
                 </div>
@@ -101,143 +96,163 @@ export default function OrdersPage() {
           ) : (
             <div className="space-y-4">
               {orders.map((order) => {
-                const artwork = order.artwork;
-                if (!artwork) return null;
-
-                // Mock order status - replace with actual order status when orders API is implemented
-                const orderStatus = "pending"; // pending, processing, shipped, delivered, cancelled
+                // Order status configuration
                 const statusConfig = {
-                  pending: {
+                  PENDING: {
                     icon: Clock,
                     color: "text-yellow-600",
                     bg: "bg-yellow-100",
                     label: "Pending",
                   },
-                  processing: {
-                    icon: Package,
-                    color: "text-blue-600",
-                    bg: "bg-blue-100",
-                    label: "Processing",
-                  },
-                  shipped: {
-                    icon: Package,
-                    color: "text-purple-600",
-                    bg: "bg-purple-100",
-                    label: "Shipped",
-                  },
-                  delivered: {
+                  PAID: {
                     icon: CheckCircle2,
                     color: "text-green-600",
                     bg: "bg-green-100",
-                    label: "Delivered",
+                    label: "Paid",
                   },
-                  cancelled: {
+                  CANCELLED: {
                     icon: XCircle,
                     color: "text-red-600",
                     bg: "bg-red-100",
                     label: "Cancelled",
                   },
+                  REFUNDED: {
+                    icon: XCircle,
+                    color: "text-gray-600",
+                    bg: "bg-gray-100",
+                    label: "Refunded",
+                  },
                 };
                 const status =
-                  statusConfig[orderStatus as keyof typeof statusConfig] ||
-                  statusConfig.pending;
+                  statusConfig[order.status as keyof typeof statusConfig] ||
+                  statusConfig.PENDING;
                 const StatusIcon = status.icon;
+
+                // Format date
+                const orderDate = new Date(order.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                });
+
+                // Calculate total amount
+                const totalAmount = typeof order.totalAmount === 'string' 
+                  ? parseFloat(order.totalAmount) 
+                  : order.totalAmount;
 
                 return (
                   <div
                     key={order.id}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
                   >
-                    <div className="flex flex-col md:flex-row gap-6">
-                      {/* Artwork Image */}
-                      <Link
-                        to={`/artwork/${artwork.id}`}
-                        className="flex-shrink-0"
-                      >
-                        <div className="relative w-32 h-32 md:w-40 md:h-40 overflow-hidden rounded-lg bg-gray-100">
-                          <img
-                            src={artwork.photos?.[0] || "/placeholder.svg"}
-                            alt={artwork.title || artwork.artist}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                      </Link>
-
-                      {/* Order Details */}
-                      <div className="flex-1 flex flex-col md:flex-row justify-between gap-4">
-                        <div className="flex-1">
-                          <Link to={`/artwork/${artwork.id}`}>
-                            <h3 className="font-semibold text-gray-900 text-lg mb-1 hover:text-red-700 transition-colors">
-                              {artwork.title || "Untitled"}
-                            </h3>
-                            <p className="text-gray-600 text-sm mb-2">
-                              by {artwork.artist}
-                            </p>
-                          </Link>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                            <span>Quantity: {order.quantity}</span>
-                            <span>•</span>
-                            <span>
-                              ${artwork.desiredPrice?.toLocaleString() || "N/A"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}
-                            >
-                              <StatusIcon className="h-3 w-3" />
-                              {status.label}
-                            </div>
+                    {/* Order Header */}
+                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}
+                          >
+                            <StatusIcon className="h-3 w-3" />
+                            {status.label}
                           </div>
                         </div>
-
-                        <div className="flex flex-col items-end justify-between gap-2">
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">Total</p>
-                            <p className="text-2xl font-bold text-gray-900">
-                              $
-                              {(
-                                (artwork.desiredPrice || 0) * order.quantity
-                              ).toLocaleString()}
-                            </p>
-                          </div>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/artwork/${artwork.id}`}>
-                              View Details
-                              <ArrowRight className="h-4 w-4 ml-2" />
-                            </Link>
-                          </Button>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="h-4 w-4" />
+                          <span>Ordered on {orderDate}</span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Order #{order.id.slice(0, 8).toUpperCase()}
                         </div>
                       </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">Total Amount</p>
+                        <p className="text-xl font-bold text-gray-900">
+                          ${totalAmount.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Order Items */}
+                    <div className="space-y-4">
+                      {order.items.map((item) => {
+                        const artwork = item.artwork;
+                        if (!artwork) return null;
+
+                        const itemPrice = typeof item.price === 'string' 
+                          ? parseFloat(item.price) 
+                          : item.price;
+                        const itemTotal = itemPrice * item.quantity;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex flex-col md:flex-row gap-4"
+                          >
+                            {/* Artwork Image */}
+                            <Link
+                              to={`/artwork/${artwork.id}`}
+                              className="flex-shrink-0"
+                            >
+                              <div className="relative w-24 h-24 md:w-32 md:h-32 overflow-hidden rounded-lg bg-gray-100">
+                                <img
+                                  src={artwork.photos?.[0] || "/placeholder.svg"}
+                                  alt={artwork.title || artwork.artist || "Artwork"}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                            </Link>
+
+                            {/* Item Details */}
+                            <div className="flex-1 flex flex-col md:flex-row justify-between gap-4">
+                              <div className="flex-1">
+                                <Link to={`/artwork/${artwork.id}`}>
+                                  <h3 className="font-semibold text-gray-900 text-base mb-1 hover:text-red-700 transition-colors">
+                                    {artwork.title || "Untitled"}
+                                  </h3>
+                                  <p className="text-gray-600 text-sm mb-2">
+                                    by {artwork.artist || artwork.user?.name || "Unknown Artist"}
+                                  </p>
+                                </Link>
+                                <div className="flex items-center gap-4 text-sm text-gray-500">
+                                  <span>Quantity: {item.quantity}</span>
+                                  <span>•</span>
+                                  <span>
+                                    ${itemPrice.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col items-end justify-center gap-2">
+                                <div className="text-right">
+                                  <p className="text-sm text-gray-500">Item Total</p>
+                                  <p className="text-lg font-semibold text-gray-900">
+                                    ${itemTotal.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                  </p>
+                                </div>
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link to={`/artwork/${artwork.id}`}>
+                                    View Artwork
+                                    <ArrowRight className="h-4 w-4 ml-2" />
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
-
-              {/* Pagination */}
-              {pagination.pages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-gray-600">
-                    Page {pagination.page} of {pagination.pages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= pagination.pages}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
             </div>
           )}
         </div>

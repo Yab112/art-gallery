@@ -186,7 +186,8 @@ export default function Header() {
 
   // Fetch cart summary for count
   const { data: cartSummary } = useCartSummary();
-  const cartCount = cartSummary?.totalItems || 0;
+  // Use itemCount (number of unique artworks) instead of totalItems (sum of quantities)
+  const cartCount = cartSummary?.itemCount || 0;
 
   const handleSearchToggle = () => {
     setIsSearchOpen(!isSearchOpen);
@@ -253,6 +254,12 @@ export default function Header() {
                   <Logo />
                 </Link>
                 <MegaMenu type="artist" label="Artists" />
+                <Link
+                  to="/orders"
+                  className="text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  Orders
+                </Link>
                 <Link
                   to="/blog"
                   className="text-gray-700 hover:text-gray-900 transition-colors"

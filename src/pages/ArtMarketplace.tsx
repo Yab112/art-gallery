@@ -315,6 +315,7 @@ export default function ArtMarketplace() {
         ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
         : "N/A",
       seller: artwork.user?.name || "Unknown",
+      status: artwork.status,
       };
     }) || [];
 
