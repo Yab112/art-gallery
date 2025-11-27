@@ -1,15 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxiosAuth from "@/hooks/use-axios-auth";
 
+export interface TalentType {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Artist {
   id: string;
   name: string;
+  email?: string;
   avatar: string;
   artworks: number;
   sales: number;
   views: number;
   salesCount: number;
   country: string;
+  talentTypes?: TalentType[];
 }
 
 interface GetAllArtistsResponse {

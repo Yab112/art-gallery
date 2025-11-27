@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useUpdateProfile } from "@/services/users/useUpdateProfile";
 import { toast } from "sonner";
@@ -22,17 +23,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
 import { EditProfileSkeleton } from "@/components/skeletons/edit-profile-skeleton";
-
-interface EditProfileFormData {
-  name: string;
-  email: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  phone?: string;
-  avatar?: string;
-  coverImage?: string;
-}
+import { profileFormSchema, type ProfileFormData } from "@/lib/schemas/profile.schema";
 
 export default function EditProfilePage() {
   const { user: sessionUser } = useAuth();
@@ -51,7 +42,8 @@ export default function EditProfilePage() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
-  const form = useForm<EditProfileFormData>({
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: profile?.name || "",
       email: profile?.email || "",
@@ -62,6 +54,7 @@ export default function EditProfilePage() {
       avatar: profile?.image || "",
       coverImage: (profile as any)?.coverImage || "",
     },
+    mode: "onChange", // Validate on change for better UX
   });
 
   const {
@@ -71,6 +64,9 @@ export default function EditProfilePage() {
     reset,
     setValue,
   } = form;
+
+  // Watch bio field for character count
+  const bioValue = form.watch("bio") || "";
 
   // Update form when profile data loads
   useEffect(() => {
@@ -94,7 +90,7 @@ export default function EditProfilePage() {
     }
   }, [profile, reset]);
 
-  const onSubmit = async (data: EditProfileFormData) => {
+  const onSubmit = async (data: ProfileFormData) => {
     try {
       let avatarUrl = data.avatar;
       let coverImageUrl = data.coverImage;
@@ -159,17 +155,17 @@ export default function EditProfilePage() {
       await updateProfile({
         name: data.name,
         avatar: avatarUrl,
-        bio: data.bio,
-        location: data.location,
-        website: data.website,
-        phone: data.phone,
+        bio: data.bio || undefined, // Convert empty string to undefined
+        location: data.location || undefined,
+        website: data.website || undefined,
+        phone: data.phone || undefined,
         coverImage: coverImageUrl,
       });
       navigate("/profile");
     } catch (error: any) {
-      toast.error(
-        "Failed to update profile: " + (error?.message || "An error occurred")
-      );
+      // Error is already handled in useUpdateProfile hook
+      // But we can add additional handling here if needed
+      console.error("Profile update error:", error);
     }
   };
 
@@ -372,8 +368,9 @@ export default function EditProfilePage() {
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
                   id="name"
-                  {...register("name", { required: "Name is required" })}
+                  {...register("name")}
                   placeholder="Your full name"
+                  maxLength={100}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -385,13 +382,7 @@ export default function EditProfilePage() {
                 <Input
                   id="email"
                   type="email"
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address",
-                    },
-                  })}
+                  {...register("email")}
                   placeholder="your.email@example.com"
                   disabled // Email is usually not directly editable here
                 />
@@ -408,12 +399,18 @@ export default function EditProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bio">Bio</Label>
+                  <span className={`text-xs ${bioValue.length > 500 ? 'text-red-500' : 'text-gray-500'}`}>
+                    {bioValue.length}/500 characters
+                  </span>
+                </div>
                 <Textarea
                   id="bio"
                   {...register("bio")}
                   placeholder="Tell us about yourself..."
                   rows={4}
+                  maxLength={500}
                 />
                 {errors.bio && (
                   <p className="text-sm text-red-500">{errors.bio.message}</p>
@@ -426,6 +423,7 @@ export default function EditProfilePage() {
                   id="location"
                   {...register("location")}
                   placeholder="City, Country"
+                  maxLength={100}
                 />
                 {errors.location && (
                   <p className="text-sm text-red-500">
@@ -439,14 +437,9 @@ export default function EditProfilePage() {
                 <Input
                   id="website"
                   type="url"
-                  {...register("website", {
-                    pattern: {
-                      value: /^https?:\/\/.+/i,
-                      message:
-                        "Please enter a valid URL (e.g., https://example.com)",
-                    },
-                  })}
+                  {...register("website")}
                   placeholder="https://example.com"
+                  maxLength={200}
                 />
                 {errors.website && (
                   <p className="text-sm text-red-500">

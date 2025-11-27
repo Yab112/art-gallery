@@ -7,6 +7,7 @@ import { ArtworkPurchase } from "@/components/artwork/artwork-purchase";
 import { RelatedArtworks } from "@/components/artwork/related-artwork";
 import { SimilarArtworks } from "@/components/artwork/similar-artworks";
 import { UserBlogs } from "@/components/artwork/user-blogs";
+import { MoreArtworksFromUser } from "@/components/artwork/more-artworks-from-user";
 import { CreateBlogModal } from "@/components/blog/create-blog-modal";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -261,6 +262,10 @@ export default function ArtworkDetailPage() {
                     {user && artwork.userId === user.id && <CreateBlogModal />}
                   </div>
                   <UserBlogs userId={artwork.userId} />
+                  <MoreArtworksFromUser 
+                    userId={artwork.userId} 
+                    currentArtworkId={id || ""}
+                  />
                 </>
               )}
             </div>

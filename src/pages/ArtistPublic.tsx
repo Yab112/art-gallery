@@ -31,7 +31,10 @@ export default function ArtistDetailPage() {
   // Get filter values from URL query params
   const page = parseInt(searchParams.get("page") || "1", 10);
   const blogPage = parseInt(searchParams.get("blogPage") || "1", 10);
-  const collectionPage = parseInt(searchParams.get("collectionPage") || "1", 10);
+  const collectionPage = parseInt(
+    searchParams.get("collectionPage") || "1",
+    10
+  );
   const sortBy = searchParams.get("sort") || "recommended";
   const priceRange = searchParams.get("priceRange") || "";
   const medium = searchParams.get("medium") || "";
@@ -59,6 +62,22 @@ export default function ArtistDetailPage() {
   // Fetch artist data
   const { data: userResponse, isLoading: isLoadingUser } = useUser(id || "");
   const user = userResponse?.profile;
+
+  // Debug: Log artist data when it loads
+  useEffect(() => {
+    if (user && process.env.NODE_ENV === "development") {
+      console.log("🎨 Artist Detail Page - Artist data loaded:", {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        talentTypes: user.talentTypes,
+        artworkCount: user.artworkCount,
+        profileViews: user.profileViews,
+        heatScore: user.heatScore,
+        fullUser: user,
+      });
+    }
+  }, [user]);
 
   // Build query params for artworks
   const buildArtworkParams = () => {
@@ -131,12 +150,45 @@ export default function ArtistDetailPage() {
 
   // Fetch artist's artworks - only when user is loaded
   const artworkParams = buildArtworkParams();
-  const { data: artworksResponse, isLoading: isLoadingArtworks } = useArtworks(
-    artworkParams || undefined
-  );
+  const {
+    data: artworksResponse,
+    isLoading: isLoadingArtworks,
+    error: artworksError,
+  } = useArtworks(artworkParams || undefined);
+
+  // Debug: Log artwork fetching
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("🖼️ Artworks fetch state:", {
+        artworkParams,
+        artworksResponse,
+        isLoadingArtworks,
+        artworksError,
+        profileArtworks: user?.artworks,
+        profileArtworkCount: user?.artworkCount,
+      });
+    }
+  }, [artworkParams, artworksResponse, isLoadingArtworks, artworksError, user]);
+
+  // Use only paginated artworks from the separate query (no fallback to profile artworks)
   const artworks = artworksResponse?.artworks || [];
   const artworksTotal = artworksResponse?.total || 0;
   const artworksPages = artworksResponse?.pages || 1;
+
+  // Debug: Log pagination info
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("📄 Pagination Debug:", {
+        artworksTotal,
+        artworksPages,
+        artworksLength: artworks.length,
+        page,
+        limit: 20,
+        shouldShowPagination: artworksPages > 1,
+        artworksResponse,
+      });
+    }
+  }, [artworksTotal, artworksPages, artworks.length, page, artworksResponse]);
 
   // Fetch artist's blogs (only published and approved)
   const { data: blogsResponse, isLoading: isLoadingBlogs } = useGetBlogPosts({
@@ -150,15 +202,11 @@ export default function ArtistDetailPage() {
   });
   const blogs = blogsResponse?.data || [];
   const blogsTotal = blogsResponse?.total || 0;
-  const blogsPages = blogsResponse?.pages || 1;
+  const blogsPages = blogsResponse?.page || 1;
 
   // Fetch artist's collections (only public)
-  const { data: collectionsResponse, isLoading: isLoadingCollections } = useGetUserCollections(
-    id || "",
-    collectionPage,
-    12,
-    "public"
-  );
+  const { data: collectionsResponse, isLoading: isLoadingCollections } =
+    useGetUserCollections(id || "", collectionPage, 12, "public");
   const collections = collectionsResponse?.collections || [];
   const collectionsTotal = collectionsResponse?.total || 0;
   const collectionsPages = collectionsResponse?.pages || 1;
@@ -197,9 +245,9 @@ export default function ArtistDetailPage() {
             Back
           </Button>
         </div>
-        
-        <ArtistProfileEnhanced 
-          user={user} 
+
+        <ArtistProfileEnhanced
+          user={user}
           artworks={artworks}
           collectionsCount={collectionsTotal}
           blogsCount={blogsTotal}
@@ -228,24 +276,25 @@ export default function ArtistDetailPage() {
               onImageClick={setSelectedImage}
             />
             {/* Artworks Pagination */}
-            {artworksPages > 1 && (
+            {artworksTotal > 0 && (
               <div className="flex items-center justify-center gap-2 mt-8">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => updateSearchParams({ page: page - 1 })}
-                  disabled={page === 1}
+                  disabled={page === 1 || artworksPages <= 1}
                 >
                   Previous
                 </Button>
                 <span className="text-sm text-gray-600">
-                  Page {page} of {artworksPages} ({artworksTotal} artworks)
+                  Page {page} of {artworksPages} ({artworksTotal}{" "}
+                  {artworksTotal === 1 ? "artwork" : "artworks"})
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => updateSearchParams({ page: page + 1 })}
-                  disabled={page >= artworksPages}
+                  disabled={page >= artworksPages || artworksPages <= 1}
                 >
                   Next
                 </Button>
@@ -285,7 +334,9 @@ export default function ArtistDetailPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateSearchParams({ blogPage: blogPage - 1 })}
+                      onClick={() =>
+                        updateSearchParams({ blogPage: blogPage - 1 })
+                      }
                       disabled={blogPage === 1}
                     >
                       Previous
@@ -296,7 +347,9 @@ export default function ArtistDetailPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateSearchParams({ blogPage: blogPage + 1 })}
+                      onClick={() =>
+                        updateSearchParams({ blogPage: blogPage + 1 })
+                      }
                       disabled={blogPage >= blogsPages}
                     >
                       Next
@@ -313,7 +366,10 @@ export default function ArtistDetailPage() {
             {isLoadingCollections ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-64 bg-gray-200 animate-pulse rounded-lg" />
+                  <div
+                    key={i}
+                    className="h-64 bg-gray-200 animate-pulse rounded-lg"
+                  />
                 ))}
               </div>
             ) : collections.length === 0 ? (
@@ -346,7 +402,9 @@ export default function ArtistDetailPage() {
                           </div>
                         )}
                         <div className="p-4">
-                          <h3 className="font-semibold text-lg mb-2">{collection.name}</h3>
+                          <h3 className="font-semibold text-lg mb-2">
+                            {collection.name}
+                          </h3>
                           {collection.description && (
                             <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                               {collection.description}
@@ -354,7 +412,9 @@ export default function ArtistDetailPage() {
                           )}
                           <div className="flex items-center justify-between text-xs text-gray-500">
                             <span>{collection.artworkCount || 0} artworks</span>
-                            <span className="capitalize">{collection.visibility}</span>
+                            <span className="capitalize">
+                              {collection.visibility}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -367,18 +427,27 @@ export default function ArtistDetailPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateSearchParams({ collectionPage: collectionPage - 1 })}
+                      onClick={() =>
+                        updateSearchParams({
+                          collectionPage: collectionPage - 1,
+                        })
+                      }
                       disabled={collectionPage === 1}
                     >
                       Previous
                     </Button>
                     <span className="text-sm text-gray-600">
-                      Page {collectionPage} of {collectionsPages} ({collectionsTotal} collections)
+                      Page {collectionPage} of {collectionsPages} (
+                      {collectionsTotal} collections)
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateSearchParams({ collectionPage: collectionPage + 1 })}
+                      onClick={() =>
+                        updateSearchParams({
+                          collectionPage: collectionPage + 1,
+                        })
+                      }
                       disabled={collectionPage >= collectionsPages}
                     >
                       Next

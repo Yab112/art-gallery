@@ -53,3 +53,4 @@ export function mapArtworkToCardProps(artwork: Artwork): ArtworkCardProps {
   };
 }
 
+
