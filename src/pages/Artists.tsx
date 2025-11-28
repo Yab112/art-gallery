@@ -159,12 +159,13 @@ export default function ArtistsPage() {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = 24; // Show 24 artists per page
 
-  const [searchTerm, setSearchTerm] = useState("");
+  // Initialize search term from URL params
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   // Debounce search term to avoid API calls on every keystroke
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedTalentType, setSelectedTalentType] = useState("");
-  const [emailSearch, setEmailSearch] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(searchParams.get("country") || "");
+  const [selectedTalentType, setSelectedTalentType] = useState(searchParams.get("talentTypeId") || "");
+  const [emailSearch, setEmailSearch] = useState(searchParams.get("email") || "");
 
   // Update URL search params
   const updateSearchParams = (
@@ -180,6 +181,40 @@ export default function ArtistsPage() {
     });
     setSearchParams(newParams, { replace: true });
   };
+
+  // Update URL params when search term changes (after debounce)
+  useEffect(() => {
+    const currentSearch = searchParams.get("search") || "";
+    if (currentSearch !== debouncedSearchTerm) {
+      updateSearchParams({ search: debouncedSearchTerm || null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm]);
+
+  // Update URL params when filters change
+  useEffect(() => {
+    const currentCountry = searchParams.get("country") || "";
+    if (currentCountry !== selectedCountry) {
+      updateSearchParams({ country: selectedCountry || null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    const currentTalentType = searchParams.get("talentTypeId") || "";
+    if (currentTalentType !== selectedTalentType) {
+      updateSearchParams({ talentTypeId: selectedTalentType || null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTalentType]);
+
+  useEffect(() => {
+    const currentEmail = searchParams.get("email") || "";
+    if (currentEmail !== emailSearch) {
+      updateSearchParams({ email: emailSearch || null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailSearch]);
 
   // Reset to page 1 when filters change (but not on initial mount)
   const prevFiltersRef = useRef({ debouncedSearchTerm, selectedCountry, selectedTalentType, emailSearch });
@@ -481,15 +516,15 @@ export default function ArtistsPage() {
         {/* Filters Section - Always visible and sticky */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8 p-6 sticky top-4 z-50">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Search by Name */}
+            {/* Search Artists */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Search by Name
+                Search Artists
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search by name..."
+                  placeholder="Search by name, email, location..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"

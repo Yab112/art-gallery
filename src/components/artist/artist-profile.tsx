@@ -3,16 +3,21 @@ import { Bell, Heart, Share2, MapPin, Globe, Palette } from "lucide-react";
 import { useState } from "react";
 import type { UserProfile } from "@/types/user.types";
 import { getAvatarUrl } from "@/utils/avatar";
+import { FollowButton } from "@/components/follow/follow-button";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ArtistProfileProps {
   user: UserProfile;
 }
 
 export function ArtistProfile({ user }: ArtistProfileProps) {
-  const [isFollowing, setIsFollowing] = useState(false);
+  const { user: currentUser } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [coverImageError, setCoverImageError] = useState(false);
+  
+  // Check if viewing own profile
+  const isOwnProfile = currentUser?.id === user.id;
 
   const avatarUrl = getAvatarUrl(user.image, user.name || "Artist", 200);
   const displayUrl = imageError ? getAvatarUrl(null, user.name || "Artist", 200) : avatarUrl;
@@ -90,14 +95,14 @@ export function ArtistProfile({ user }: ArtistProfileProps) {
 
           {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 mt-4 lg:mt-0">
-            <Button
+            {!isOwnProfile && (
+              <FollowButton
+                userId={user.id}
+                isFollowing={user.isFollowing}
                 variant="default"
-                size="default"
                 className="bg-red-700 hover:bg-red-800 text-white shadow-sm"
-              onClick={() => setIsFollowing(!isFollowing)}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </Button>
+              />
+            )}
             <Button
               variant="outline"
               size="icon"

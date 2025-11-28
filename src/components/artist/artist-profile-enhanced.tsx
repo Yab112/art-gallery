@@ -24,6 +24,9 @@ import type { Artwork } from "@/types/artwork.types";
 import { getAvatarUrl } from "@/utils/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { FollowButton } from "@/components/follow/follow-button";
+import { useAuth } from "@/hooks/use-auth";
+import { Link } from "react-router-dom";
 
 interface ArtistProfileEnhancedProps {
   user: UserProfile;
@@ -38,10 +41,13 @@ export function ArtistProfileEnhanced({
   collectionsCount = 0,
   blogsCount = 0,
 }: ArtistProfileEnhancedProps) {
-  const [isFollowing, setIsFollowing] = useState(false);
+  const { user: currentUser } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [coverImageError, setCoverImageError] = useState(false);
+  
+  // Check if viewing own profile
+  const isOwnProfile = currentUser?.id === user.id;
 
   const avatarUrl = getAvatarUrl(user.image, user.name || "Artist", 200);
   const displayUrl = imageError
@@ -80,6 +86,8 @@ export function ArtistProfileEnhanced({
   const totalArtworks = user.artworkCount || 0;
   const totalCollections = collectionsCount || 0;
   const totalBlogs = blogsCount || 0;
+  const followerCount = user.followerCount || 0;
+  const followingCount = user.followingCount || 0;
   const memberSince = user.createdAt
     ? new Date(user.createdAt).getFullYear()
     : null;
@@ -318,14 +326,14 @@ export function ArtistProfileEnhanced({
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 mt-4 lg:mt-0">
-              <Button
-                variant="default"
-                size="default"
-                className="bg-red-700 hover:bg-red-800 text-white shadow-sm"
-                onClick={() => setIsFollowing(!isFollowing)}
-              >
-                {isFollowing ? "Following" : "Follow"}
-              </Button>
+              {!isOwnProfile && (
+                <FollowButton
+                  userId={user.id}
+                  isFollowing={user.isFollowing}
+                  variant="default"
+                  className="bg-red-700 hover:bg-red-800 text-white shadow-sm"
+                />
+              )}
               <Button
                 variant="outline"
                 size="icon"
@@ -395,15 +403,18 @@ export function ArtistProfileEnhanced({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 p-4">
+        <Link
+          to={`/profile/${user.id}/followers`}
+          className="flex items-center gap-3 p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+        >
           <div className="p-2 bg-purple-50 rounded-lg">
             <Users className="h-5 w-5 text-purple-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-gray-900">0</p>
+            <p className="text-2xl font-bold text-gray-900">{followerCount}</p>
             <p className="text-xs text-gray-600">Followers</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Engagement Metrics Row */}

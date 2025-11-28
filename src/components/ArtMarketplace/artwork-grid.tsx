@@ -1,7 +1,30 @@
 import { ArtworkCard } from "@/components/artwork-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Palette, ChevronLeft, ChevronRight, CheckSquare, Square } from "lucide-react";
+import { Palette, ChevronLeft, ChevronRight, CheckSquare, Square, Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useCheckFavorite } from "@/queries/favoriteQueries";
+
+// List view favorite button component
+function ListFavoriteButton({ artworkId, onFavorite }: { artworkId: string; onFavorite: (id: string) => void }) {
+  const { data: favoriteCheck } = useCheckFavorite(artworkId);
+  const isFavorited = favoriteCheck?.isFavorite || false;
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onFavorite(artworkId);
+      }}
+      className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
+        isFavorited ? "text-red-500" : "text-gray-400"
+      }`}
+      aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+    >
+      <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
+    </button>
+  );
+}
 
 interface Artwork {
   id: string;
@@ -39,6 +62,7 @@ export function ArtworkGrid({
   selectedArtworkIds = new Set(),
   onToggleSelection,
 }: ArtworkGridProps) {
+  const navigate = useNavigate();
   if (artworks.length === 0) {
     return (
       <section className="px-4 min-h-[500px] flex items-center">
@@ -106,53 +130,132 @@ export function ArtworkGrid({
   return (
     <section className="px-4">
       <div className="mx-auto max-w-7xl">
-        <div
-          className={`grid gap-8 ${
-            viewMode === "grid"
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              : "grid-cols-1"
-          }`}
-        >
-          {artworks.map((artwork) => (
-            <div key={artwork.id} className="group relative">
-              {isSelectionMode && (
-                <div className="absolute top-2 left-2 z-20">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleSelection?.(artwork.id);
-                    }}
-                    className="bg-white rounded-md p-1.5 shadow-md hover:bg-gray-50 transition-colors"
-                  >
-                    {selectedArtworkIds.has(artwork.id) ? (
-                      <CheckSquare className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <Square className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              )}
+        {viewMode === "list" ? (
+          <div className="space-y-4">
+            {artworks.map((artwork) => (
               <div
-                className={isSelectionMode && selectedArtworkIds.has(artwork.id) ? "ring-2 ring-blue-500 rounded-lg" : ""}
+                key={artwork.id}
+                className={`group relative flex gap-6 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-md ${
+                  isSelectionMode && selectedArtworkIds.has(artwork.id)
+                    ? "ring-2 ring-blue-500"
+                    : ""
+                } ${!isSelectionMode ? "cursor-pointer" : ""}`}
                 onClick={(e) => {
                   if (isSelectionMode) {
                     e.preventDefault();
                     e.stopPropagation();
                     onToggleSelection?.(artwork.id);
+                  } else {
+                    navigate(`/artwork/${artwork.id}`);
                   }
                 }}
-                style={isSelectionMode ? { cursor: 'pointer' } : {}}
               >
-                <ArtworkCard
-                  {...artwork}
-                  onFavorite={onFavorite}
-                  isMasonry={false}
-                  disableNavigation={isSelectionMode}
-                />
+                {isSelectionMode && (
+                  <div className="absolute top-4 left-4 z-20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleSelection?.(artwork.id);
+                      }}
+                      className="bg-white rounded-md p-1.5 shadow-md hover:bg-gray-50 transition-colors"
+                    >
+                      {selectedArtworkIds.has(artwork.id) ? (
+                        <CheckSquare className="h-5 w-5 text-blue-600" />
+                      ) : (
+                        <Square className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                )}
+                
+                {/* Image */}
+                <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                  {artwork.image ? (
+                    <img
+                      src={artwork.image}
+                      alt={`${artwork.title} by ${artwork.artist}`}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                      <Palette className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-black text-sm uppercase tracking-wide truncate">
+                        {artwork.artist}
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        <span className="text-orange-500">🏆</span> {artwork.title}
+                        {artwork.year && ` (${artwork.year})`}
+                      </p>
+                      <p className="font-bold text-lg mt-2">{artwork.price}</p>
+                      <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                        <span>{artwork.medium}</span>
+                        <span>{artwork.dimensions}</span>
+                        <span>Seller: {artwork.seller}</span>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <ListFavoriteButton artworkId={artwork.id} onFavorite={onFavorite} />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {artworks.map((artwork) => (
+              <div key={artwork.id} className="group relative">
+                {isSelectionMode && (
+                  <div className="absolute top-2 left-2 z-20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleSelection?.(artwork.id);
+                      }}
+                      className="bg-white rounded-md p-1.5 shadow-md hover:bg-gray-50 transition-colors"
+                    >
+                      {selectedArtworkIds.has(artwork.id) ? (
+                        <CheckSquare className="h-5 w-5 text-blue-600" />
+                      ) : (
+                        <Square className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                )}
+                <div
+                  className={isSelectionMode && selectedArtworkIds.has(artwork.id) ? "ring-2 ring-blue-500 rounded-lg" : ""}
+                  onClick={(e) => {
+                    if (isSelectionMode) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleSelection?.(artwork.id);
+                    }
+                  }}
+                  style={isSelectionMode ? { cursor: 'pointer' } : {}}
+                >
+                  <ArtworkCard
+                    {...artwork}
+                    onFavorite={onFavorite}
+                    isMasonry={false}
+                    disableNavigation={isSelectionMode}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Pagination - Show if we have page info and artworks */}
         {onPageChange && (

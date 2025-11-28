@@ -51,3 +51,15 @@ export const uploadKeys = {
   all: ["upload"] as const,
   presigned: () => [...uploadKeys.all, "presigned"] as const,
 };
+
+export const followKeys = {
+  all: () => ["follow"] as const,
+  followers: (userId: string, page?: number, limit?: number) =>
+    [...followKeys.all(), "followers", userId, page, limit] as const,
+  following: (userId: string, page?: number, limit?: number) =>
+    [...followKeys.all(), "following", userId, page, limit] as const,
+  status: (userId: string) =>
+    [...followKeys.all(), "status", userId] as const,
+  counts: (userId: string) =>
+    [...followKeys.all(), "counts", userId] as const,
+};

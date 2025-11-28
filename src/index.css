@@ -74,6 +74,22 @@
   html {
     overflow-x: hidden;
   }
+
+  /* Subtle outline on focus for all input fields */
+  input:focus,
+  textarea:focus,
+  select:focus,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 1px solid rgba(0, 0, 0, 0.1) !important;
+    outline-offset: 0px !important;
+    box-shadow: none !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-width: 0px !important;
+    --tw-ring-width: 0px !important;
+  }
 }
 
 @layer utilities {
