@@ -13,13 +13,9 @@ export interface Sale {
 }
 
 export interface EarningsData {
-  totalSales: number;
-  totalCommission: number;
-  totalEarnings: number;
+  earning: number;
   totalWithdrawn: number;
   availableBalance: number;
-  salesCount: number;
-  sales: Sale[];
 }
 
 export interface EarningsResponse {

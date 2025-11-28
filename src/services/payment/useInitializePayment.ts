@@ -41,9 +41,13 @@ export const useInitializePayment = () => {
   return useMutation({
     mutationFn: initializePayment,
     onSuccess: (data) => {
+      console.log('Payment initialization success:', data);
       // Redirect to checkout URL
-      if (data.success && data.data.checkoutUrl) {
+      if (data.success && data.data?.checkoutUrl) {
+        console.log('Redirecting to checkout URL:', data.data.checkoutUrl);
         window.location.href = data.data.checkoutUrl;
+      } else {
+        console.error('Missing checkout URL in response:', data);
       }
     },
     onError: (error: any) => {

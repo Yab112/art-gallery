@@ -24,6 +24,8 @@ export interface User {
   lastActiveAt?: string | null;
   profileViews?: number;
   heatScore?: number;
+  // Earnings
+  earning?: number;
   // Preferences & Settings
   themePreference?: string; // UI theme: light|dark
   languagePreference?: string; // Content language

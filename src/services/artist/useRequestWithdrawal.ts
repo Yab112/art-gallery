@@ -39,7 +39,9 @@ export const useRequestWithdrawal = () => {
     onSuccess: () => {
       // Invalidate and refetch artist data
       queryClient.invalidateQueries({ queryKey: ['artist-earnings'] });
+      queryClient.invalidateQueries({ queryKey: ['earnings'] }); // Also invalidate EarningsDashboard query
       queryClient.invalidateQueries({ queryKey: ['artist-withdrawals'] });
+      // Transactions will be invalidated when withdrawal is completed (via polling)
     },
     onError: (error: any) => {
       console.error('Withdrawal request failed:', error);

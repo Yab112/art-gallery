@@ -41,9 +41,32 @@ export default function PaymentSuccessPage() {
               queryClient.invalidateQueries({ 
                 queryKey: ["user-orders"] 
               });
-              // Also invalidate cart summary if user is logged in
+              // Invalidate all cart-related queries
+              queryClient.invalidateQueries({ 
+                queryKey: ["cart"] 
+              });
+              // Also invalidate cart summary specifically
               queryClient.invalidateQueries({ 
                 queryKey: ["cart-summary"] 
+              });
+              // Invalidate cart items list
+              queryClient.invalidateQueries({ 
+                queryKey: ["cart", "list"] 
+              });
+              // Invalidate earnings (for sellers - earnings update when order completes)
+              queryClient.invalidateQueries({ 
+                queryKey: ["artist-earnings"] 
+              });
+              queryClient.invalidateQueries({ 
+                queryKey: ["earnings"] 
+              });
+              // Invalidate transactions (new transaction created for buyer)
+              queryClient.invalidateQueries({ 
+                queryKey: ["user-transactions"] 
+              });
+              // Invalidate transaction stats
+              queryClient.invalidateQueries({ 
+                queryKey: ["user-transaction-stats"] 
               });
             } else {
               setVerificationStatus('failed');
