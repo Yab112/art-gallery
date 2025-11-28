@@ -1,4 +1,4 @@
-import { useMyProfile } from "@/queries/userQueries";
+import { useMyProfile, useUser } from "@/queries/userQueries";
 import { useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,8 @@ import {
   Languages,
   BarChart3,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Palette } from "lucide-react";
 import { useMyCollections } from "@/queries/collectionQueries";
@@ -68,7 +69,18 @@ import {
 export default function ProfilePage() {
   const { user: sessionUser } = useAuth();
   const navigate = useNavigate();
-  const { data: profileData, isLoading, error } = useMyProfile();
+  const { userId } = useParams<{ userId?: string }>();
+  
+  // If userId is provided and different from current user, fetch that user's profile
+  // Otherwise, fetch current user's profile
+  const isViewingOtherProfile = userId && userId !== sessionUser?.id;
+  const { data: otherUserData, isLoading: isLoadingOtherUser, error: otherUserError } = useUser(userId || "");
+  const { data: myProfileData, isLoading: isLoadingMyProfile, error: myProfileError } = useMyProfile();
+  
+  // Use the appropriate data based on whether we're viewing another user's profile
+  const profileData = isViewingOtherProfile ? otherUserData : myProfileData;
+  const isLoading = isViewingOtherProfile ? isLoadingOtherUser : isLoadingMyProfile;
+  const error = isViewingOtherProfile ? otherUserError : myProfileError;
   const { data: collectionsData, isLoading: isLoadingCollections } =
     useMyCollections(1, 10);
   const { data: artworksData, isLoading: isLoadingArtworks } = useMyArtworks(
@@ -206,16 +218,18 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  asChild
-                >
-                  <Link to="/profile/edit">
-                    <Edit className="h-4 w-4" />
-                    Edit Profile
-                  </Link>
-                </Button>
+                {!isViewingOtherProfile && (
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    asChild
+                  >
+                    <Link to="/profile/edit">
+                      <Edit className="h-4 w-4" />
+                      Edit Profile
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -1070,6 +1084,33 @@ export default function ProfilePage() {
                         </p>
                       </div>
                     )}
+                  {((profile as any).followerCount !== undefined ||
+                    (profile as any).followingCount !== undefined) && (
+                    <>
+                      <div>
+                        <Link
+                          to={`/profile/${profile.id}/followers`}
+                          className="block hover:text-red-600 transition-colors"
+                        >
+                          <p className="text-sm text-gray-500">Followers</p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {(profile as any).followerCount || 0}
+                          </p>
+                        </Link>
+                      </div>
+                      <div>
+                        <Link
+                          to={`/profile/${profile.id}/following`}
+                          className="block hover:text-red-600 transition-colors"
+                        >
+                          <p className="text-sm text-gray-500">Following</p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {(profile as any).followingCount || 0}
+                          </p>
+                        </Link>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

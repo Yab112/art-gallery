@@ -41,10 +41,17 @@ export interface User {
       icon?: string | null;
     };
   }>;
+  // Follow fields
+  followerCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
 }
 
 export interface UserProfile extends User {
   artworkCount?: number;
+  followerCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
   reviewCount?: number;
   collectionCount?: number;
   artworks?: any[];

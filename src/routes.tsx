@@ -31,6 +31,9 @@ import BlogDetailPage from "./pages/BlogDetail";
 import MyBlogsPage from "./pages/MyBlogs";
 import BlogSuccessPage from "./pages/BlogSuccess";
 import EditBlogPage from "./pages/EditBlog";
+import FollowersPage from "./pages/Followers";
+import FollowingPage from "./pages/Following";
+import FollowFeedPage from "./pages/FollowFeed";
 
 export const router = createBrowserRouter([
   {
@@ -86,8 +89,24 @@ export const router = createBrowserRouter([
         element: <ProfilePage />,
       },
       {
+        path: "profile/:userId",
+        element: <ProfilePage />,
+      },
+      {
+        path: "profile/:userId/followers",
+        element: <FollowersPage />,
+      },
+      {
+        path: "profile/:userId/following",
+        element: <FollowingPage />,
+      },
+      {
         path: "profile/edit",
         element: <EditProfilePage />,
+      },
+      {
+        path: "feed",
+        element: <FollowFeedPage />,
       },
       {
         path: "profile/my-artworks",
