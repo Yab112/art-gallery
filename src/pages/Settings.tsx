@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { EarningsDashboard } from "@/components/settings/EarningsDashboard";
 import { WithdrawalSection } from "@/components/settings/WithdrawalSection";
 import { PaymentMethodSection } from "@/components/settings/PaymentMethodSection";
+import { BillingPaymentsSection } from "@/components/settings/BillingPaymentsSection";
 import { TransactionsSection } from "@/components/settings/TransactionsSection";
 import { SettingsSkeleton } from "@/components/skeletons/settings-skeleton";
 
@@ -36,7 +37,7 @@ export default function SettingsPage() {
   const { data: profileData, isLoading, error } = useMyProfile();
   const { updateProfile, isUpdating } = useUpdateProfile();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "notifications" | "security" | "earnings" | "withdrawals" | "payment-method" | "transactions"
+    "profile" | "notifications" | "security" | "earnings" | "withdrawals" | "billing-payments" | "transactions"
   >("profile");
 
   const profile = profileData?.profile || sessionUser;
@@ -199,15 +200,15 @@ export default function SettingsPage() {
                     Withdrawals
                   </button>
                   <button
-                    onClick={() => setActiveTab("payment-method")}
+                    onClick={() => setActiveTab("billing-payments")}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "payment-method"
+                      activeTab === "billing-payments"
                         ? "bg-red-50 text-red-700 font-medium"
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     <CreditCard className="h-5 w-5" />
-                    Payment Method
+                    Billing & Payments
                   </button>
 
                   <div className="border-t my-3"></div>
@@ -371,7 +372,17 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Payment Method */}
+              {/* Billing & Payments */}
+              {activeTab === "billing-payments" && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    Billing & Payments
+                  </h2>
+                  <BillingPaymentsSection />
+                </div>
+              )}
+
+              {/* Payment Method (Withdrawal Methods) */}
               {activeTab === "payment-method" && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">

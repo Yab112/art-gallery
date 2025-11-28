@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreditCard, Lock } from "lucide-react";
 import { useCheckout } from "@/contexts/CheckoutContext";
+import { useGetPaymentMethodPreference } from "@/services/settings/usePaymentMethodPreference";
 // import { StripePayment } from "./stripe-payment";
 
 interface PaymentFormProps {
@@ -14,7 +15,20 @@ interface PaymentFormProps {
 
 export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
   const { paymentData, setPaymentData } = useCheckout();
-  const [paymentMethod, setPaymentMethod] = useState(paymentData?.provider || "chapa");
+  const { data: preference } = useGetPaymentMethodPreference();
+  
+  // Use user's preferred payment method as default, fallback to paymentData or 'paypal'
+  const defaultMethod = preference?.paymentMethodPreference || paymentData?.provider || 'paypal';
+  const [paymentMethod, setPaymentMethod] = useState<"chapa" | "paypal" | "card">(
+    defaultMethod as "chapa" | "paypal" | "card"
+  );
+
+  // Update payment method when preference loads
+  useEffect(() => {
+    if (preference?.paymentMethodPreference && !paymentData?.provider) {
+      setPaymentMethod(preference.paymentMethodPreference as "chapa" | "paypal" | "card");
+    }
+  }, [preference, paymentData]);
   const [formData, setFormData] = useState({
     cardNumber: "",
     expiryDate: "",
