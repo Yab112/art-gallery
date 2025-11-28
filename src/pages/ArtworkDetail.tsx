@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtworkDetailSkeleton } from "@/components/skeletons/artwork-detail-skeleton";
+import { useCartItems } from "@/queries/cartQueries";
 
 export default function ArtworkDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -64,7 +65,11 @@ export default function ArtworkDetailPage() {
   // Mutations
   const { addFavorite } = useAddFavorite();
   const { removeFavorite } = useRemoveFavorite();
-  const { addToCart } = useAddToCart();
+  const { addToCart, isAdding } = useAddToCart();
+
+  // Check if artwork is already in cart
+  const { data: cartData } = useCartItems(1, 100); // Get all cart items
+  const isInCart = cartData?.items?.some(item => item.artworkId === id) || false;
 
   // Scroll to top on mount
   useEffect(() => {
@@ -181,7 +186,7 @@ export default function ArtworkDetailPage() {
                   {/* Right Column - Artwork Details */}
                   <div className="space-y-3">
                     <ArtworkDetails artwork={artwork} />
-                    <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} />
+                    <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} isAdding={isAdding} isInCart={isInCart} />
                     <ArtworkCollapsibles
                       artwork={artwork}
                       isShippingOpen={isShippingOpen}
@@ -234,7 +239,7 @@ export default function ArtworkDetailPage() {
               {/* Right Column - Artwork Details */}
               <div className="space-y-3">
                 <ArtworkDetails artwork={artwork} />
-                <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} />
+                <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} isAdding={isAdding} isInCart={isInCart} />
                 <ArtworkCollapsibles
                   artwork={artwork}
                   isShippingOpen={isShippingOpen}
