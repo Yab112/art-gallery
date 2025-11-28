@@ -53,6 +53,21 @@ export default function PaymentSuccessPage() {
               queryClient.invalidateQueries({ 
                 queryKey: ["cart", "list"] 
               });
+              // Invalidate earnings (for sellers - earnings update when order completes)
+              queryClient.invalidateQueries({ 
+                queryKey: ["artist-earnings"] 
+              });
+              queryClient.invalidateQueries({ 
+                queryKey: ["earnings"] 
+              });
+              // Invalidate transactions (new transaction created for buyer)
+              queryClient.invalidateQueries({ 
+                queryKey: ["user-transactions"] 
+              });
+              // Invalidate transaction stats
+              queryClient.invalidateQueries({ 
+                queryKey: ["user-transaction-stats"] 
+              });
             } else {
               setVerificationStatus('failed');
               setVerificationError(data.message || "Payment verification failed");
