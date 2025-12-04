@@ -42,7 +42,6 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
     }
   };
 
-
   const form = useForm<SignupFormData>({
     defaultValues: {
       firstName: "",
@@ -69,22 +68,23 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
       // Use Better Auth signUp with proper error handling
       const result = await signUp.email(
         {
-          email: data.email,
+          email: data.email, 
           password: data.password,
           name: `${data.firstName} ${data.lastName}`,
           // Additional fields can be passed here if needed
         },
         {
           onSuccess: () => {
-            // Success - show email sent message
-            setSuccess(
-              "Account created successfully! Please check your email to verify your account."
-            );
+             // Success - redirect to verify email page
             reset();
             setIsLoading(false);
+            navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
           },
           onError: (ctx) => {
-            setError(ctx.error?.message || "Failed to create account. Please try again.");
+            setError(
+              ctx.error?.message ||
+                "Failed to create account. Please try again."
+            );
             setIsLoading(false);
           },
         }
@@ -92,8 +92,18 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
 
       // Handle result if it's returned synchronously
       if (result?.error) {
-        setError(result.error.message || "Failed to create account. Please try again.");
+        setError(
+          result.error.message || "Failed to create account. Please try again."
+        );
         setIsLoading(false);
+        return;
+      }
+
+      // If result is successful and returned synchronously (no error), redirect
+      if (result && !result.error) {
+        reset();
+        setIsLoading(false);
+        navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
         return;
       }
     } catch (err: any) {

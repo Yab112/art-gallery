@@ -2,7 +2,7 @@ import { ArtworkActions } from "@/components/artwork/artwork-actions";
 import { ArtworkCollapsibles } from "@/components/artwork/artwork-collapsibles";
 import { ArtworkDetails } from "@/components/artwork/artwork-details";
 import { ArtworkGalleryInfo } from "@/components/artwork/artwork-galleryInfo";
-import { ArtworkImage } from "@/components/artwork/artwork-image";
+import { ArtworkImageGallery } from "@/components/artwork/artwork-image-gallery";
 import { ArtworkPurchase } from "@/components/artwork/artwork-purchase";
 import { RelatedArtworks } from "@/components/artwork/related-artwork";
 import { SimilarArtworks } from "@/components/artwork/similar-artworks";
@@ -171,8 +171,8 @@ export default function ArtworkDetailPage() {
                 <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
                   {/* Left Column - Artwork Image */}
                   <div className="space-y-3">
-                    <ArtworkImage
-                      src={artwork.photos?.[0] || "/placeholder.svg"}
+                    <ArtworkImageGallery
+                      photos={artwork.photos || []}
                       alt={`${artwork.title || "Untitled"} by ${artwork.artist}`}
                     />
                     <ArtworkActions
@@ -224,8 +224,8 @@ export default function ArtworkDetailPage() {
             <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
               {/* Left Column - Artwork Image */}
               <div className="space-y-3">
-                <ArtworkImage
-                  src={artwork.photos?.[0] || "/placeholder.svg"}
+                <ArtworkImageGallery
+                  photos={artwork.photos || []}
                   alt={`${artwork.title || "Untitled"} by ${artwork.artist}`}
                 />
                 <ArtworkActions

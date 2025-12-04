@@ -10,6 +10,7 @@ import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork";
 import { useQueryClient } from "@tanstack/react-query";
 import { artworkKeys } from "@/queries/queryKeys";
 import { toast } from "sonner";
+import { MyArtworksSkeleton } from "@/components/skeletons/my-artworks-skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
