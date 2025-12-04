@@ -14,6 +14,8 @@ interface FilterControlsProps {
   onPriceRangeChange?: (value: string) => void;
   medium?: string;
   onMediumChange?: (value: string) => void;
+  status?: string;
+  onStatusChange?: (value: string) => void;
 }
 
 export function FilterControls({
@@ -23,6 +25,8 @@ export function FilterControls({
   onPriceRangeChange,
   medium = "",
   onMediumChange,
+  status = "APPROVED",
+  onStatusChange,
 }: FilterControlsProps) {
   const getSortLabel = (value: string) => {
     switch (value) {
@@ -112,9 +116,15 @@ export function FilterControls({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>All</DropdownMenuItem>
-            <DropdownMenuItem>Available</DropdownMenuItem>
-            <DropdownMenuItem>Sold</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange?.("APPROVED")}>
+              Available
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange?.("SOLD")}>
+              Sold
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange?.("APPROVED")}>
+              All
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -132,29 +142,19 @@ export function FilterControls({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => onSortChange?.("recommended")}
-          >
+          <DropdownMenuItem onClick={() => onSortChange?.("recommended")}>
             Recommended
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => onSortChange?.("price-low")}
-          >
+          <DropdownMenuItem onClick={() => onSortChange?.("price-low")}>
             Price: Low to High
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => onSortChange?.("price-high")}
-          >
+          <DropdownMenuItem onClick={() => onSortChange?.("price-high")}>
             Price: High to Low
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => onSortChange?.("newest")}
-          >
+          <DropdownMenuItem onClick={() => onSortChange?.("newest")}>
             Recently Added
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => onSortChange?.("oldest")}
-          >
+          <DropdownMenuItem onClick={() => onSortChange?.("oldest")}>
             Oldest First
           </DropdownMenuItem>
         </DropdownMenuContent>

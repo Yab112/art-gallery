@@ -88,7 +88,9 @@ export interface ArtworkQueryParams {
   status?: string;
   search?: string;
   artist?: string;
+  userId?: string;
   categoryIds?: string[];
+  technique?: string;
   support?: string;
   origin?: string;
   yearOfArtwork?: string;
@@ -127,4 +129,3 @@ export interface CreateArtworkDto {
   proofOfOrigin?: string;
   photos: string[];
 }
-

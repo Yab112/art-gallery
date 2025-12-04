@@ -38,16 +38,30 @@ export default function ArtistDetailPage() {
   const sortBy = searchParams.get("sort") || "recommended";
   const priceRange = searchParams.get("priceRange") || "";
   const medium = searchParams.get("medium") || "";
+  const support = searchParams.get("support") || "";
+  const origin = searchParams.get("origin") || "";
+  const yearOfArtwork = searchParams.get("yearOfArtwork") || "";
+  const categoryParam = searchParams.get("categories") || "";
+  const selectedCategoryIds = categoryParam
+    ? categoryParam.split(",").filter((id) => id.trim() !== "")
+    : [];
   const status = searchParams.get("status") || "APPROVED";
 
   // Update URL query params
   const updateSearchParams = (
-    updates: Record<string, string | number | null>
+    updates: Record<string, string | number | string[] | null>
   ) => {
     const newParams = new URLSearchParams(searchParams);
     Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "") {
+      if (
+        value === null ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         newParams.delete(key);
+      } else if (Array.isArray(value)) {
+        // For arrays (like categoryIds), join with comma
+        newParams.set(key, value.join(","));
       } else {
         newParams.set(key, String(value));
       }
@@ -140,9 +154,29 @@ export default function ArtistDetailPage() {
       }
     }
 
-    // Map medium filter to technique
+    // Map medium filter to technique (backend DTO accepts technique and maps it to support)
     if (medium) {
       params.technique = medium;
+    }
+
+    // Add support filter (if different from medium) - backend accepts both technique and support
+    if (support && support !== medium) {
+      params.support = support;
+    }
+
+    // Add origin filter
+    if (origin) {
+      params.origin = origin;
+    }
+
+    // Add year of artwork filter
+    if (yearOfArtwork) {
+      params.yearOfArtwork = yearOfArtwork;
+    }
+
+    // Add category filter
+    if (selectedCategoryIds.length > 0) {
+      params.categoryIds = selectedCategoryIds;
     }
 
     return params;
@@ -153,6 +187,7 @@ export default function ArtistDetailPage() {
   const {
     data: artworksResponse,
     isLoading: isLoadingArtworks,
+    isFetching: isFetchingArtworks,
     error: artworksError,
   } = useArtworks(artworkParams || undefined);
 
@@ -269,10 +304,14 @@ export default function ArtistDetailPage() {
               onMediumChange={(value: string) =>
                 updateSearchParams({ medium: value || null, page: 1 })
               }
+              status={status}
+              onStatusChange={(value: string) =>
+                updateSearchParams({ status: value || "APPROVED", page: 1 })
+              }
             />
             <ArtworkGrid
               artworks={artworks}
-              isLoading={isLoadingArtworks}
+              isLoading={isLoadingArtworks || isFetchingArtworks}
               onImageClick={setSelectedImage}
             />
             {/* Artworks Pagination */}
