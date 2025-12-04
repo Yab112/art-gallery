@@ -48,21 +48,21 @@ export function UserBlogs({ userId, limit = 6 }: UserBlogsProps) {
           <h2 className="text-xl font-bold text-gray-900">Blog Posts by This Artist</h2>
         </div>
         {hasBlogs && (
-          <Link to={`/blog?authorId=${userId}`}>
-            <Button variant="ghost" size="sm">
-              View All
-            </Button>
-          </Link>
+        <Link to={`/blog?authorId=${userId}`}>
+          <Button variant="ghost" size="sm">
+            View All
+          </Button>
+        </Link>
         )}
       </div>
 
       {hasBlogs ? (
         /* Blog List - Medium Style */
-        <div className="space-y-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {data.data.map((post) => (
-            <BlogCard key={post.id} blogPost={post} />
-          ))}
-        </div>
+      <div className="space-y-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {data.data.map((post) => (
+          <BlogCard key={post.id} blogPost={post} />
+        ))}
+      </div>
       ) : (
         /* Empty State */
         <div className="bg-white rounded-lg border border-gray-200 p-8">

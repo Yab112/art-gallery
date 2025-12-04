@@ -123,3 +123,9 @@ const debouncedSearchTerm = useDebounce(searchTerm, 500);
 3. `art-gallery/src/services/artist/useGetAllArtists.ts` - Added placeholderData and refetch config
 
 
+
+
+
+
+
+
