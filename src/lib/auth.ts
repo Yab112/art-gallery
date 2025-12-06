@@ -23,9 +23,12 @@ export const {
 // Helper functions for social authentication
 export const signInWithGoogle = async () => {
   try {
+    // Use full frontend URL for callback to ensure proper redirect after OAuth
+    // This ensures Better Auth redirects to the frontend, not the backend
+    const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/", // Redirect to home after successful sign-in
+      callbackURL: `${frontendUrl}/`, // Full frontend URL for proper redirect
     });
   } catch (error) {
     console.error("Google sign-in error:", error);

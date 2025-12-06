@@ -12,10 +12,10 @@ import {
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import type { ArtworkFormData } from "@/lib/schemas/artwork.schema";
 import {
-  COMMISSION_RATE,
   TAX_RATE,
   PRICE_NEGOTIATION_OPTIONS,
 } from "@/lib/constants/srtsell.constant";
+import { usePlatformSettings } from "@/queries/settingsQueries";
 
 interface PriceSectionProps {
   control: Control<ArtworkFormData>;
@@ -24,11 +24,18 @@ interface PriceSectionProps {
 }
 
 export function PriceSection({ control, errors, formData }: PriceSectionProps) {
+  const { data: platformSettings } = usePlatformSettings();
+  
+  // Get commission rate from API or fallback to default (30%)
+  const commissionRate = platformSettings?.settings?.platformCommissionRate 
+    ? platformSettings.settings.platformCommissionRate / 100 // Convert percentage to decimal
+    : 0.1; // Default fallback
+  
   const calculateNetPrice = () => {
     // Remove $ and commas, then parse
     const priceStr = formData.desiredPrice?.replace(/[$,]/g, "") || "0";
     const price = Number.parseFloat(priceStr) || 0;
-    const commission = price * COMMISSION_RATE;
+    const commission = price * commissionRate;
     const taxes = price * TAX_RATE;
     return price - commission - taxes;
   };
@@ -108,13 +115,15 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
 
         <div className="space-y-2">
           <Label>
-            For you (commission {(COMMISSION_RATE * 100).toFixed(0)}% + taxes)
+            For you (commission {Math.round(commissionRate * 100)}% + taxes)
           </Label>
-          <div className="h-10 px-3 py-2 bg-muted rounded-md flex items-center text-muted-foreground">
-            ${calculateNetPrice().toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+            <p className="text-sm text-gray-700">
+              ${calculateNetPrice().toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
           </div>
         </div>
       </div>
