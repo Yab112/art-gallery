@@ -33,6 +33,7 @@ interface ArtistCardProps {
 
 export function ArtistCard({ artist, showSales }: ArtistCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [placeholderError, setPlaceholderError] = useState(false);
   const navigate = useNavigate();
 
   // Debug: Log artist data
@@ -46,14 +47,22 @@ export function ArtistCard({ artist, showSales }: ArtistCardProps) {
   }
 
   // Get avatar URL with fallback to placeholder service
-  const avatarUrl = getAvatarUrl(artist.avatar, artist.name, 200);
-  const displayUrl = imageError
-    ? getAvatarUrl(null, artist.name, 200)
-    : avatarUrl;
+  // If artist.avatar is empty/null, skip straight to placeholder
+  const hasAvatar = artist.avatar && artist.avatar.trim() !== "" && 
+                    artist.avatar !== "/placeholder.svg" && 
+                    artist.avatar !== "/default-avatar.png";
+  const avatarUrl = hasAvatar ? getAvatarUrl(artist.avatar, artist.name, 200) : null;
+  const placeholderUrl = getAvatarUrl(null, artist.name, 200);
 
   const handleImageError = () => {
     if (!imageError) {
       setImageError(true);
+    }
+  };
+
+  const handlePlaceholderError = () => {
+    if (!placeholderError) {
+      setPlaceholderError(true);
     }
   };
 
@@ -73,12 +82,27 @@ export function ArtistCard({ artist, showSales }: ArtistCardProps) {
     <div className="flex flex-col items-center p-4 cursor-pointer" onClick={handleClick}>
       {/* Avatar - Clickable */}
       <div className="relative mb-3">
-        <img
-          src={displayUrl}
-          alt={artist.name}
-          onError={handleImageError}
-          className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-gray-100 shadow-md"
-        />
+        {hasAvatar && !imageError ? (
+          <img
+            src={avatarUrl!}
+            alt={artist.name}
+            onError={handleImageError}
+            className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-gray-100 shadow-md"
+          />
+        ) : !placeholderError ? (
+          <img
+            src={placeholderUrl}
+            alt={artist.name}
+            onError={handlePlaceholderError}
+            className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-gray-100 shadow-md"
+          />
+        ) : (
+          <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center border-4 border-gray-100 shadow-md bg-blue-600">
+            <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+              {(artist.name || "A")[0].toUpperCase()}
+            </span>
+          </div>
+        )}
         {artist.rating && (
           <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
             <span className="text-xs font-semibold">{artist.rating}</span>

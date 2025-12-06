@@ -17,6 +17,9 @@ import {
   Circle,
   CheckCircle2,
   Calendar,
+  Mountain,
+  Image,
+  Tag,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import type { UserProfile } from "@/types/user.types";
@@ -27,6 +30,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FollowButton } from "@/components/follow/follow-button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "react-router-dom";
+import { useFollowing } from "@/queries/followQueries";
+import { ArtworkCard } from "@/components/artwork-card";
 
 interface ArtistProfileEnhancedProps {
   user: UserProfile;
@@ -45,18 +50,32 @@ export function ArtistProfileEnhanced({
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [coverImageError, setCoverImageError] = useState(false);
+  // Track failed image URLs to prevent flickering from retry loops
+  const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(new Set());
+  // Track if profile image has failed to prevent retry loops
+  const [profileImageFailed, setProfileImageFailed] = useState(false);
+  // Track if placeholder image has also failed
+  const [placeholderImageFailed, setPlaceholderImageFailed] = useState(false);
   
   // Check if viewing own profile
   const isOwnProfile = currentUser?.id === user.id;
 
-  const avatarUrl = getAvatarUrl(user.image, user.name || "Artist", 200);
-  const displayUrl = imageError
-    ? getAvatarUrl(null, user.name || "Artist", 200)
-    : avatarUrl;
+  // Memoize avatar URLs to prevent regeneration on every render
+  const avatarUrl = useMemo(() => {
+    return getAvatarUrl(user.image, user.name || "Artist", 200);
+  }, [user.image, user.name]);
+
+  const displayUrl = useMemo(() => {
+    if (profileImageFailed || !user.image) {
+      return getAvatarUrl(null, user.name || "Artist", 200);
+    }
+    return avatarUrl;
+  }, [profileImageFailed, user.image, user.name, avatarUrl]);
+
   const coverImageUrl = user.coverImage || "/default-cover.jpg";
 
-  // Extract art specializations from artworks
-  const getArtSpecializations = () => {
+  // Extract art specializations from artworks - memoized to prevent flickering
+  const specializations = useMemo(() => {
     const techniques = new Set<string>();
     const categories = new Set<string>();
 
@@ -75,9 +94,8 @@ export function ArtistProfileEnhanced({
       techniques: Array.from(techniques).slice(0, 5), // Top 5 techniques
       categories: Array.from(categories).slice(0, 5), // Top 5 categories
     };
-  };
+  }, [artworks]);
 
-  const specializations = getArtSpecializations();
   const hasSpecializations =
     specializations.techniques.length > 0 ||
     specializations.categories.length > 0;
@@ -109,11 +127,21 @@ export function ArtistProfileEnhanced({
   // Get primary talent type
   const primaryTalentType = user.talentTypes?.[0]?.talentType;
 
-  // Get featured artworks (most liked or recent)
-  const featuredArtworks = artworks
-    .filter((art) => art.photos && art.photos.length > 0)
-    .sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
-    .slice(0, 3);
+  // Get featured artworks (most liked or recent) - memoized to prevent flickering
+  // Create a stable signature from artworks to detect actual changes
+  const artworksSignature = useMemo(() => {
+    if (!artworks || artworks.length === 0) return '';
+    return artworks.map(a => `${a.id}-${a.photos?.[0] || ''}-${a.likeCount || 0}`).join('|');
+  }, [artworks]);
+  
+  const featuredArtworks = useMemo(() => {
+    if (!artworks || artworks.length === 0) return [];
+    
+    // Create a stable array by filtering, sorting, and slicing
+    const filtered = artworks.filter((art) => art.photos && art.photos.length > 0);
+    const sorted = [...filtered].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+    return sorted.slice(0, 3);
+  }, [artworksSignature]);
 
   // Calculate heat score percentage for visual indicator (0-100%)
   const heatScorePercentage = Math.min(100, (heatScore / 100) * 100);
@@ -130,355 +158,288 @@ export function ArtistProfileEnhanced({
   // Check if email is verified
   const isEmailVerified = user.emailVerified || false;
 
+  // Fetch following users for avatars display
+  const { data: followingData } = useFollowing(user.id, 1, 4);
+  const followingUsers = followingData?.users || [];
+
   return (
     <div className="mb-12 space-y-6">
-      {/* Cover Image Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        {/* Cover Image */}
-        <div className="relative h-64 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200">
-          {!coverImageError &&
-          coverImageUrl &&
-          coverImageUrl !== "/default-cover.jpg" ? (
+      {/* Cover Image - Full Width Black Banner */}
+      <div className="px-4">
+        <div className="relative w-full h-48 bg-black">
+          {!coverImageError && user.coverImage ? (
             <img
-              src={coverImageUrl}
+              src={user.coverImage}
               alt={`${user.name || "Artist"} cover`}
               className="w-full h-full object-cover"
               onError={() => setCoverImageError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+            <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
-                <Palette className="h-16 w-16 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No cover image</p>
+                <div className="bg-gray-600 rounded-lg p-4 inline-block">
+                  <Mountain className="h-12 w-12 text-gray-300 mx-auto" />
+                </div>
               </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Header with Profile Picture and Info */}
-        <div className="p-6">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div className="flex items-start space-x-4 -mt-20">
-              {/* Profile Picture with Trophies */}
-              <div className="flex items-center gap-3">
-                {/* Profile Picture */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white ring-2 ring-gray-100">
-                    <img
-                      src={displayUrl}
-                      alt={user.name || "Artist profile"}
-                      className="w-full h-full object-cover"
-                      onError={() => setImageError(true)}
-                      onLoad={() => setImageError(false)}
-                    />
+      {/* Profile Header */}
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 -mt-20 flex-1">
+              {/* Profile Picture */}
+              <div className="relative flex-shrink-0">
+                {user.image && !profileImageFailed ? (
+                  <img
+                    src={displayUrl}
+                    alt={user.name || "Artist profile"}
+                    className="w-40 h-40 rounded-full object-cover border-[8px]"
+                    style={{ borderColor: '#F9FAFB' }}
+                    onError={() => {
+                      setProfileImageFailed(true); // Mark as failed, prevent retry
+                    }}
+                  />
+                ) : !placeholderImageFailed ? (
+                  <img
+                    src={displayUrl}
+                    alt={user.name || "Artist profile"}
+                    className="w-40 h-40 rounded-full object-cover border-[8px]"
+                    style={{ borderColor: '#F9FAFB' }}
+                    onError={() => {
+                      setPlaceholderImageFailed(true); // Mark placeholder as failed
+                    }}
+                  />
+                ) : (
+                  <div className="w-40 h-40 bg-blue-600 rounded-full flex items-center justify-center border-[8px]"
+                    style={{ borderColor: '#F9FAFB' }}>
+                    <span className="text-4xl font-bold text-white">
+                      {(user.name || "A")[0].toUpperCase()}
+                    </span>
                   </div>
-                  {/* Online Status Indicator */}
-                  {isOnline && (
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1.5 shadow-md ring-2 ring-white">
-                      <Circle className="h-4 w-4 text-white fill-white" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Trophies/Achievements - Horizontal next to avatar */}
+                )}
               </div>
 
               {/* Name and Details */}
-              <div className="mt-20 flex-1">
-                <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <div className="mt-12 flex-1">
+                {/* Name with Status Badges */}
+                <div className="flex items-center gap-2 mb-2 flex-wrap mt-4">
                   <h1 className="text-3xl font-bold text-gray-900">
                     {user.name || "Artist"}
                   </h1>
                   {isOnline && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs bg-green-50 text-green-700 border-green-200"
-                    >
-                      <Circle className="h-2 w-2 fill-green-500 mr-1" />
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
+                      <Circle className="h-2.5 w-2.5 fill-green-500" />
                       Online
-                    </Badge>
+                    </span>
                   )}
                   {isTrending && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs bg-orange-50 text-orange-700 border-orange-200"
-                    >
-                      <Flame className="h-3 w-3 mr-1 fill-orange-500" />
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-md">
+                      <Flame className="h-2.5 w-2.5 fill-orange-500" />
                       Trending
-                    </Badge>
-                  )}
-                  {primaryTalentType && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1"
-                    >
-                      {primaryTalentType.icon && (
-                        <span className="text-xs">
-                          {primaryTalentType.icon}
-                        </span>
-                      )}
-                      {primaryTalentType.name}
-                    </Badge>
-                  )}
-                  {memberSince && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs inline-flex items-center gap-1.5"
-                    >
-                      <Award className="h-3 w-3 text-gray-600 flex-shrink-0" />
-                      <span>Since {memberSince}</span>
-                    </Badge>
+                    </span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-600">
-                  {user.location && (
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      <span>{user.location}</span>
-                    </div>
-                  )}
-                  {user.website && (
-                    <a
-                      href={user.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 hover:text-red-700 transition-colors"
-                    >
-                      <Globe className="h-4 w-4" />
-                      <span className="underline">Website</span>
-                    </a>
-                  )}
-                  {isEmailVerified && (
-                    <div className="flex items-center gap-1.5 text-green-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Verified</span>
-                    </div>
-                  )}
-                  {memberSinceFormatted && (
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4" />
-                      <span>Member since {memberSinceFormatted}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Specializations Badge - moved from avatar to here */}
-                    {hasSpecializations && (
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-red-100 to-pink-100 rounded-full border border-red-200 shadow-sm">
-                        <Sparkles className="h-4 w-4 text-red-600 flex-shrink-0" />
-                        <span className="text-xs font-semibold text-red-700">
-                          Artist
-                        </span>
-                      </div>
-                    )}
-                    {isTrending && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-orange-100 to-red-100 rounded-full border border-orange-200 shadow-sm">
-                        <Award className="h-4 w-4 text-orange-600" />
-                        <span className="text-xs font-semibold text-orange-700">
-                          Trending
-                        </span>
-                      </div>
-                    )}
-                    {heatScore > 75 && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full border border-yellow-200 shadow-sm">
-                        <Flame className="h-4 w-4 text-yellow-600 fill-yellow-600" />
-                        <span className="text-xs font-semibold text-yellow-700">
-                          Hot
-                        </span>
-                      </div>
-                    )}
-                    {totalArtworks >= 20 && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full border border-blue-200 shadow-sm">
-                        <Palette className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs font-semibold text-blue-700">
-                          Prolific
-                        </span>
-                      </div>
-                    )}
-                    {profileViews > 500 && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full border border-purple-200 shadow-sm">
-                        <Eye className="h-4 w-4 text-purple-600" />
-                        <span className="text-xs font-semibold text-purple-700">
-                          Popular
-                        </span>
-                      </div>
-                    )}
-                    {isEmailVerified && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200 shadow-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600" />
-                        <span className="text-xs font-semibold text-green-700">
-                          Verified
-                        </span>
-                      </div>
-                    )}
-                    {memberSince &&
-                      new Date().getFullYear() - memberSince >= 3 && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-gray-100 to-slate-100 rounded-full border border-gray-200 shadow-sm">
-                          <Award className="h-4 w-4 text-gray-600" />
-                          <span className="text-xs font-semibold text-gray-700">
-                            Veteran
-                          </span>
-                        </div>
-                      )}
+
+                {/* Heat Score and Views */}
+                <div className="flex items-center gap-4 mt-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    <span className="text-gray-500">Heat Score:</span>
+                    <span className="font-semibold text-gray-900">
+                      {heatScore.toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-500">Views:</span>
+                    <span className="font-semibold text-gray-900">
+                      {profileViews.toLocaleString()}
+                    </span>
                   </div>
                 </div>
+
+                {/* Followers/Following Stats */}
+                <div className="flex items-center gap-4 mt-3">
+                  <Link
+                    to={`/profile/${user.id}/followers`}
+                    className="text-gray-900 hover:text-red-600 transition-colors"
+                  >
+                    <span className="text-lg font-semibold">
+                      {followerCount}
+                    </span>
+                    <span className="text-gray-600 ml-1">Followers</span>
+                  </Link>
+                  <div className="h-4 w-px bg-gray-300"></div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/profile/${user.id}/following`}
+                      className="text-gray-900 hover:text-red-600 transition-colors"
+                    >
+                      <span className="text-lg font-semibold">
+                        {followingCount}
+                      </span>
+                      <span className="text-gray-600 ml-1">Following</span>
+                    </Link>
+                    {followingUsers.length > 0 && (
+                      <div className="flex items-center -space-x-4 ml-2">
+                        {followingUsers.slice(0, 4).map((followingUser, index) => (
+                          <Link
+                            key={followingUser.id}
+                            to={`/profile/${followingUser.id}`}
+                            className="relative block flex-shrink-0"
+                            style={{ zIndex: 4 - index }}
+                          >
+                            <img
+                              src={getAvatarUrl(followingUser.image, followingUser.name || "User", 40)}
+                              alt={followingUser.name || "User"}
+                              className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full border-2 border-white object-cover hover:scale-110 transition-transform bg-gray-200"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = getAvatarUrl(null, followingUser.name || "User", 40);
+                              }}
+                              loading="lazy"
+                            />
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Location, Website, Verified - Subtle Row */}
+                {(user.location || user.website || isEmailVerified || memberSinceFormatted) && (
+                  <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-500">
+                    {user.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        <span>{user.location}</span>
+                      </div>
+                    )}
+                    {user.website && (
+                      <a
+                        href={user.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 hover:text-red-600 transition-colors"
+                      >
+                        <Globe className="h-3 w-3" />
+                        <span>Website</span>
+                      </a>
+                    )}
+                    {isEmailVerified && (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>Verified</span>
+                      </div>
+                    )}
+                    {memberSinceFormatted && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>Joined {memberSinceFormatted}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 mt-4 lg:mt-0">
-              {!isOwnProfile && (
+            {!isOwnProfile && (
+              <div className="flex flex-wrap gap-2 items-center">
                 <FollowButton
                   userId={user.id}
                   isFollowing={user.isFollowing}
                   variant="default"
-                  className="bg-red-700 hover:bg-red-800 text-white shadow-sm"
                 />
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-gray-300 hover:bg-gray-50"
-                onClick={() => setIsLiked(!isLiked)}
-                title="Like"
-              >
-                <Heart
-                  className={`h-4 w-4 ${
-                    isLiked ? "fill-current text-red-500" : ""
-                  }`}
-                />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-gray-300 hover:bg-gray-50"
-                title="Share"
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-gray-300 hover:bg-gray-50"
+                  onClick={() => setIsLiked(!isLiked)}
+                  title="Like"
+                >
+                  <Heart
+                    className={`h-4 w-4 ${
+                      isLiked ? "fill-current text-red-500" : ""
+                    }`}
+                  />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-gray-300 hover:bg-gray-50"
+                  title="Share"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
-
-          {/* Bio/Introduction */}
-          {user.bio && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-gray-700 leading-relaxed text-base">
-                {user.bio}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="flex items-center gap-3 p-4">
-          <div className="p-2 bg-red-50 rounded-lg">
-            <Palette className="h-5 w-5 text-red-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{totalArtworks}</p>
-            <p className="text-xs text-gray-600">Artworks</p>
+      {/* Achievement Badges */}
+      {(hasSpecializations || primaryTalentType || heatScore > 75 || totalArtworks >= 20 || profileViews > 500 || (memberSince && new Date().getFullYear() - memberSince >= 3)) && (
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="flex flex-wrap items-center gap-2">
+            {primaryTalentType && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
+                {primaryTalentType.icon && (
+                  <span className="text-xs">{primaryTalentType.icon}</span>
+                )}
+                {primaryTalentType.name}
+              </span>
+            )}
+            {heatScore > 75 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-md">
+                <Flame className="h-3 w-3" />
+                Hot
+              </span>
+            )}
+            {totalArtworks >= 20 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
+                <Palette className="h-3 w-3" />
+                Prolific
+              </span>
+            )}
+            {profileViews > 500 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-md">
+                <Eye className="h-3 w-3" />
+                Popular
+              </span>
+            )}
+            {memberSince && new Date().getFullYear() - memberSince >= 3 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
+                <Award className="h-3 w-3" />
+                Veteran
+              </span>
+            )}
           </div>
         </div>
-
-        <div className="flex items-center gap-3 p-4">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <FolderOpen className="h-5 w-5 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">
-              {totalCollections}
-            </p>
-            <p className="text-xs text-gray-600">Collections</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 p-4">
-          <div className="p-2 bg-green-50 rounded-lg">
-            <BookOpen className="h-5 w-5 text-green-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{totalBlogs}</p>
-            <p className="text-xs text-gray-600">Blog Posts</p>
-          </div>
-        </div>
-
-        <Link
-          to={`/profile/${user.id}/followers`}
-          className="flex items-center gap-3 p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-        >
-          <div className="p-2 bg-purple-50 rounded-lg">
-            <Users className="h-5 w-5 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{followerCount}</p>
-            <p className="text-xs text-gray-600">Followers</p>
-          </div>
-        </Link>
-      </div>
+      )}
 
       {/* Engagement Metrics Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Heat Score */}
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 relative overflow-hidden p-4 rounded-lg">
-          {isTrending && (
-            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-200 rounded-full -mr-10 -mt-10 opacity-20" />
-          )}
-          <div className="relative">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Flame className="h-5 w-5 text-orange-600 fill-orange-600" />
+      {isOnline && (
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Online Status Card */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Circle className="h-5 w-5 text-green-600 fill-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    Heat Score
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {heatScore.toFixed(1)}
-                    {isTrending && (
-                      <span className="ml-2 text-orange-600 text-lg">🔥</span>
-                    )}
-                  </p>
+                  <p className="text-lg font-bold text-gray-900">Online Now</p>
+                  <p className="text-xs text-gray-600">Active recently</p>
                 </div>
               </div>
-            </div>
-            {/* Heat Score Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-orange-400 via-orange-500 to-red-500 transition-all duration-500 shadow-sm"
-                style={{ width: `${heatScorePercentage}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-gray-500">Engagement ranking</p>
-              {isTrending && (
-                <span className="text-xs font-semibold text-orange-600">
-                  Trending!
-                </span>
-              )}
             </div>
           </div>
         </div>
-
-        {/* Profile Views Card - Only show on own profile, not public */}
-        {/* Removed - Profile Views should only be visible on user's own profile page */}
-
-        {/* Online Status Card */}
-        {isOnline && (
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Circle className="h-5 w-5 text-green-600 fill-green-600" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-gray-900">Online Now</p>
-                <p className="text-xs text-gray-600">Active recently</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Additional Info Section - Only show timezone and language, NOT subscriptions (private info) */}
       {/* {(timezoneDisplay || languageDisplay) && (
@@ -522,100 +483,129 @@ export function ArtistProfileEnhanced({
         </Card>
       )} */}
 
-      {/* Art Specializations */}
-      {hasSpecializations && (
-        <Card className="border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Award className="h-5 w-5 text-red-600" />
-              <h2 className="text-lg font-semibold text-gray-900">
-                Art Specializations
-              </h2>
-            </div>
-            <div className="space-y-4">
-              {specializations.techniques.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Techniques
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {specializations.techniques.map((technique, idx) => (
-                      <Badge
-                        key={idx}
-                        variant="secondary"
-                        className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                      >
-                        {technique}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {specializations.categories.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Categories
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {specializations.categories.map((category, idx) => (
-                      <Badge
-                        key={idx}
-                        variant="secondary"
-                        className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                      >
-                        {category}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Featured Artworks Preview */}
-      {featuredArtworks.length > 0 && (
-        <Card className="border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-red-600" />
-                <h2 className="text-lg font-semibold text-gray-900">
+      {/* Main Content with Right Sidebar */}
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Main Content Area */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Featured Works */}
+            <div className="bg-white rounded-md p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-6">
+                <TrendingUp className="h-4 w-4 text-gray-400" />
+                <h2 className="text-base font-medium text-gray-700">
                   Featured Works
                 </h2>
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {featuredArtworks.map((artwork, idx) => (
-                <div
-                  key={artwork.id || idx}
-                  className="relative aspect-square rounded-lg overflow-hidden group cursor-pointer hover:scale-105 transition-transform"
-                >
-                  <img
-                    src={artwork.photos?.[0] || "/placeholder.svg"}
-                    alt={artwork.title || "Artwork"}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-0 left-0 right-0 p-2">
-                      <p className="text-white text-xs font-medium truncate">
-                        {artwork.title || "Untitled"}
-                      </p>
-                      {artwork.likeCount !== undefined &&
-                        artwork.likeCount > 0 && (
-                          <p className="text-white/80 text-xs">
-                            {artwork.likeCount} likes
-                          </p>
-                        )}
-                    </div>
-                  </div>
+              {featuredArtworks.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {featuredArtworks.map((artwork) => (
+                    <ArtworkCard
+                      key={artwork.id}
+                      id={artwork.id}
+                      image={artwork.photos?.[0] || "/placeholder.svg"}
+                      title={artwork.title || "Untitled"}
+                      artist={artwork.artist || user.name || "Unknown"}
+                      price={`US$${artwork.desiredPrice?.toLocaleString() || "0"}`}
+                      year={artwork.yearOfArtwork?.toString()}
+                      medium={artwork.technique || artwork.support || "N/A"}
+                      dimensions={
+                        artwork.dimensions
+                          ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+                          : "N/A"
+                      }
+                      seller={artwork.user?.name || user.name || "Unknown"}
+                      status={artwork.status}
+                    />
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Image className="h-12 w-12 text-gray-300 mb-3" />
+                  <p className="text-sm text-gray-500">No featured artworks yet</p>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="space-y-6">
+            {/* Techniques */}
+            <div className="bg-white rounded-md p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <Award className="h-4 w-4 text-gray-400" />
+                <h2 className="text-base font-medium text-gray-700">
+                  Techniques
+                </h2>
+              </div>
+              {specializations.techniques.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {specializations.techniques.map((technique, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-xs font-medium"
+                    >
+                      {technique}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Award className="h-8 w-8 text-gray-300 mb-2" />
+                  <p className="text-xs text-gray-500">No techniques yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Categories */}
+            <div className="bg-white rounded-md p-6 border border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <Tag className="h-4 w-4 text-gray-400" />
+                <h2 className="text-base font-medium text-gray-700">
+                  Categories
+                </h2>
+              </div>
+              {specializations.categories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {specializations.categories.map((category, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
+                    >
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Tag className="h-8 w-8 text-gray-300 mb-2" />
+                  <p className="text-xs text-gray-500">No categories yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Statistics - Minimal Footer Style */}
+            <div className="bg-white rounded-md p-6 border border-gray-100">
+              <div className="flex flex-wrap items-center justify-center gap-6 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Palette className="h-3.5 w-3.5 text-gray-400" />
+                  <span className="font-medium text-gray-900">{totalArtworks}</span>
+                  <span className="text-gray-500">Artworks</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <FolderOpen className="h-3.5 w-3.5 text-gray-400" />
+                  <span className="font-medium text-gray-900">{totalCollections}</span>
+                  <span className="text-gray-500">Collections</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <BookOpen className="h-3.5 w-3.5 text-gray-400" />
+                  <span className="font-medium text-gray-900">{totalBlogs}</span>
+                  <span className="text-gray-500">Blog Posts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

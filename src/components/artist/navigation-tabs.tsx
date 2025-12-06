@@ -15,7 +15,7 @@ export function NavigationTabs({
   onTabChange,
 }: NavigationTabsProps) {
   return (
-    <div className="mb-8 border-border border-b">
+    <div className="mb-8 border-b border-gray-200">
       <nav className="flex space-x-8">
         {tabs.map((tab) => (
           <button
@@ -24,8 +24,8 @@ export function NavigationTabs({
             onClick={() => onTabChange(tab.id)}
             className={`border-b-2 px-1 py-4 font-medium text-sm transition-colors ${
               activeTab === tab.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+                ? "border-red-600 text-red-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             {tab.label}

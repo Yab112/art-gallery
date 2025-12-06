@@ -67,9 +67,10 @@ export const useArtworks = (params?: ArtworkQueryParams) => {
         pages: 1,
       };
     },
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-    staleTime: 5 * 60 * 1000,
+    refetchInterval: false, // Disable auto-refetch to prevent flickering
+    staleTime: 10 * 60 * 1000, // Increase stale time to 10 minutes
     placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
   });
 };
 

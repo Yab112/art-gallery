@@ -6,7 +6,7 @@ import { ImageModal } from "@/components/artist/image-modal";
 import { NavigationTabs } from "@/components/artist/navigation-tabs";
 import { SimilarArtists } from "@/components/artist/similar-artists";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useUser } from "@/queries/userQueries";
 import { useArtworks } from "@/queries/artworkQueries";
@@ -17,7 +17,7 @@ import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton";
 import { useGetUserCollections } from "@/services/collections/useGetUserCollections";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BookOpen, FolderOpen, Loader2 } from "lucide-react";
+import { BookOpen, FolderOpen, Loader2, MapPin, Globe, Calendar, Mail, Palette, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ArtistDetailPage() {
@@ -206,7 +206,15 @@ export default function ArtistDetailPage() {
   }, [artworkParams, artworksResponse, isLoadingArtworks, artworksError, user]);
 
   // Use only paginated artworks from the separate query (no fallback to profile artworks)
-  const artworks = artworksResponse?.artworks || [];
+  // Memoize to prevent creating new array reference on every render (causes flickering)
+  // Use a stable reference by checking if the data actually changed
+  const artworks = useMemo(() => {
+    const arts = artworksResponse?.artworks || [];
+    return arts;
+  }, [
+    artworksResponse?.artworks?.length,
+    artworksResponse?.artworks?.map(a => `${a.id}-${a.photos?.[0] || ''}`).join('|')
+  ]);
   const artworksTotal = artworksResponse?.total || 0;
   const artworksPages = artworksResponse?.pages || 1;
 
@@ -267,6 +275,12 @@ export default function ArtistDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ArtistProfileEnhanced
+        user={user}
+        artworks={artworks}
+        collectionsCount={collectionsTotal}
+        blogsCount={blogsTotal}
+      />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Back Button */}
         <div className="mb-4">
@@ -280,13 +294,6 @@ export default function ArtistDetailPage() {
             Back
           </Button>
         </div>
-
-        <ArtistProfileEnhanced
-          user={user}
-          artworks={artworks}
-          collectionsCount={collectionsTotal}
-          blogsCount={blogsTotal}
-        />
         <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {activeTab === "artworks" && (
@@ -342,7 +349,109 @@ export default function ArtistDetailPage() {
           </>
         )}
 
-        {activeTab === "about" && <AboutSection user={user} />}
+        {activeTab === "about" && (
+          <div className="mt-8">
+            <div className="max-w-4xl space-y-8">
+              {/* About Section - Bio */}
+              {user.bio && (
+                <div className="bg-red-50/30 rounded-lg p-5 border border-red-100/50">
+                  <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                    About
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed text-sm whitespace-pre-line">
+                    {user.bio}
+                  </p>
+                </div>
+              )}
+
+              {/* Artist Information Section */}
+              {(user.location || user.website || user.email || user.createdAt || user.artworkCount) && (
+                <div className="bg-white rounded-md p-6 border border-gray-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award className="h-4 w-4 text-gray-400" />
+                    <h2 className="text-base font-medium text-gray-700">
+                      Artist Information
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-3">
+                      {user.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Location</p>
+                            <p className="text-xs text-gray-600">{user.location}</p>
+                          </div>
+                        </div>
+                      )}
+                      {user.website && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Website</p>
+                            <a
+                              href={user.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-red-600 hover:text-red-700 hover:underline transition-colors"
+                            >
+                              {user.website}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {user.artworkCount !== undefined && user.artworkCount > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Palette className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Artworks</p>
+                            <p className="text-xs text-gray-600">
+                              {user.artworkCount} {user.artworkCount === 1 ? "artwork" : "artworks"} available
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      {user.createdAt && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Member Since</p>
+                            <p className="text-xs text-gray-600">
+                              {new Date(user.createdAt).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {user.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Contact</p>
+                            <p className="text-xs text-gray-600">{user.email}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!user.bio && !user.location && !user.website && !user.email && (
+                <div className="text-center py-12 border border-dashed border-gray-300 rounded-lg bg-white">
+                  <p className="text-gray-500">
+                    {user.name || "This artist"} hasn't added any information yet.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {activeTab === "blog" && (
           <div className="mt-8">
