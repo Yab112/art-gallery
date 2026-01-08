@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
+import { MinimalButton } from "@/components/ui/minimal-button";
 import { useFollowUser } from "@/services/follow/useFollowUser";
 import { useUnfollowUser } from "@/services/follow/useUnfollowUser";
 import { useFollowStatus } from "@/services/follow/useFollowStatus";
 import { useQueryClient } from "@tanstack/react-query";
 import { followKeys } from "@/queries/queryKeys";
 import { userKeys } from "@/queries/queryKeys";
-import { Loader2 } from "lucide-react";
+import { UserPlus } from "lucide-react";
 
 interface FollowButtonProps {
   userId: string;
@@ -56,26 +56,25 @@ export function FollowButton({
   };
 
   return (
-    <Button
-      variant={isFollowing ? "outline" : variant}
-      size={size}
+    <MinimalButton
+      icon={!isFollowing ? UserPlus : undefined}
       onClick={handleToggleFollow}
       disabled={isLoading}
+      isLoading={isLoading}
+      variant={variant}
+      size={size}
       className={className}
     >
-      {isLoading ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          {isFollowing ? "Unfollowing..." : "Following..."}
-        </>
-      ) : isFollowing ? (
-        "Unfollow"
-      ) : showFollowBack ? (
-        "Follow Back"
-      ) : (
-        "Follow"
-      )}
-    </Button>
+      {isLoading
+        ? isFollowing
+          ? "Unfollowing..."
+          : "Following..."
+        : isFollowing
+        ? "Unfollow"
+        : showFollowBack
+        ? "Follow Back"
+        : "Follow"}
+    </MinimalButton>
   );
 }
 

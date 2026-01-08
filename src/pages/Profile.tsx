@@ -24,6 +24,7 @@ import {
   Clock,
   Languages,
   BarChart3,
+  Mountain,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Users } from "lucide-react";
@@ -32,6 +33,8 @@ import { Palette } from "lucide-react";
 import { useMyCollections } from "@/queries/collectionQueries";
 import { useMyArtworks } from "@/queries/artworkQueries";
 import { ArtworkCard } from "@/components/artwork-card";
+import { useFollowing } from "@/queries/followQueries";
+import { getAvatarUrl } from "@/utils/avatar";
 import { useCreateCollection } from "@/services/collections/useCreateCollection";
 import { useDeleteCollection } from "@/services/collections/useDeleteCollection";
 import { usePublishCollection } from "@/services/collections/usePublishCollection";
@@ -39,7 +42,7 @@ import { useUnpublishCollection } from "@/services/collections/useUnpublishColle
 import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork";
 import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { collectionKeys, artworkKeys } from "@/queries/queryKeys";
+import { collectionKeys, artworkKeys, userKeys } from "@/queries/queryKeys";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +58,9 @@ import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries";
 import { uploadFileToS3 } from "@/services/upload";
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
 import { ProfileSectionSkeleton } from "@/components/skeletons/profile-section-skeleton";
+import { useUpdateProfile } from "@/services/users/useUpdateProfile";
+import { useUpdateAvatar } from "@/services/users/useUpdateAvatar";
+import { MinimalButton } from "@/components/ui/minimal-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,14 +93,34 @@ export default function ProfilePage() {
     1,
     3
   );
+  
+  // Get profile ID for following query - use userId param or session user id
+  const profileIdForFollowing = userId || sessionUser?.id;
+  // Fetch following users for avatars display
+  const { data: followingData } = useFollowing(profileIdForFollowing, 1, 4);
+  const followingUsers = followingData?.users || [];
   const { createCollection, isCreating } = useCreateCollection();
   const { deleteCollection, isDeleting } = useDeleteCollection();
   const { publishCollection } = usePublishCollection();
   const { unpublishCollection } = useUnpublishCollection();
   const { deleteArtwork, isDeleting: isDeletingArtwork } = useDeleteArtwork();
   const { mutateAsync: getPresignedUrl } = useGetPresignedImageUploadUrl();
+  const { updateProfile, isUpdating: isUpdatingProfile } = useUpdateProfile();
+  const { updateAvatar, isUpdating: isUpdatingAvatar } = useUpdateAvatar();
   const queryClient = useQueryClient();
   const [showCreateCollection, setShowCreateCollection] = useState(false);
+  
+  // Profile cover image state
+  const [profileCoverImageFile, setProfileCoverImageFile] = useState<File | null>(null);
+  const [profileCoverImagePreview, setProfileCoverImagePreview] = useState<string>("");
+  const [isUploadingProfileCover, setIsUploadingProfileCover] = useState(false);
+  const profileCoverImageInputRef = useRef<HTMLInputElement>(null);
+  
+  // Profile avatar state
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleDeleteArtwork = async (artworkId: string) => {
     if (window.confirm("Are you sure you want to delete this artwork?")) {
@@ -170,47 +196,312 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
-          {/* Cover Image */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden">
-            <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
-              {(profile as any).coverImage ? (
-                <img
-                  src={(profile as any).coverImage}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center text-gray-400">
-                    <ImageIcon className="h-12 w-12 mx-auto mb-2" />
-                    <p className="text-sm">No cover image</p>
-                  </div>
+        {/* Cover Image - Full Width Black Banner */}
+        <div className="px-4">
+          <div 
+            className={`relative w-full h-48 bg-black ${
+              !isViewingOtherProfile ? "cursor-pointer group" : ""
+            }`}
+            onClick={() => {
+              if (!isViewingOtherProfile) {
+                profileCoverImageInputRef.current?.click();
+              }
+            }}
+          >
+          {profileCoverImagePreview ? (
+            <img
+              src={profileCoverImagePreview}
+              alt="Cover preview"
+              className="w-full h-full object-cover"
+            />
+          ) : (profile as any).coverImage ? (
+            <img
+              src={(profile as any).coverImage}
+              alt="Cover"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="bg-gray-600 rounded-lg p-4 inline-block">
+                  <Mountain className="h-12 w-12 text-gray-300 mx-auto" />
                 </div>
-              )}
+              </div>
             </div>
-            {/* Header */}
-            <div className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-4 -mt-16">
-                  <div className="relative">
-                    {profile.image ? (
+          )}
+          {!isViewingOtherProfile && (
+            <>
+              {/* Full overlay with edit icon */}
+              <div className="absolute top-0 bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all pointer-events-none flex items-center justify-center">
+                <Edit className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </>
+          )}
+          </div>
+        </div>
+        {/* Hidden file input for profile cover image */}
+        {!isViewingOtherProfile && (
+          <Input
+            ref={profileCoverImageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+
+              // Validate file size (max 5MB)
+              if (file.size > 5 * 1024 * 1024) {
+                toast.error("Image size must be less than 5MB");
+                return;
+              }
+
+              // Validate file type
+              if (!file.type.startsWith("image/")) {
+                toast.error("Please select an image file");
+                return;
+              }
+
+              setProfileCoverImageFile(file);
+              setProfileCoverImagePreview(URL.createObjectURL(file));
+
+              // Upload and update profile immediately
+              setIsUploadingProfileCover(true);
+              try {
+                const presignedResponse = await getPresignedUrl({
+                  fileName: file.name,
+                  contentType: file.type,
+                });
+
+                if (!presignedResponse.success || !presignedResponse.presignedUrl) {
+                  throw new Error("Failed to get upload URL");
+                }
+
+                await uploadFileToS3(presignedResponse.presignedUrl, file);
+                const coverImageUrl = presignedResponse.publicUrl;
+
+                // Update profile with new cover image
+                await updateProfile({
+                  coverImage: coverImageUrl,
+                });
+
+                // Invalidate profile queries to refresh the data
+                queryClient.invalidateQueries({ queryKey: userKeys.me() });
+                if (profile?.id) {
+                  queryClient.invalidateQueries({ queryKey: userKeys.detail(profile.id) });
+                }
+
+                toast.success("Cover image updated successfully");
+                
+                // Clear preview after successful upload
+                setProfileCoverImageFile(null);
+                setProfileCoverImagePreview("");
+              } catch (error: any) {
+                toast.error(
+                  "Failed to upload cover image: " +
+                    (error?.message || "An error occurred")
+                );
+                // Reset preview on error
+                setProfileCoverImageFile(null);
+                setProfileCoverImagePreview("");
+              } finally {
+                setIsUploadingProfileCover(false);
+                // Reset file input
+                if (profileCoverImageInputRef.current) {
+                  profileCoverImageInputRef.current.value = "";
+                }
+              }
+            }}
+          />
+        )}
+        
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          {/* Profile Header */}
+          <div className="mb-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-4 -mt-20 flex-1">
+                  <div 
+                    className={`relative ${!isViewingOtherProfile ? "cursor-pointer group" : ""}`}
+                    onClick={() => {
+                      if (!isViewingOtherProfile) {
+                        avatarInputRef.current?.click();
+                      }
+                    }}
+                  >
+                    {avatarPreview ? (
+                      <img
+                        src={avatarPreview}
+                        alt={profile.name || "User"}
+                        className="w-40 h-40 rounded-full object-cover border-[8px]"
+                        style={{ borderColor: '#F9FAFB' }}
+                      />
+                    ) : profile.image ? (
                       <img
                         src={profile.image}
                         alt={profile.name || "User"}
-                        className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                        className="w-40 h-40 rounded-full object-cover border-[8px]"
+                        style={{ borderColor: '#F9FAFB' }}
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center border-4 border-white shadow-md">
-                        <User className="h-10 w-10 text-red-700" />
+                      <div className="w-40 h-40 bg-blue-600 rounded-full flex items-center justify-center border-[8px]"
+                        style={{ borderColor: '#F9FAFB' }}>
+                        <span className="text-4xl font-bold text-white">
+                          {(profile.name || "U")[0].toUpperCase()}
+                        </span>
                       </div>
                     )}
+                    {!isViewingOtherProfile && (
+                      <>
+                        {/* Red edit icon at bottom-right - cutting into avatar */}
+                        <div className="absolute bottom-1 right-1 w-12 h-12 bg-red-700 rounded-full flex items-center justify-center border-[6px] border-white z-10">
+                          <Edit className="h-4 w-4 text-white" />
+                        </div>
+                        {/* Hidden file input */}
+                        <Input
+                          ref={avatarInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+
+                            // Validate file size (max 5MB)
+                            if (file.size > 5 * 1024 * 1024) {
+                              toast.error("Image size must be less than 5MB");
+                              return;
+                            }
+
+                            // Validate file type
+                            if (!file.type.startsWith("image/")) {
+                              toast.error("Please select an image file");
+                              return;
+                            }
+
+                            setAvatarFile(file);
+                            setAvatarPreview(URL.createObjectURL(file));
+
+                            // Upload and update avatar immediately
+                            setIsUploadingAvatar(true);
+                            try {
+                              const presignedResponse = await getPresignedUrl({
+                                fileName: file.name,
+                                contentType: file.type,
+                              });
+
+                              if (!presignedResponse.success || !presignedResponse.presignedUrl) {
+                                throw new Error("Failed to get upload URL");
+                              }
+
+                              await uploadFileToS3(presignedResponse.presignedUrl, file);
+                              const avatarUrl = presignedResponse.publicUrl;
+
+                              // Update avatar
+                              await updateAvatar(avatarUrl);
+
+                              // Invalidate profile queries to refresh the data
+                              queryClient.invalidateQueries({ queryKey: userKeys.me() });
+                              if (profile?.id) {
+                                queryClient.invalidateQueries({ queryKey: userKeys.detail(profile.id) });
+                              }
+
+                              toast.success("Profile picture updated successfully");
+                              
+                              // Clear preview after successful upload
+                              setAvatarFile(null);
+                              setAvatarPreview("");
+                            } catch (error: any) {
+                              toast.error(
+                                "Failed to upload profile picture: " +
+                                  (error?.message || "An error occurred")
+                              );
+                              // Reset preview on error
+                              setAvatarFile(null);
+                              setAvatarPreview("");
+                            } finally {
+                              setIsUploadingAvatar(false);
+                              // Reset file input
+                              if (avatarInputRef.current) {
+                                avatarInputRef.current.value = "";
+                              }
+                            }
+                          }}
+                        />
+                      </>
+                    )}
                   </div>
-                  <div className="mt-12">
-                    <h1 className="text-3xl font-bold text-gray-900">
+                  <div className="mt-12 flex-1">
+                    <h1 className="text-3xl font-bold text-gray-900 mt-2">
                       {profile.name || "User"}
                     </h1>
-                    <p className="text-gray-500 mt-1">{profile.email}</p>
+                    {/* Heat Score and Views */}
+                    <div className="flex items-center gap-4 mt-2 text-sm">
+                      {/* Heat Score */}
+                      <div className="flex items-center gap-2">
+                        <Flame className="h-4 w-4 text-orange-500" />
+                        <span className="text-gray-500">Heat Score:</span>
+                        <span className="font-semibold text-gray-900">
+                          {((profile as any)?.heatScore ?? 0).toFixed(1)}
+                        </span>
+                      </div>
+
+                      {/* Profile Views */}
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-500">Views:</span>
+                        <span className="font-semibold text-gray-900">
+                          {((profile as any)?.profileViews ?? 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Inline Stats with Following Avatars */}
+                    <div className="flex items-center gap-4 mt-3">
+                      <Link
+                        to={`/profile/${profile.id}/followers`}
+                        className="text-gray-900 hover:text-red-600 transition-colors"
+                      >
+                        <span className="text-lg font-semibold">
+                          {(profile as any).followerCount || 0}
+                        </span>
+                        <span className="text-gray-600 ml-1">Followers</span>
+                      </Link>
+                      <div className="h-4 w-px bg-gray-300"></div>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/profile/${profile.id}/following`}
+                          className="text-gray-900 hover:text-red-600 transition-colors"
+                        >
+                          <span className="text-lg font-semibold">
+                            {(profile as any).followingCount || 0}
+                          </span>
+                          <span className="text-gray-600 ml-1">Following</span>
+                        </Link>
+                        {/* Following Avatars - Overlapping */}
+                        {followingUsers.length > 0 && (
+                          <div className="flex items-center -space-x-4 ml-2">
+                            {followingUsers.slice(0, 4).map((user, index) => (
+                              <Link
+                                key={user.id}
+                                to={`/profile/${user.id}`}
+                                className="relative block flex-shrink-0"
+                                style={{ zIndex: 4 - index }}
+                              >
+                                <img
+                                  src={getAvatarUrl(user.image, user.name || "User", 40)}
+                                  alt={user.name || "User"}
+                                  className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full border-2 border-white object-cover hover:scale-110 transition-transform bg-gray-200"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = getAvatarUrl(null, user.name || "User", 40);
+                                  }}
+                                  loading="lazy"
+                                />
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     {"role" in profile && profile.role && (
                       <span className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
                         {profile.role}
@@ -232,7 +523,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-          </div>
 
           {/* Profile Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -242,209 +532,77 @@ export default function ProfilePage() {
               {((profile as any)?.bio ||
                 (profile as any)?.location ||
                 (profile as any)?.website) && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    About
-                  </h2>
+                <div className="space-y-4">
                   {(profile as any)?.bio && (
-                    <p className="text-gray-700 leading-relaxed mb-4">
-                      {(profile as any).bio}
-                    </p>
+                    <div className="bg-red-50/30 rounded-lg p-5 border border-red-100/50">
+                      <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                        About
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed text-sm">
+                        {(profile as any).bio}
+                      </p>
+                    </div>
                   )}
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    {(profile as any)?.location && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="h-4 w-4" />
-                        <span>{(profile as any).location}</span>
-                      </div>
-                    )}
-                    {(profile as any)?.website && (
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-gray-600" />
-                        <a
-                          href={(profile as any).website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-red-600 hover:text-red-700 hover:underline"
-                        >
-                          Website
-                        </a>
-                      </div>
-                    )}
-                  </div>
+                  {((profile as any)?.location || (profile as any)?.website) && (
+                    <div className="flex flex-wrap items-center gap-5 text-sm">
+                      {(profile as any)?.location && (
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <span className="font-medium">{(profile as any).location}</span>
+                        </div>
+                      )}
+                      {(profile as any)?.website && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-gray-500" />
+                          <a
+                            href={(profile as any).website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-red-600 hover:text-red-700 font-medium hover:underline transition-colors"
+                          >
+                            {(profile as any).website}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Engagement Metrics - Always show */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <BarChart3 className="h-5 w-5 text-red-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Engagement Metrics
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Heat Score - Always show */}
-                  <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Flame className="h-5 w-5 text-orange-600 fill-orange-600" />
-                      <p className="text-sm font-medium text-gray-700">
-                        Heat Score
-                      </p>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {((profile as any)?.heatScore ?? 0).toFixed(1)}
-                    </p>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                      <div
-                        className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (((profile as any)?.heatScore ?? 0) / 100) * 100
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Profile Views - Always show */}
-                  <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Eye className="h-5 w-5 text-indigo-600" />
-                      <p className="text-sm font-medium text-gray-700">
-                        Profile Views
-                      </p>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {((profile as any)?.profileViews ?? 0).toLocaleString()}
-                    </p>
-                  </div>
-
-                  {/* Online Status */}
-                  {(profile as any)?.lastActiveAt &&
-                    (() => {
-                      try {
-                        const lastActive = new Date(
-                          (profile as any).lastActiveAt
-                        );
-                        const now = new Date();
-                        const diffMinutes =
-                          (now.getTime() - lastActive.getTime()) / (1000 * 60);
-                        const isOnline = diffMinutes < 5;
-                        return isOnline ? (
-                          <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Circle className="h-5 w-5 text-green-600 fill-green-600" />
-                              <p className="text-sm font-medium text-gray-700">
-                                Status
-                              </p>
-                            </div>
-                            <p className="text-lg font-bold text-gray-900">
-                              Online Now
-                            </p>
+              {/* Engagement Metrics - Minimal inline design */}
+              {(profile as any)?.lastActiveAt &&
+                (() => {
+                  try {
+                    const lastActive = new Date(
+                      (profile as any).lastActiveAt
+                    );
+                    const now = new Date();
+                    const diffMinutes =
+                      (now.getTime() - lastActive.getTime()) / (1000 * 60);
+                    const isOnline = diffMinutes < 5;
+                    return isOnline ? (
+                      <div className="py-6 border-b border-gray-100">
+                        <div className="flex flex-wrap items-center gap-6 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Circle className="h-3 w-3 text-green-500 fill-green-500" />
+                            <span className="text-gray-500">Online</span>
                           </div>
-                        ) : null;
-                      } catch (e) {
-                        return null;
-                      }
-                    })()}
-                </div>
-              </div>
-
-              {/* Account Information */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Account Information
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="text-gray-900">{profile.email}</p>
-                      {profile.emailVerified ? (
-                        <span className="text-xs text-green-600 mt-1">
-                          ✓ Verified
-                        </span>
-                      ) : (
-                        <span className="text-xs text-yellow-600 mt-1">
-                          ⚠ Not verified
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {(profile as any)?.location && (
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500">Location</p>
-                        <p className="text-gray-900">
-                          {(profile as any).location}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {(profile as any)?.website && (
-                    <div className="flex items-center space-x-3">
-                      <Globe className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500">Website</p>
-                        <a
-                          href={(profile as any).website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-red-600 hover:text-red-700 hover:underline"
-                        >
-                          {(profile as any).website}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  {profile.createdAt && (
-                    <div className="flex items-center space-x-3">
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500">Member Since</p>
-                        <p className="text-gray-900">
-                          {new Date(profile.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {"artworkCount" in profile &&
-                    profile.artworkCount !== undefined && (
-                      <div className="flex items-center space-x-3">
-                        <Palette className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Artworks</p>
-                          <p className="text-gray-900">
-                            {profile.artworkCount}{" "}
-                            {profile.artworkCount === 1
-                              ? "artwork"
-                              : "artworks"}
-                          </p>
                         </div>
                       </div>
-                    )}
-                </div>
-              </div>
+                    ) : null;
+                  } catch (e) {
+                    return null;
+                  }
+                })()}
 
               {/* Talent Types */}
               {(profile as any)?.talentTypes &&
                 Array.isArray((profile as any).talentTypes) &&
                 (profile as any).talentTypes.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Award className="h-5 w-5 text-red-600" />
-                      <h2 className="text-xl font-semibold text-gray-900">
+                  <div className="bg-white rounded-md p-6 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Award className="h-4 w-4 text-gray-400" />
+                      <h2 className="text-lg font-medium text-gray-900">
                         Talent Types
                       </h2>
                     </div>
@@ -452,7 +610,7 @@ export default function ProfilePage() {
                       {(profile as any).talentTypes.map((tt: any) => (
                         <span
                           key={tt.id}
-                          className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-sm font-medium"
+                          className="px-2.5 py-1 text-gray-600 border border-gray-200 rounded-md text-sm hover:border-gray-300 transition-colors"
                         >
                           {tt.icon && <span className="mr-1">{tt.icon}</span>}
                           {tt.name}
@@ -467,24 +625,19 @@ export default function ProfilePage() {
                 <ProfileSectionSkeleton />
               ) : artworksData?.artworks && artworksData.artworks.length > 0 ? (
                 <>
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div className="bg-white rounded-md p-6 border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold text-gray-900">
+                      <h2 className="text-lg font-medium text-gray-900">
                         My Artworks
                       </h2>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/sellart">Add New Artwork</Link>
-                      </Button>
+                      <MinimalButton
+                        icon={Plus}
+                        onClick={() => navigate("/sellart")}
+                        variant="default"
+                      >
+                        Add New Artwork
+                      </MinimalButton>
                     </div>
-                    <p className="text-gray-600 mb-4">
-                      You have{" "}
-                      {artworksData.total || artworksData.artworks.length}{" "}
-                      {(artworksData.total || artworksData.artworks.length) ===
-                      1
-                        ? "artwork"
-                        : "artworks"}{" "}
-                      in your collection.
-                    </p>
                     {/* Artworks Preview Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                       {artworksData.artworks.slice(0, 3).map((artwork) => (
@@ -571,41 +724,36 @@ export default function ProfilePage() {
               ) : "artworkCount" in profile &&
                 profile.artworkCount !== undefined &&
                 profile.artworkCount > 0 ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-md p-6 border border-gray-100">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-lg font-medium text-gray-900">
                       My Artworks
                     </h2>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/sellart">Add New Artwork</Link>
-                    </Button>
+                    <MinimalButton
+                      icon={Plus}
+                      onClick={() => navigate("/sellart")}
+                      variant="default"
+                    >
+                      Add New Artwork
+                    </MinimalButton>
                   </div>
-                  <p className="text-gray-600">
-                    You have{" "}
-                    {"artworkCount" in profile ? profile.artworkCount : 0}{" "}
-                    {("artworkCount" in profile ? profile.artworkCount : 0) ===
-                    1
-                      ? "artwork"
-                      : "artworks"}{" "}
-                    in your collection.
-                  </p>
                   <Button variant="link" className="mt-4" asChild>
                     <Link to="/profile/my-artworks">View All My Artworks</Link>
                   </Button>
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-md p-6 border border-gray-100">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-lg font-medium text-gray-900">
                       My Artworks
                     </h2>
-                    <Button
+                    <MinimalButton
+                      icon={Plus}
                       onClick={() => navigate("/sellart")}
-                      className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
+                      variant="default"
                     >
-                      <Plus className="h-4 w-4" />
                       Create Artwork
-                    </Button>
+                    </MinimalButton>
                   </div>
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
@@ -619,23 +767,30 @@ export default function ProfilePage() {
               )}
 
               {/* My Collections */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-md p-6 border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <FolderOpen className="h-5 w-5 text-red-700" />
-                    <h2 className="text-xl font-semibold text-gray-900 ">
+                    <FolderOpen className="h-4 w-4 text-gray-400" />
+                    <h2 className="text-lg font-medium text-gray-900">
                       My Collections
                     </h2>
                   </div>
-                  <Button
-                    onClick={() =>
-                      setShowCreateCollection(!showCreateCollection)
-                    }
-                    className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
-                  >
-                    <FolderPlus className="h-4 w-4" />
-                    {showCreateCollection ? "Cancel" : "New Collection"}
-                  </Button>
+                  {showCreateCollection ? (
+                    <button
+                      onClick={() => setShowCreateCollection(false)}
+                      className="text-sm text-gray-600 hover:text-gray-900 hover:underline transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <MinimalButton
+                      icon={FolderPlus}
+                      onClick={() => setShowCreateCollection(true)}
+                      variant="default"
+                    >
+                      New Collection
+                    </MinimalButton>
+                  )}
                 </div>
 
                 {/* Create Collection Form */}
@@ -776,7 +931,7 @@ export default function ProfilePage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <Button
+                      <MinimalButton
                         onClick={async () => {
                           if (!newCollection.name.trim()) {
                             toast.error("Collection name is required");
@@ -857,14 +1012,15 @@ export default function ProfilePage() {
                           }
                         }}
                         disabled={isCreating || isUploadingCover}
-                        className="bg-red-700 hover:bg-red-800 text-white"
+                        isLoading={isCreating || isUploadingCover}
+                        variant="default"
                       >
                         {isUploadingCover
                           ? "Uploading cover..."
                           : isCreating
                           ? "Creating..."
                           : "Create Collection"}
-                      </Button>
+                      </MinimalButton>
                     </div>
                   </div>
                 )}
@@ -1020,96 +1176,186 @@ export default function ProfilePage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Quick Actions */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Quick Actions
-                </h2>
-                <div className="space-y-2">
-                  <Button className="w-full justify-start  border-0" asChild>
-                    <Link to="/sellart">
-                      <ImageIcon className="h-4 w-4 mr-2" />
-                      Sell Artwork
-                    </Link>
-                  </Button>
-                  <Button
-                    className="w-full justify-start bg-[#053352] text-white hover:bg-[#042a47] border-0"
-                    asChild
+              <div className="bg-white rounded-md p-6 border border-gray-100">
+                <div className="space-y-3">
+                  <Link
+                    to="/sellart"
+                    className="flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 hover:underline transition-colors group"
                   >
-                    <Link to="/profile/my-artworks">
-                      <Palette className="h-4 w-4 mr-2" />
-                      My Artworks
-                    </Link>
-                  </Button>
+                    <ImageIcon className="h-4 w-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                    <span>Sell Artwork</span>
+                  </Link>
+                  <Link
+                    to="/profile/my-artworks"
+                    className="flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 hover:underline transition-colors group"
+                  >
+                    <Palette className="h-4 w-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                    <span>My Artworks</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Account Information */}
+              <div className="bg-white rounded-md p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">
+                    Information and Contacts
+                  </h2>
+                  {!isViewingOtherProfile && (
+                    <button
+                      onClick={() => navigate("/profile/edit")}
+                      className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      <Edit className="h-4 w-4 text-gray-500" />
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {/* Email */}
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <div>
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {profile.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  {(profile as any)?.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Location</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {(profile as any).location}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Website */}
+                  {(profile as any)?.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Website</p>
+                        <a
+                          href={(profile as any).website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-gray-900 hover:text-red-600 transition-colors"
+                        >
+                          {(profile as any).website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Member Since */}
+                  {profile.createdAt && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Member Since</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(profile.createdAt).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Artworks */}
+                  {"artworkCount" in profile &&
+                    profile.artworkCount !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <Palette className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-xs text-gray-500">Artworks</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {profile.artworkCount}{" "}
+                            {profile.artworkCount === 1 ? "artwork" : "artworks"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
 
               {/* Account Stats */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Account Stats
-                </h2>
-                <div className="space-y-4">
-                  {"score" in profile && profile.score !== undefined && (
-                    <div>
-                      <p className="text-sm text-gray-500">Score</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {profile.score || 0}
-                      </p>
-                    </div>
-                  )}
+              <div className="bg-white rounded-md p-6 border border-gray-100">
+                <div className="flex flex-wrap gap-3">
                   {"artworkCount" in profile &&
                     profile.artworkCount !== undefined && (
-                      <div>
-                        <p className="text-sm text-gray-500">Artworks</p>
-                        <p className="text-2xl font-bold text-gray-900">
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
+                        <Palette className="h-3.5 w-3.5 text-gray-500" />
+                        <span className="text-xs text-gray-500">Artworks</span>
+                        <span className="text-sm font-semibold text-gray-900">
                           {profile.artworkCount}
-                        </p>
-                      </div>
-                    )}
-                  {"reviewCount" in profile &&
-                    (profile as any).reviewCount !== undefined && (
-                      <div>
-                        <p className="text-sm text-gray-500">Reviews</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {(profile as any).reviewCount}
-                        </p>
+                        </span>
                       </div>
                     )}
                   {"collectionCount" in profile &&
                     (profile as any).collectionCount !== undefined && (
-                      <div>
-                        <p className="text-sm text-gray-500">Collections</p>
-                        <p className="text-2xl font-bold text-gray-900">
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
+                        <FolderOpen className="h-3.5 w-3.5 text-gray-500" />
+                        <span className="text-xs text-gray-500">Collections</span>
+                        <span className="text-sm font-semibold text-gray-900">
                           {(profile as any).collectionCount}
-                        </p>
+                        </span>
                       </div>
                     )}
                   {((profile as any).followerCount !== undefined ||
                     (profile as any).followingCount !== undefined) && (
                     <>
-                      <div>
-                        <Link
-                          to={`/profile/${profile.id}/followers`}
-                          className="block hover:text-red-600 transition-colors"
-                        >
-                          <p className="text-sm text-gray-500">Followers</p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {(profile as any).followerCount || 0}
-                          </p>
-                        </Link>
-                      </div>
-                      <div>
-                        <Link
-                          to={`/profile/${profile.id}/following`}
-                          className="block hover:text-red-600 transition-colors"
-                        >
-                          <p className="text-sm text-gray-500">Following</p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {(profile as any).followingCount || 0}
-                          </p>
-                        </Link>
-                      </div>
+                      <Link
+                        to={`/profile/${profile.id}/followers`}
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
+                      >
+                        <Users className="h-3.5 w-3.5 text-gray-500 group-hover:text-red-600 transition-colors" />
+                        <span className="text-xs text-gray-500">Followers</span>
+                        <span className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                          {(profile as any).followerCount || 0}
+                        </span>
+                      </Link>
+                      <Link
+                        to={`/profile/${profile.id}/following`}
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
+                      >
+                        <Users className="h-3.5 w-3.5 text-gray-500 group-hover:text-red-600 transition-colors" />
+                        <span className="text-xs text-gray-500">Following</span>
+                        <span className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                          {(profile as any).followingCount || 0}
+                        </span>
+                      </Link>
                     </>
+                  )}
+                  {"reviewCount" in profile &&
+                    (profile as any).reviewCount !== undefined && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
+                        <Award className="h-3.5 w-3.5 text-gray-500" />
+                        <span className="text-xs text-gray-500">Reviews</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {(profile as any).reviewCount}
+                        </span>
+                      </div>
+                    )}
+                  {"score" in profile && profile.score !== undefined && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
+                      <BarChart3 className="h-3.5 w-3.5 text-gray-500" />
+                      <span className="text-xs text-gray-500">Score</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {profile.score || 0}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1118,8 +1364,8 @@ export default function ProfilePage() {
               {((profile as any)?.timezone ||
                 (profile as any)?.languagePreference ||
                 (profile as any)?.emailSubscription !== undefined) && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                <div className="bg-white rounded-md p-6 border border-gray-100">
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Preferences
                   </h2>
                   <div className="space-y-3">

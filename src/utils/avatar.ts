@@ -13,10 +13,16 @@ export function getPlaceholderAvatar(name: string = "User", size: number = 200):
     .toUpperCase()
     .slice(0, 2) || "U";
 
-  // Use UI Avatars service - simple and reliable
-  // Format: https://ui-avatars.com/api/?name=John+Doe&size=200&background=random
+  // Use UI Avatars service with a stable background color based on name
+  // This prevents flickering from random background changes
   const encodedName = encodeURIComponent(name);
-  return `https://ui-avatars.com/api/?name=${encodedName}&size=${size}&background=random&color=fff&bold=true&format=png`;
+  // Generate a consistent color based on the name hash
+  const hash = name.split('').reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
+  const color = Math.abs(hash % 360); // Use hue value for consistent color
+  
+  return `https://ui-avatars.com/api/?name=${encodedName}&size=${size}&background=${color}&color=fff&bold=true&format=png`;
 }
 
 /**

@@ -31,28 +31,26 @@ export function ArtworkGrid({ artworks, isLoading, onImageClick }: ArtworkGridPr
 
   return (
     <div>
-      <div className="mt-12 columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3 xl:columns-4">
+      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {artworks.map((artwork) => (
-          <div key={artwork.id} className="break-inside-avoid">
-            <ArtworkCard
-              isMasonry
-              id={artwork.id}
-              image={artwork.photos?.[0] || "/placeholder.svg"}
-              title={artwork.title || "Untitled"}
-              artist={artwork.artist}
-              price={`US$${artwork.desiredPrice?.toLocaleString() || "0"}`}
-              year={artwork.yearOfArtwork}
-              medium={artwork.technique}
-              dimensions={
-                artwork.dimensions
-                  ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
-                  : "N/A"
-              }
-              seller={artwork.user?.name || "Unknown"}
-              status={artwork.status}
-              onImageClick={onImageClick}
-            />
-          </div>
+          <ArtworkCard
+            key={artwork.id}
+            id={artwork.id}
+            image={artwork.photos?.[0] || "/placeholder.svg"}
+            title={artwork.title || "Untitled"}
+            artist={artwork.artist}
+            price={`US$${artwork.desiredPrice?.toLocaleString() || "0"}`}
+            year={artwork.yearOfArtwork}
+            medium={artwork.technique}
+            dimensions={
+              artwork.dimensions
+                ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+                : "N/A"
+            }
+            seller={artwork.user?.name || "Unknown"}
+            status={artwork.status}
+            onImageClick={onImageClick}
+          />
         ))}
       </div>
     </div>
