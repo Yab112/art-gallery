@@ -45,7 +45,7 @@ export default function SettingsPage() {
   const { data: profileData, isLoading, error } = useMyProfile();
   const { updateProfile, isUpdating } = useUpdateProfile();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "security" | "earnings" | "withdrawals" | "billing-payments" | "transactions"
+    "profile" | "security" | "earnings" | "withdrawals" | "billing-payments" | "payment-method" | "transactions"
   >("profile");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
