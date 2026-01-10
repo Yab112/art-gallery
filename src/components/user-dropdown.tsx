@@ -29,6 +29,17 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [authView, setAuthView] = useState<"signin" | "signup">("signin");
 
+  // Debug: Log user data to see what we're getting
+  if (user) {
+    console.log("UserDropdown - User data:", {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      hasImage: !!user.image,
+    });
+  }
+
   const handleAuthSwitch = (view: "signin" | "signup") => {
     setAuthView(view);
   };
@@ -83,7 +94,19 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
         disabled={isLoading}
       >
         {isLoading ? (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+          <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+        ) : isLoggedIn && user?.image && user.image.trim() !== "" ? (
+          <img
+            src={user.image}
+            alt={user.name || "User"}
+            className="h-8 w-8 rounded-full object-cover border-2 border-gray-200"
+          />
+        ) : isLoggedIn && user ? (
+          <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-sm font-semibold text-red-700">
+              {(user.name || user.email || "U")[0].toUpperCase()}
+            </span>
+          </div>
         ) : (
           <User className="h-5 w-5 cursor-pointer text-gray-600" />
         )}

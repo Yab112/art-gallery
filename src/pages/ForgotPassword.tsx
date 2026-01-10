@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft } from "lucide-react";
-import { authClient } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/components/auth/auth-layout";
 
@@ -37,21 +36,42 @@ export default function ForgotPasswordPage() {
     setSuccess(null);
 
     try {
-      // Use Better Auth requestPasswordReset
-      const result = await authClient.requestPasswordReset({
-        email: data.email,
-        redirectTo: `${window.location.origin}/reset-password`,
+      const backendUrl = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3099";
+      
+      // Better Auth endpoint: POST /api/auth/forget-password
+      const response = await fetch(`${backendUrl}/api/auth/forget-password`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          redirectTo: `${window.location.origin}/reset-password`,
+        }),
       });
 
-      if (result.error) {
-        setError(result.error.message || "Failed to send reset email. Please try again.");
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result.error) {
+        setError(
+          result.error?.message || 
+          result.message || 
+          "Failed to send reset email. Please try again."
+        );
         return;
       }
 
       // Success - show success message
       setSuccess("Password reset email sent! Please check your inbox.");
     } catch (err: any) {
-      setError(err?.message || "An error occurred. Please try again.");
+      console.error("Password reset request error:", err);
+      // Handle network errors specifically
+      if (err.message?.includes("Failed to fetch") || err.message?.includes("ERR_CONNECTION_REFUSED")) {
+        setError("Cannot connect to server. Please make sure the backend is running on localhost:3099");
+      } else {
+        setError(err?.message || "An error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
