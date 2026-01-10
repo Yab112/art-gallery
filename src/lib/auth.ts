@@ -3,6 +3,10 @@ import { createAuthClient } from "better-auth/react";
 // Better Auth client configuration
 // Note: baseURL should be the server origin only, not including /api/auth
 // Better Auth client automatically appends /api/auth to the baseURL
+const betterAuthBaseURL =
+  import.meta.env.VITE_BETTER_AUTH_URL || "http://13.48.147.113:3099";
+console.log("🔐 Frontend Better Auth baseURL:", betterAuthBaseURL);
+
 export const authClient = createAuthClient({
   baseURL: import.meta.env.VITE_BETTER_AUTH_URL || '',
   // Enable credentials for cookies (required for cross-origin requests)
@@ -36,7 +40,6 @@ export const signInWithGoogle = async () => {
     throw error;
   }
 };
-
 
 // Export types
 export type Session = typeof authClient.$Infer.Session;
