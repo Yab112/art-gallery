@@ -182,6 +182,21 @@ export default function ArtistsPage() {
     setSearchParams(newParams, { replace: true });
   };
 
+  // Fetch talent types to filter by talent type slug
+  const { data: talentTypes = [] } = useGetTalentTypes();
+
+  // If talentTypeSlug is in URL, find the corresponding talentTypeId
+  useEffect(() => {
+    if (talentTypeSlug && talentTypes.length > 0 && !selectedTalentType) {
+      const talentType = talentTypes.find((tt) => tt.slug === talentTypeSlug);
+      if (talentType) {
+        setSelectedTalentType(talentType.id);
+        updateSearchParams({ talentTypeId: talentType.id, talentType: null });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [talentTypeSlug, talentTypes]);
+
   // Update URL params when search term changes (after debounce)
   useEffect(() => {
     const currentSearch = searchParams.get("search") || "";
@@ -204,6 +219,10 @@ export default function ArtistsPage() {
     const currentTalentType = searchParams.get("talentTypeId") || "";
     if (currentTalentType !== selectedTalentType) {
       updateSearchParams({ talentTypeId: selectedTalentType || null });
+      // If talentTypeSlug is set, clear it when talentTypeId changes
+      if (selectedTalentType && talentTypeSlug) {
+        updateSearchParams({ talentType: null });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTalentType]);
@@ -234,16 +253,20 @@ export default function ArtistsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, selectedCountry, selectedTalentType, emailSearch, page]);
 
-  // Fetch talent types to filter by talent type slug
-  const { data: talentTypes = [] } = useGetTalentTypes();
-
-  // Fetch artists data from backend - use debounced search term and pagination
+  // Fetch artists data from backend - use debounced search term and all filters
   const {
     data: allArtistsData,
     isLoading: isLoadingAll,
     isFetching: isFetchingAll,
     error: allArtistsError,
-  } = useGetAllArtists(page, limit, debouncedSearchTerm || undefined);
+  } = useGetAllArtists(
+    page,
+    limit,
+    debouncedSearchTerm || undefined,
+    selectedCountry || undefined,
+    selectedTalentType || undefined,
+    emailSearch || undefined
+  );
   const { data: topSellingData, isLoading: isLoadingTopSelling } =
     useGetTopSellingArtists(10);
   const { data: mostViewedData, isLoading: isLoadingMostViewed } =
@@ -359,18 +382,15 @@ export default function ArtistsPage() {
     return mostViewedData.artists.map(transformArtist);
   }, [mostViewedData]);
 
-  // Filter artists based on selected filters
-  // Note: Search is now handled by backend via debouncedSearchTerm
-  // This local filter is for client-side filters (country, tags, talent type)
+  // All filtering is now handled by the backend API
+  // Only handle talentTypeSlug from URL params if it's different from selectedTalentType
   const filteredArtists = useMemo(() => {
-    let filtered = allArtists;
-
-    // Filter by talent type if provided in query params
-    if (talentTypeSlug && talentTypes.length > 0) {
+    // If talentTypeSlug is in URL but different from selectedTalentType, filter client-side
+    if (talentTypeSlug && talentTypes.length > 0 && !selectedTalentType) {
       const talentType = talentTypes.find((tt) => tt.slug === talentTypeSlug);
       if (talentType && allArtistsData?.artists) {
         // Filter artists that have this talent type
-        filtered = allArtistsData.artists
+        return allArtistsData.artists
           .filter((artist: any) => {
             return artist.talentTypes?.some(
               (tt: any) => tt.talentType?.id === talentType.id
@@ -380,37 +400,13 @@ export default function ArtistsPage() {
       }
     }
 
-    // Apply other filters
-    return filtered.filter((artist) => {
-      const countryMatch =
-        selectedCountry === "" || artist.country === selectedCountry;
-
-      // Filter by talent type
-      const talentTypeMatch =
-        selectedTalentType === "" ||
-        (artist.talentTypes &&
-          artist.talentTypes.length > 0 &&
-          artist.talentTypes.some((tt: any) => {
-            // Handle both formats: direct talentType object or nested talentType
-            const ttId = tt.id || tt.talentType?.id;
-            return ttId === selectedTalentType;
-          }));
-
-      // Filter by email search
-      const emailMatch =
-        emailSearch === "" ||
-        (artist.email &&
-          artist.email.toLowerCase().includes(emailSearch.toLowerCase()));
-
-      return countryMatch && talentTypeMatch && emailMatch;
-    });
+    // Otherwise, backend has already filtered everything
+    return allArtists;
   }, [
     allArtists,
-    selectedCountry,
-    selectedTalentType,
-    emailSearch,
     talentTypeSlug,
     talentTypes,
+    selectedTalentType,
     allArtistsData,
   ]);
 
@@ -513,46 +509,37 @@ export default function ArtistsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Filters Section - Always visible and sticky */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8 p-6 sticky top-4 z-50">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Filters Section - Minimal Design */}
+        <div className="mb-6 pb-4 border-b border-gray-200 sticky top-4 z-50">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Search Artists */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Search Artists
-              </label>
+            <div className="flex-1 min-w-[150px]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                 <Input
-                  placeholder="Search by name, email, location..."
+                  placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 h-9 text-sm border border-gray-200 rounded shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-300"
                 />
               </div>
             </div>
 
             {/* Search by Email */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Search by Email
-              </label>
+            <div className="flex-1 min-w-[150px]">
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                 <Input
-                  placeholder="Search by email..."
+                  placeholder="Email..."
                   value={emailSearch}
                   onChange={(e) => setEmailSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 h-9 text-sm border border-gray-200 rounded shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-300"
                 />
               </div>
             </div>
 
             {/* Talent Type Filter */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Talent Type
-              </label>
+            <div className="min-w-[140px]">
               <Select
                 value={selectedTalentType || "all"}
                 onValueChange={(value) =>
@@ -560,8 +547,8 @@ export default function ArtistsPage() {
                 }
                 {...({ modal: false } as any)}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Talent Types" />
+                <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded shadow-none focus:ring-0 focus:ring-offset-0 focus:border-gray-300">
+                  <SelectValue placeholder="Talent Type" />
                 </SelectTrigger>
                 <SelectContent
                   className="z-[200] max-h-[300px]"
@@ -579,10 +566,7 @@ export default function ArtistsPage() {
             </div>
 
             {/* Country Filter */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Country
-              </label>
+            <div className="min-w-[140px]">
               <Select
                 value={selectedCountry || "all"}
                 onValueChange={(value) =>
@@ -590,8 +574,8 @@ export default function ArtistsPage() {
                 }
                 {...({ modal: false } as any)}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Countries" />
+                <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded shadow-none focus:ring-0 focus:ring-offset-0 focus:border-gray-300">
+                  <SelectValue placeholder="Country" />
                 </SelectTrigger>
                 <SelectContent
                   className="z-[200] max-h-[300px]"

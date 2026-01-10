@@ -7,19 +7,21 @@ import { Label } from "@/components/ui/label";
 import {
   Settings as SettingsIcon,
   User,
-  Bell,
   Shield,
   Save,
   DollarSign,
   Wallet,
   CreditCard,
   Receipt,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useUpdateProfile } from "@/services/users/useUpdateProfile";
 import { toast } from "sonner";
+import { changePassword } from "@/lib/auth";
 import { EarningsDashboard } from "@/components/settings/EarningsDashboard";
 import { WithdrawalSection } from "@/components/settings/WithdrawalSection";
 import { PaymentMethodSection } from "@/components/settings/PaymentMethodSection";
@@ -32,13 +34,24 @@ interface SettingsFormData {
   email: string;
 }
 
+interface ChangePasswordFormData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export default function SettingsPage() {
   const { user: sessionUser } = useAuth();
   const { data: profileData, isLoading, error } = useMyProfile();
   const { updateProfile, isUpdating } = useUpdateProfile();
   const [activeTab, setActiveTab] = useState<
-    "profile" | "notifications" | "security" | "earnings" | "withdrawals" | "billing-payments" | "transactions"
+    "profile" | "security" | "earnings" | "withdrawals" | "billing-payments" | "transactions"
   >("profile");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const profile = profileData?.profile || sessionUser;
 
@@ -55,6 +68,24 @@ export default function SettingsPage() {
     formState: { errors },
     reset,
   } = form;
+
+  const passwordForm = useForm<ChangePasswordFormData>({
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    reset: resetPassword,
+    watch,
+  } = passwordForm;
+
+  const newPassword = watch("newPassword");
 
   // Update form when profile data loads
   useEffect(() => {
@@ -74,6 +105,66 @@ export default function SettingsPage() {
       toast.error(
         "Failed to update profile: " + (error?.message || "An error occurred")
       );
+    }
+  };
+
+  const onPasswordSubmit = async (data: ChangePasswordFormData) => {
+    // Clear any previous errors
+    setPasswordError(null);
+    
+    if (data.newPassword !== data.confirmPassword) {
+      const errorMsg = "New passwords do not match";
+      setPasswordError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+
+    if (data.currentPassword === data.newPassword) {
+      const errorMsg = "New password must be different from current password";
+      setPasswordError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        revokeOtherSessions: true,
+      }, {
+        onSuccess: () => {
+          toast.success("Password changed successfully");
+          resetPassword();
+          setPasswordError(null);
+          setIsChangingPassword(false);
+        },
+        onError: (ctx) => {
+          // Better Auth returns error in ctx.error
+          const error = ctx.error;
+          let errorMessage = "Failed to change password. Please try again.";
+          
+          if (error) {
+            // Check for specific error codes
+            if (error.code === "INVALID_PASSWORD") {
+              errorMessage = "The current password you entered is incorrect. If you signed up with Google, you don't have a password yet. Use 'Forgot Password' to set one first.";
+            } else if (error.message) {
+              errorMessage = error.message;
+            } else if (error.code) {
+              errorMessage = `Error: ${error.code}`;
+            }
+          }
+          
+          setPasswordError(errorMessage);
+          toast.error(errorMessage);
+          setIsChangingPassword(false);
+        },
+      });
+    } catch (error: any) {
+      const errorMsg = error?.message || "Failed to change password";
+      setPasswordError(errorMsg);
+      toast.error(errorMsg);
+      setIsChangingPassword(false);
     }
   };
 
@@ -148,17 +239,6 @@ export default function SettingsPage() {
                   >
                     <User className="h-5 w-5" />
                     Profile
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("notifications")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "notifications"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Bell className="h-5 w-5" />
-                    Notifications
                   </button>
                   <button
                     onClick={() => setActiveTab("security")}
@@ -298,22 +378,6 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Notifications Settings */}
-              {activeTab === "notifications" && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                    Notification Settings
-                  </h2>
-                  <div className="space-y-4">
-                    <p className="text-gray-600">
-                      Notification settings will be available soon. We're
-                      working on implementing email and push notification
-                      preferences.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Security Settings */}
               {activeTab === "security" && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -322,30 +386,140 @@ export default function SettingsPage() {
                   </h2>
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
-                          <h3 className="font-medium text-gray-900">
-                            Password
+                      <div className="p-4 border border-gray-200 rounded-lg">
+                        <div className="mb-4">
+                          <h3 className="font-medium text-gray-900 mb-1">
+                            Change Password
                           </h3>
                           <p className="text-sm text-gray-500">
-                            Change your account password
+                            Update your account password to keep your account secure
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Note: If you signed up with Google, you'll need to use "Forgot Password" first to set a password.
                           </p>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Change Password
-                        </Button>
-                      </div>
+                        {passwordError && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-700 font-medium">
+                              {passwordError}
+                            </p>
+                          </div>
+                        )}
+                        <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="currentPassword">Current Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="currentPassword"
+                                type={showCurrentPassword ? "text" : "password"}
+                                {...registerPassword("currentPassword", {
+                                  required: "Current password is required",
+                                })}
+                                placeholder="Enter your current password"
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                              >
+                                {showCurrentPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                            {passwordErrors.currentPassword && (
+                              <p className="text-sm text-red-500">
+                                {passwordErrors.currentPassword.message}
+                              </p>
+                            )}
+                          </div>
 
-                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
-                          <h3 className="font-medium text-gray-900">
-                            Two-Factor Authentication
-                          </h3>
-                          <p className="text-sm text-gray-500">Disabled</p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          Enable 2FA
-                        </Button>
+                          <div className="space-y-2">
+                            <Label htmlFor="newPassword">New Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="newPassword"
+                                type={showNewPassword ? "text" : "password"}
+                                {...registerPassword("newPassword", {
+                                  required: "New password is required",
+                                  minLength: {
+                                    value: 8,
+                                    message: "Password must be at least 8 characters",
+                                  },
+                                  maxLength: {
+                                    value: 128,
+                                    message: "Password must be less than 128 characters",
+                                  },
+                                })}
+                                placeholder="Enter your new password"
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                              >
+                                {showNewPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                            {passwordErrors.newPassword && (
+                              <p className="text-sm text-red-500">
+                                {passwordErrors.newPassword.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="confirmPassword"
+                                type={showConfirmPassword ? "text" : "password"}
+                                {...registerPassword("confirmPassword", {
+                                  required: "Please confirm your new password",
+                                  validate: (value) =>
+                                    value === newPassword || "Passwords do not match",
+                                })}
+                                placeholder="Confirm your new password"
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                              >
+                                {showConfirmPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                            {passwordErrors.confirmPassword && (
+                              <p className="text-sm text-red-500">
+                                {passwordErrors.confirmPassword.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex justify-end pt-2">
+                            <Button
+                              type="submit"
+                              disabled={isChangingPassword}
+                              className="flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white"
+                            >
+                              <Save className="h-4 w-4" />
+                              {isChangingPassword ? "Changing..." : "Change Password"}
+                            </Button>
+                          </div>
+                        </form>
                       </div>
                     </div>
                   </div>

@@ -63,10 +63,97 @@ export default function EditProfilePage() {
     formState: { errors },
     reset,
     setValue,
+    getValues,
   } = form;
 
   // Watch bio field for character count
   const bioValue = form.watch("bio") || "";
+
+  // Handle browser autofill - browsers don't trigger onChange for autofill
+  // This effect uses multiple strategies to detect and sync autofilled values
+  useEffect(() => {
+    const fieldsToWatch: Array<keyof ProfileFormData> = ['name', 'location', 'website', 'phone', 'bio'];
+    
+    const syncAllAutofilledValues = () => {
+      fieldsToWatch.forEach((fieldName) => {
+        const input = document.getElementById(fieldName) as HTMLInputElement | HTMLTextAreaElement | null;
+        if (input) {
+          const currentFormValue = getValues(fieldName) || '';
+          const inputValue = input.value || '';
+          
+          // Only update if values differ (avoid infinite loops)
+          if (inputValue !== currentFormValue && inputValue.trim() !== '') {
+            setValue(fieldName, inputValue, { shouldValidate: true, shouldDirty: true });
+          }
+        }
+      });
+    };
+
+    // Strategy 1: Poll periodically to catch autofill
+    const pollInterval = setInterval(() => {
+      syncAllAutofilledValues();
+    }, 300); // Check every 300ms
+
+    // Strategy 2: Check on focus/blur
+    const handleFocus = () => {
+      setTimeout(syncAllAutofilledValues, 150);
+    };
+
+    const handleBlur = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      const fieldName = target.id as keyof ProfileFormData;
+      if (fieldName && fieldsToWatch.includes(fieldName)) {
+        syncAllAutofilledValues();
+      }
+    };
+
+    // Strategy 3: Use MutationObserver to detect DOM changes (autofill can trigger these)
+    const observer = new MutationObserver(() => {
+      syncAllAutofilledValues();
+    });
+
+    // Strategy 4: Listen for animation events (some browsers use these for autofill)
+    const handleAnimationStart = (e: AnimationEvent) => {
+      // Browsers often use animation events to detect autofill
+      if (e.animationName === 'onAutoFillStart' || e.animationName === 'onAutoFillCancel') {
+        setTimeout(syncAllAutofilledValues, 100);
+      }
+    };
+
+    // Strategy 5: Check on window focus (user might autofill when tab is focused)
+    const handleWindowFocus = () => {
+      setTimeout(syncAllAutofilledValues, 200);
+    };
+
+    // Attach all listeners
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('focusin', handleFocus);
+      form.addEventListener('focusout', handleBlur);
+      form.addEventListener('animationstart', handleAnimationStart as EventListener);
+      
+      // Observe the form for changes
+      observer.observe(form, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['value', 'style'],
+      });
+    }
+
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      clearInterval(pollInterval);
+      if (form) {
+        form.removeEventListener('focusin', handleFocus);
+        form.removeEventListener('focusout', handleBlur);
+        form.removeEventListener('animationstart', handleAnimationStart as EventListener);
+      }
+      observer.disconnect();
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [setValue, getValues]);
 
   // Update form when profile data loads
   useEffect(() => {
@@ -92,8 +179,52 @@ export default function EditProfilePage() {
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      let avatarUrl = data.avatar;
-      let coverImageUrl = data.coverImage;
+      // CRITICAL: Read values directly from DOM inputs to catch autofill
+      // This is the most reliable way to get autofilled values
+      const nameInput = document.getElementById("name") as HTMLInputElement | null;
+      const locationInput = document.getElementById("location") as HTMLInputElement | null;
+      const websiteInput = document.getElementById("website") as HTMLInputElement | null;
+      const phoneInput = document.getElementById("phone") as HTMLInputElement | null;
+      const bioTextarea = document.getElementById("bio") as HTMLTextAreaElement | null;
+
+      // Get actual DOM values (these will include autofilled values)
+      const actualName = nameInput?.value || data.name;
+      const actualLocation = locationInput?.value || data.location || '';
+      const actualWebsite = websiteInput?.value || data.website || '';
+      const actualPhone = phoneInput?.value || data.phone || '';
+      const actualBio = bioTextarea?.value || data.bio || '';
+
+      // Sync to form state for validation
+      if (nameInput && nameInput.value !== getValues("name")) {
+        setValue("name", actualName, { shouldValidate: true, shouldDirty: true });
+      }
+      if (locationInput && locationInput.value !== getValues("location")) {
+        setValue("location", actualLocation, { shouldValidate: true, shouldDirty: true });
+      }
+      if (websiteInput && websiteInput.value !== getValues("website")) {
+        setValue("website", actualWebsite, { shouldValidate: true, shouldDirty: true });
+      }
+      if (phoneInput && phoneInput.value !== getValues("phone")) {
+        setValue("phone", actualPhone, { shouldValidate: true, shouldDirty: true });
+      }
+      if (bioTextarea && bioTextarea.value !== getValues("bio")) {
+        setValue("bio", actualBio, { shouldValidate: true, shouldDirty: true });
+      }
+
+      // Use actual DOM values instead of form state
+      const latestData = {
+        name: actualName,
+        location: actualLocation,
+        website: actualWebsite,
+        phone: actualPhone,
+        bio: actualBio,
+        avatar: data.avatar,
+        coverImage: data.coverImage,
+        email: data.email,
+      };
+
+      let avatarUrl = latestData.avatar || data.avatar;
+      let coverImageUrl = latestData.coverImage || data.coverImage;
 
       // Upload avatar if selected
       if (avatarFile) {
@@ -151,14 +282,14 @@ export default function EditProfilePage() {
         }
       }
 
-      // Update profile with all data
+      // Update profile with all data (use actual DOM values to include autofilled values)
       await updateProfile({
-        name: data.name,
+        name: latestData.name,
         avatar: avatarUrl,
-        bio: data.bio || undefined, // Convert empty string to undefined
-        location: data.location || undefined,
-        website: data.website || undefined,
-        phone: data.phone || undefined,
+        bio: latestData.bio || undefined, // Convert empty string to undefined
+        location: latestData.location || undefined,
+        website: latestData.website || undefined,
+        phone: latestData.phone || undefined,
         coverImage: coverImageUrl,
       });
       navigate("/profile");
@@ -203,6 +334,18 @@ export default function EditProfilePage() {
 
   return (
     <ProtectedRoute>
+      {/* CSS to detect autofill and trigger animation */}
+      <style>{`
+        @keyframes onAutoFillStart {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        input:-webkit-autofill,
+        textarea:-webkit-autofill {
+          animation-name: onAutoFillStart;
+          animation-duration: 0.001s;
+        }
+      `}</style>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Header */}
@@ -368,9 +511,20 @@ export default function EditProfilePage() {
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
                   id="name"
-                  {...register("name")}
+                  {...register("name", {
+                    onChange: (e) => {
+                      setValue("name", e.target.value, { shouldValidate: true, shouldDirty: true });
+                    },
+                  })}
+                  onInput={(e) => {
+                    const value = (e.target as HTMLInputElement).value;
+                    if (value !== getValues("name")) {
+                      setValue("name", value, { shouldValidate: true, shouldDirty: true });
+                    }
+                  }}
                   placeholder="Your full name"
                   maxLength={100}
+                  autoComplete="name"
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -407,7 +561,17 @@ export default function EditProfilePage() {
                 </div>
                 <Textarea
                   id="bio"
-                  {...register("bio")}
+                  {...register("bio", {
+                    onChange: (e) => {
+                      setValue("bio", e.target.value, { shouldValidate: true, shouldDirty: true });
+                    },
+                  })}
+                  onInput={(e) => {
+                    const value = (e.target as HTMLTextAreaElement).value;
+                    if (value !== getValues("bio")) {
+                      setValue("bio", value, { shouldValidate: true, shouldDirty: true });
+                    }
+                  }}
                   placeholder="Tell us about yourself..."
                   rows={4}
                   maxLength={500}
@@ -421,9 +585,14 @@ export default function EditProfilePage() {
                 <Label htmlFor="location">Location</Label>
                 <Input
                   id="location"
-                  {...register("location")}
+                  {...register("location", {
+                    onChange: (e) => {
+                      setValue("location", e.target.value, { shouldValidate: true, shouldDirty: true });
+                    },
+                  })}
                   placeholder="City, Country"
                   maxLength={100}
+                  autoComplete="address-level2"
                 />
                 {errors.location && (
                   <p className="text-sm text-red-500">
@@ -453,8 +622,19 @@ export default function EditProfilePage() {
                 <Input
                   id="phone"
                   type="tel"
-                  {...register("phone")}
+                  {...register("phone", {
+                    onChange: (e) => {
+                      setValue("phone", e.target.value, { shouldValidate: true, shouldDirty: true });
+                    },
+                  })}
+                  onInput={(e) => {
+                    const value = (e.target as HTMLInputElement).value;
+                    if (value !== getValues("phone")) {
+                      setValue("phone", value, { shouldValidate: true, shouldDirty: true });
+                    }
+                  }}
                   placeholder="+1 (555) 123-4567"
+                  autoComplete="tel"
                 />
                 {errors.phone && (
                   <p className="text-sm text-red-500">{errors.phone.message}</p>

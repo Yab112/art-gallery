@@ -35,11 +35,10 @@ export default function VerifyEmailPage() {
 
     try {
       // Better-auth verify-email endpoint expects GET request with token as query parameter
-      const backendUrl = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3099";
-      
+      // Use relative URL to go through Vite proxy (configured in vite.config.ts)
       // Better-auth verification endpoint format: GET /api/auth/verify-email?token=xxx
       const response = await fetch(
-        `${backendUrl}/api/auth/verify-email?token=${encodeURIComponent(verificationToken)}`,
+        `/api/auth/verify-email?token=${encodeURIComponent(verificationToken)}`,
         {
           method: "GET",
           credentials: "include",

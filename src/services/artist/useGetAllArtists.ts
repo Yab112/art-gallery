@@ -34,12 +34,15 @@ interface GetAllArtistsResponse {
 export const useGetAllArtists = (
   page: number = 1,
   limit: number = 50,
-  search?: string
+  search?: string,
+  country?: string,
+  talentTypeId?: string,
+  email?: string
 ) => {
   const axiosAuth = useAxiosAuth();
 
   return useQuery<GetAllArtistsResponse>({
-    queryKey: ["all-artists", page, limit, search],
+    queryKey: ["all-artists", page, limit, search, country, talentTypeId, email],
     queryFn: async () => {
       try {
         const params = new URLSearchParams({
@@ -48,6 +51,15 @@ export const useGetAllArtists = (
         });
         if (search) {
           params.append("search", search);
+        }
+        if (country) {
+          params.append("country", country);
+        }
+        if (talentTypeId) {
+          params.append("talentTypeId", talentTypeId);
+        }
+        if (email) {
+          params.append("email", email);
         }
         const url = `artist/all?${params.toString()}`;
         const response = await axiosAuth.get<GetAllArtistsResponse>(url);

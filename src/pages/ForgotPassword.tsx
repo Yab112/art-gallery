@@ -36,10 +36,9 @@ export default function ForgotPasswordPage() {
     setSuccess(null);
 
     try {
-      const backendUrl = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3099";
-      
-      // Better Auth endpoint: POST /api/auth/forget-password
-      const response = await fetch(`${backendUrl}/api/auth/forget-password`, {
+      // Use relative URL to go through Vite proxy (configured in vite.config.ts)
+      // Better Auth endpoint: POST /api/auth/request-password-reset
+      const response = await fetch(`/api/auth/request-password-reset`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -51,9 +50,29 @@ export default function ForgotPasswordPage() {
         }),
       });
 
-      const result = await response.json().catch(() => ({}));
+      // Better Auth returns 200 on success, even if user doesn't exist (security)
+      // Check response status first
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        setError(
+          errorData.error?.message || 
+          errorData.message || 
+          `Failed to send reset email. Status: ${response.status}`
+        );
+        return;
+      }
 
-      if (!response.ok || result.error) {
+      // Parse response - Better Auth may return different formats
+      const result = await response.json().catch(() => {
+        // If response is not JSON, still consider it success if status is 200
+        if (response.ok) {
+          return { success: true };
+        }
+        return {};
+      });
+
+      // Check for error in response body
+      if (result.error) {
         setError(
           result.error?.message || 
           result.message || 
@@ -62,13 +81,14 @@ export default function ForgotPasswordPage() {
         return;
       }
 
-      // Success - show success message
-      setSuccess("Password reset email sent! Please check your inbox.");
+      // Success - Better Auth returns success even if email doesn't exist (for security)
+      // Always show success message to prevent email enumeration
+      setSuccess("If an account with that email exists, a password reset link has been sent. Please check your inbox.");
     } catch (err: any) {
       console.error("Password reset request error:", err);
       // Handle network errors specifically
       if (err.message?.includes("Failed to fetch") || err.message?.includes("ERR_CONNECTION_REFUSED")) {
-        setError("Cannot connect to server. Please make sure the backend is running on localhost:3099");
+        setError("Cannot connect to server. Please check your connection and try again.");
       } else {
         setError(err?.message || "An error occurred. Please try again.");
       }

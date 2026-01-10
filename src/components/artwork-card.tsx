@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Heart, Search } from "lucide-react";
-import { useState } from "react";
+import { Heart } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAddFavorite } from "@/services/favorites/useAddFavorite";
 import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite";
@@ -20,7 +20,6 @@ interface ArtworkCardProps {
   seller: string;
   status?: string;
   onFavorite?: (id: string) => void;
-  onSearch?: (id: string) => void;
   isMasonry?: boolean;
   onImageClick?: (src: string) => void;
   artworks?: any[];
@@ -62,22 +61,41 @@ export function ArtworkCard({
 
   // Check if artwork is favorited
   const { data: favoriteCheck } = useCheckFavorite(id);
-  const isFavorited = favoriteCheck?.isFavorite || false;
+  const serverIsFavorited = favoriteCheck?.isFavorite || false;
+  
+  // Local state for optimistic updates - updates immediately before server response
+  const [localIsFavorited, setLocalIsFavorited] = useState(serverIsFavorited);
+  
+  // Sync local state with server state when it changes
+  useEffect(() => {
+    setLocalIsFavorited(serverIsFavorited);
+  }, [serverIsFavorited]);
 
-  // Mutations
+  // Use local state for immediate UI feedback, fallback to server state
+  const isFavorited = localIsFavorited;
+
+  // Mutations with optimistic updates
   const { addFavorite } = useAddFavorite();
   const { removeFavorite } = useRemoveFavorite();
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Optimistically update local state immediately for instant UI feedback
+    const currentState = localIsFavorited;
+    const newFavoritedState = !currentState;
+    setLocalIsFavorited(newFavoritedState);
+    
     try {
-      if (isFavorited) {
+      if (currentState) {
         await removeFavorite(id);
       } else {
         await addFavorite(id);
       }
       onFavorite?.(id);
     } catch (error) {
+      // Rollback optimistic update on error
+      setLocalIsFavorited(currentState);
       console.error("Failed to toggle favorite:", error);
     }
   };
@@ -159,17 +177,6 @@ export function ArtworkCard({
               : "-translate-y-full pointer-events-none opacity-0"
           }`}
         >
-          <Button
-            size="sm"
-            variant="secondary"
-            className="bg-white/90 shadow-md hover:bg-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/artwork/${id}`);
-            }}
-          >
-            <Search className="h-4 w-4" />
-          </Button>
           <Button
             size="sm"
             variant="secondary"

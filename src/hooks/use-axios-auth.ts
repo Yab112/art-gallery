@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSession } from "@/lib/auth";
 
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_BASE_URL || "http://13.48.147.113:3099/api/",
+  baseURL: import.meta.env.VITE_SERVER_BASE_URL || '/api',
   timeout: 10000, 
   withCredentials: true, // Important for Better Auth cookies - cookies are sent automatically
 });

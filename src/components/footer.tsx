@@ -11,6 +11,8 @@ import {
   Camera,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import useAxiosAuth from "@/hooks/use-axios-auth";
 
 function Logo() {
   const [imageError, setImageError] = useState(false);
@@ -84,6 +86,45 @@ const contactInfo = [
 ];
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const axiosAuth = useAxiosAuth();
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.trim()) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      const response = await axiosAuth.post("/profile/subscribe-newsletter", {
+        email: email.trim(),
+      });
+
+      if (response.data.success) {
+        toast.success("Successfully subscribed to newsletter!");
+        setEmail("");
+      } else {
+        toast.error(response.data.message || "Failed to subscribe");
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to subscribe. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   return (
     <footer className="bg-white text-gray-900">
       {/* Main Footer Content */}
@@ -178,16 +219,24 @@ export function Footer() {
                 offers.
               </p>
             </div>
-            <div className="flex w-full max-w-md gap-2">
+            <form onSubmit={handleSubscribe} className="flex w-full max-w-md gap-2">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubscribing}
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                required
               />
-              <button className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/20">
-                Subscribe
+              <button 
+                type="submit"
+                disabled={isSubscribing}
+                className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubscribing ? "Subscribing..." : "Subscribe"}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

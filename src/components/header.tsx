@@ -214,8 +214,8 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 py-4 overflow-visible">
+          <div className="flex items-center justify-between overflow-visible">
             {/* Mobile Menu Button - visible on mobile only */}
             <Button
               size="icon"

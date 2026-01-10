@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   LogOut,
@@ -28,17 +28,14 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authView, setAuthView] = useState<"signin" | "signup">("signin");
+  const [imageError, setImageError] = useState(false);
 
-  // Debug: Log user data to see what we're getting
-  if (user) {
-    console.log("UserDropdown - User data:", {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      image: user.image,
-      hasImage: !!user.image,
-    });
-  }
+  // Reset image error when user or image changes
+  useEffect(() => {
+    if (user?.image) {
+      setImageError(false);
+    }
+  }, [user?.image, user?.id]);
 
   const handleAuthSwitch = (view: "signin" | "signup") => {
     setAuthView(view);
@@ -85,25 +82,28 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <Button
         size="icon"
         variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative hover:bg-gray-100"
+        className="relative hover:bg-gray-100 p-0 h-8 w-8 rounded-full overflow-hidden"
         disabled={isLoading}
+        aria-label={user?.name || "User menu"}
       >
         {isLoading ? (
           <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
-        ) : isLoggedIn && user?.image && user.image.trim() !== "" ? (
+        ) : isLoggedIn && user?.image && user.image.trim() !== "" && !imageError ? (
           <img
             src={user.image}
-            alt={user.name || "User"}
-            className="h-8 w-8 rounded-full object-cover border-2 border-gray-200"
+            alt=""
+            className="h-8 w-8 rounded-full object-cover border-2 border-gray-200 w-full h-full"
+            onError={() => setImageError(true)}
+            onLoad={() => setImageError(false)}
           />
         ) : isLoggedIn && user ? (
-          <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-            <span className="text-sm font-semibold text-red-700">
+          <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center shrink-0 w-full h-full">
+            <span className="text-sm font-semibold text-red-700 leading-none">
               {(user.name || user.email || "U")[0].toUpperCase()}
             </span>
           </div>
@@ -113,14 +113,14 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border z-[100]">
           <div className="py-2">
             {isLoggedIn ? (
               <>
                 {/* User Info */}
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    {user?.image ? (
+                    {user?.image && !imageError ? (
                       <img
                         src={user.image}
                         alt={user.name || "User"}
@@ -131,10 +131,13 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                           height: "2rem",
                           objectFit: "cover",
                         }}
+                        onError={() => setImageError(true)}
                       />
                     ) : (
-                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-red-700" />
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                        <span className="text-xs font-semibold text-red-700">
+                          {(user?.name || user?.email || "U")[0].toUpperCase()}
+                        </span>
                       </div>
                     )}
                     <div>
@@ -242,7 +245,7 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
 
       {/* Overlay to close dropdown when clicking outside */}
       {isOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+        <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} />
       )}
     </div>
   );
