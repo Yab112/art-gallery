@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: art-gallery-frontend:latest
+    ports:
+      - "5173:80"
+    restart: always
+    # Environment variables here are for runtime, NOT build time.
+    # Vite apps need env vars at BUILD time from args.
+    # We can keep these for documentation or if you have runtime config logic.
+    environment:
+      - VITE_FRONTEND_URL=http://localhost:5173
+      - VITE_BETTER_AUTH_URL=http://13.60.211.105:3099
+      - VITE_SERVER_BASE_URL=http://13.60.211.105:3099/api
+    
