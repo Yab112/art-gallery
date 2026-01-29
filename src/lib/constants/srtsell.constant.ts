@@ -46,7 +46,6 @@ export const PRICE_NEGOTIATION_OPTIONS: SelectOption[] = [
   { value: "yes", label: "Yes, I accept price negotiation" },
 ];
 
-export const COMMISSION_RATE = 0.3; // 30%
 export const TAX_RATE = 0.0; // Adjust based on requirements
 
 export const MAX_PHOTOS = 5;

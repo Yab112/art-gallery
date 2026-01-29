@@ -222,7 +222,7 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
                 Delete Artwork
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-white">
               <DialogHeader>
                 <DialogTitle>Delete Artwork</DialogTitle>
                 <DialogDescription>
@@ -328,11 +328,10 @@ export function ArtworkOwnerPanel({ artwork }: ArtworkOwnerPanelProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-3 w-3 ${
-                                i < review.rating
+                              className={`h-3 w-3 ${i < review.rating
                                   ? "fill-yellow-400 text-yellow-400 opacity-80"
                                   : "text-gray-300"
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>

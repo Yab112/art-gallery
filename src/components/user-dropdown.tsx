@@ -236,6 +236,15 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                     <UserPlus className="h-4 w-4 mr-3 text-gray-500" />
                     Create Account
                   </button>
+                  <button
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-100 mt-1 pt-2"
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate("/buyart");
+                    }}
+                  >
+                    Explore as guest
+                  </button>
                 </div>
               </>
             )}

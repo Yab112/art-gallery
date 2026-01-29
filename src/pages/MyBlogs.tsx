@@ -19,6 +19,7 @@ import {
   BookOpen,
   BarChart3,
   MoreVertical,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BlogCard } from "@/components/blog/blog-card";
@@ -251,11 +252,11 @@ export default function MyBlogsPage() {
 
   const data = allPosts.data
     ? {
-        ...allPosts.data,
-        data: paginatedPosts,
-        total: totalFiltered,
-        totalPages,
-      }
+      ...allPosts.data,
+      data: paginatedPosts,
+      total: totalFiltered,
+      totalPages,
+    }
     : undefined;
 
   const isLoading = allPosts.isLoading;
@@ -301,9 +302,8 @@ export default function MyBlogsPage() {
   const handleShare = async (postId: string) => {
     try {
       await axiosAuth.post(`blog/${postId}/share`, {});
-      const url = `${window.location.origin}/blog/${
-        data?.data.find((p) => p.id === postId)?.slug
-      }`;
+      const url = `${window.location.origin}/blog/${data?.data.find((p) => p.id === postId)?.slug
+        }`;
       navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
     } catch (error) {
@@ -508,22 +508,34 @@ export default function MyBlogsPage() {
                             post.published
                               ? "default"
                               : post.status === "PENDING"
-                              ? "secondary"
-                              : "outline"
+                                ? "secondary"
+                                : post.status === "APPROVED"
+                                  ? "default"
+                                  : post.status === "REJECTED"
+                                    ? "destructive"
+                                    : "outline"
                           }
                           className={
                             post.published
                               ? "bg-green-500 text-white"
                               : post.status === "PENDING"
-                              ? "bg-yellow-500 text-white"
-                              : "bg-gray-500 text-white"
+                                ? "bg-yellow-500 text-white"
+                                : post.status === "APPROVED"
+                                  ? "bg-blue-500 text-white"
+                                  : post.status === "REJECTED"
+                                    ? "bg-red-500 text-white"
+                                    : "bg-gray-500 text-white"
                           }
                         >
                           {post.published
                             ? "Published"
                             : post.status === "PENDING"
-                            ? "Pending"
-                            : "Draft"}
+                              ? "Pending"
+                              : post.status === "APPROVED"
+                                ? "Approved"
+                                : post.status === "REJECTED"
+                                  ? "Rejected"
+                                  : "Draft"}
                         </Badge>
                       </div>
 
@@ -576,13 +588,38 @@ export default function MyBlogsPage() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {!post.published && (
+                            <DropdownMenuItem
+                              onClick={() => handleShare(post.id)}
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share
+                            </DropdownMenuItem>
+                            {!post.published && post.status === "APPROVED" && (
                               <DropdownMenuItem
                                 onClick={() => handlePublish(post.id)}
                                 disabled={publishBlog.isPending}
                                 className="text-green-700"
                               >
+                                <ThumbsUp className="w-4 h-4 mr-2" />
                                 Publish
+                              </DropdownMenuItem>
+                            )}
+                            {!post.published && post.status === "PENDING" && (
+                              <DropdownMenuItem
+                                disabled
+                                className="text-gray-400 cursor-not-allowed"
+                              >
+                                <Clock className="w-4 h-4 mr-2" />
+                                Awaiting Approval
+                              </DropdownMenuItem>
+                            )}
+                            {!post.published && post.status === "REJECTED" && (
+                              <DropdownMenuItem
+                                disabled
+                                className="text-red-400 cursor-not-allowed"
+                              >
+                                <ThumbsDown className="w-4 h-4 mr-2" />
+                                Rejected - Cannot Publish
                               </DropdownMenuItem>
                             )}
                             {post.published && (
@@ -594,12 +631,6 @@ export default function MyBlogsPage() {
                                 Unpublish
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem
-                              onClick={() => handleShare(post.id)}
-                            >
-                              <Share2 className="w-4 h-4 mr-2" />
-                              Share
-                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={(e) => {
                                 e.preventDefault();

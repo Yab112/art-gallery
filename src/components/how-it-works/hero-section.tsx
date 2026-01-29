@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export function HeroSection() {
   return (
@@ -15,17 +16,21 @@ export function HeroSection() {
             gallery, we make art accessible to everyone.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-red-700 hover:bg-red-800 text-white">
-              Start Collecting
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Sell Your Art
-            </Button>
+            <Link to="/buyart">
+              <Button size="lg" className="bg-red-700 hover:bg-red-800 text-white w-full sm:w-auto">
+                Start Collecting
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/sellart">
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
+              >
+                Sell Your Art
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

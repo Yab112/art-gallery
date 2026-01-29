@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { ArrowLeft, CreditCard, Shield, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { OrderSummary } from "@/components/checkout/order-summary";
 import { PaymentForm } from "@/components/checkout/payment-form";
 import { ShippingInfo } from "@/components/checkout/shipping-info";
 // import { StripeProvider } from "@/components/checkout/stripe-provider";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { CheckoutProvider, useCheckout } from "@/contexts/CheckoutContext";
 import { useCreateOrder } from "@/services/order/useCreateOrder";
@@ -18,10 +16,11 @@ import { useCartItems } from "@/queries/cartQueries";
 import { toast } from "sonner";
 
 function CheckoutContent() {
-  const navigate = useNavigate();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const { shippingData, paymentData, selectedCartItemIds } = useCheckout();
   const { data: cartData } = useCartItems(1, 50);
@@ -49,6 +48,11 @@ function CheckoutContent() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!agreedToTerms) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
     if (!shippingData || !paymentData) {
       setError("Please complete all checkout steps");
       toast.error("Please complete all checkout steps");
@@ -142,7 +146,7 @@ function CheckoutContent() {
       // Ensure provider is lowercase and amount is a number
       const provider = (paymentData.provider || 'chapa').toLowerCase() as 'chapa' | 'paypal';
       const amount = typeof totalAmount === 'string' ? parseFloat(totalAmount) : Number(totalAmount);
-      
+
       if (isNaN(amount) || amount <= 0) {
         throw new Error(`Invalid payment amount: ${totalAmount}`);
       }
@@ -183,200 +187,201 @@ function CheckoutContent() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              to="/buyart"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Continue Shopping</span>
-            </Link>
-            <div className="text-2xl font-bold text-red-700">artopia</div>
-            <div className="w-24"></div> {/* Spacer for centering */}
+        {/* Header */}
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <Link
+                to="/buyart"
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Continue Shopping</span>
+              </Link>
+              <div className="text-2xl font-bold text-red-700">artopia</div>
+              <div className="w-24"></div> {/* Spacer for centering */}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Progress Steps */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-8">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isActive = currentStep === step.id;
-                const isCompleted = currentStep > step.id;
+        {/* Progress Steps */}
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center space-x-8">
+                {steps.map((step, index) => {
+                  const Icon = step.icon;
+                  const isActive = currentStep === step.id;
+                  const isCompleted = currentStep > step.id;
 
-                return (
-                  <div key={step.id} className="flex items-center">
-                    <div className="flex items-center">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                          isActive
+                  return (
+                    <div key={step.id} className="flex items-center">
+                      <div className="flex items-center">
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${isActive
                             ? "border-red-500 bg-red-500 text-white"
                             : isCompleted
-                            ? "border-green-500 bg-green-500 text-white"
-                            : "border-gray-300 bg-white text-gray-500"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="ml-3">
-                        <p
-                          className={`text-sm font-medium ${
-                            isActive
+                              ? "border-green-500 bg-green-500 text-white"
+                              : "border-gray-300 bg-white text-gray-500"
+                            }`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="ml-3">
+                          <p
+                            className={`text-sm font-medium ${isActive
                               ? "text-red-600"
                               : isCompleted
-                              ? "text-green-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {step.name}
-                        </p>
+                                ? "text-green-600"
+                                : "text-gray-500"
+                              }`}
+                          >
+                            {step.name}
+                          </p>
+                        </div>
                       </div>
+                      {index < steps.length - 1 && (
+                        <div
+                          className={`ml-8 h-0.5 w-16 ${isCompleted ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                        />
+                      )}
                     </div>
-                    {index < steps.length - 1 && (
-                      <div
-                        className={`ml-8 h-0.5 w-16 ${
-                          isCompleted ? "bg-green-500" : "bg-gray-300"
-                        }`}
-                      />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Left Column - Checkout Form */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg border p-6">
+                {currentStep === 1 && <ShippingInfo onNext={handleNext} />}
+
+                {currentStep === 2 && (
+                  <PaymentForm onNext={handleNext} onPrevious={handlePrevious} />
+                )}
+
+                {currentStep === 3 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        Review Your Order
+                      </h2>
+                      <p className="text-gray-600">
+                        Please review your order details before placing it.
+                      </p>
+                    </div>
+
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
                     )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Column - Checkout Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg border p-6">
-              {currentStep === 1 && <ShippingInfo onNext={handleNext} />}
-
-              {currentStep === 2 && (
-                <PaymentForm onNext={handleNext} onPrevious={handlePrevious} />
-              )}
-
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                      Review Your Order
-                    </h2>
-                    <p className="text-gray-600">
-                      Please review your order details before placing it.
-                    </p>
-                  </div>
-
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <p className="text-sm text-red-600">{error}</p>
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between py-4 border-b">
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          Shipping Address
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {shippingData ? (
-                            <>
-                              {shippingData.firstName} {shippingData.lastName}
-                              <br />
-                              {shippingData.address}
-                              {shippingData.apartment && `, ${shippingData.apartment}`}
-                              <br />
-                              {shippingData.city}, {shippingData.state} {shippingData.zipCode}
-                              <br />
-                              {shippingData.country}
-                            </>
-                          ) : (
-                            <span className="text-red-600">No shipping information provided</span>
-                          )}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => setCurrentStep(1)}>
-                        Edit
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between py-4 border-b">
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          Payment Method
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {paymentData ? (
-                            paymentData.provider === 'chapa' ? (
-                              <>Chapa (Mobile Money, Bank Transfer)</>
-                            ) : paymentData.provider === 'paypal' ? (
-                              <>PayPal</>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between py-4 border-b">
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            Shipping Address
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {shippingData ? (
+                              <>
+                                {shippingData.firstName} {shippingData.lastName}
+                                <br />
+                                {shippingData.address}
+                                {shippingData.apartment && `, ${shippingData.apartment}`}
+                                <br />
+                                {shippingData.city}, {shippingData.state} {shippingData.zipCode}
+                                <br />
+                                {shippingData.country}
+                              </>
                             ) : (
-                              <>Credit/Debit Card</>
-                            )
-                          ) : (
-                            <span className="text-red-600">No payment method selected</span>
-                          )}
-                        </p>
+                              <span className="text-red-600">No shipping information provided</span>
+                            )}
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentStep(1)}>
+                          Edit
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setCurrentStep(2)}>
-                        Edit
+
+                      <div className="flex items-center justify-between py-4 border-b">
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            Payment Method
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {paymentData ? (
+                              paymentData.provider === 'chapa' ? (
+                                <>Chapa (Mobile Money, Bank Transfer)</>
+                              ) : paymentData.provider === 'paypal' ? (
+                                <>PayPal</>
+                              ) : (
+                                <>Credit/Debit Card</>
+                              )
+                            ) : (
+                              <span className="text-red-600">No payment method selected</span>
+                            )}
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentStep(2)}>
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="terms"
+                        checked={agreedToTerms}
+                        onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                      />
+                      <Label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
+                        I agree to the{" "}
+                        <a href="#" className="text-red-600 hover:underline" onClick={(e) => e.stopPropagation()}>
+                          Terms of Service
+                        </a>{" "}
+                        and{" "}
+                        <a href="#" className="text-red-600 hover:underline" onClick={(e) => e.stopPropagation()}>
+                          Privacy Policy
+                        </a>
+                      </Label>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <Button
+                        variant="outline"
+                        onClick={handlePrevious}
+                        className="flex-1 bg-white"
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        onClick={handlePlaceOrder}
+                        disabled={isProcessing || !agreedToTerms}
+                        className="flex-1 bg-red-700 hover:bg-red-800 text-white disabled:opacity-50"
+                      >
+                        {isProcessing ? "Processing..." : "Place Order"}
                       </Button>
                     </div>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="terms" />
-                    <Label htmlFor="terms" className="text-sm text-gray-600">
-                      I agree to the{" "}
-                      <a href="#" className="text-red-600 hover:underline">
-                        Terms of Service
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-red-600 hover:underline">
-                        Privacy Policy
-                      </a>
-                    </Label>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={handlePrevious}
-                      className="flex-1 bg-white"
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      onClick={handlePlaceOrder}
-                      disabled={isProcessing}
-                      className="flex-1 bg-red-700 hover:bg-red-800 text-white"
-                    >
-                      {isProcessing ? "Processing..." : "Place Order"}
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1">
-            <OrderSummary />
+            {/* Right Column - Order Summary */}
+            <div className="lg:col-span-1">
+              <OrderSummary />
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </ProtectedRoute>
   );
 }

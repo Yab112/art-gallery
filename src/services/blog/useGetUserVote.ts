@@ -2,7 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import useAxiosAuth from "@/hooks/use-axios-auth";
 import type { BlogVote } from "@/types/blog.types";
 
-export const useGetUserVote = (blogPostId: string) => {
+export type UseGetUserVoteOptions = { enabled?: boolean };
+
+/** Skip when guest (enabled: false) — vote API requires auth. */
+export const useGetUserVote = (
+  blogPostId: string,
+  options?: UseGetUserVoteOptions
+) => {
   const axiosAuth = useAxiosAuth();
 
   return useQuery<BlogVote>({
@@ -13,8 +19,8 @@ export const useGetUserVote = (blogPostId: string) => {
       );
       return response.data;
     },
-    enabled: !!blogPostId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!blogPostId && (options?.enabled ?? true),
+    staleTime: 5 * 60 * 1000,
   });
 };
 

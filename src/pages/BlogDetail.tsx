@@ -7,6 +7,7 @@ import {
   useGetUserVote,
   useShareBlogPost,
   useGetBlogPosts,
+  usePublishBlogPost,
 } from "@/services/blog";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -39,7 +40,7 @@ export default function BlogDetailPage() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [commentPage, setCommentPage] = useState(1);
+  const [commentPage] = useState(1);
 
   // Get return path from location state
   const returnTo = (location.state as any)?.returnTo || "/blog";
@@ -52,13 +53,16 @@ export default function BlogDetailPage() {
   const { data: commentsData, isLoading: isLoadingComments } =
     useGetBlogComments(blogPost?.id || "", commentPage, 20);
 
-  // Fetch user vote
-  const { data: userVote } = useGetUserVote(blogPost?.id || "");
+  // Fetch user vote only when logged in (guests skip)
+  const { data: userVote } = useGetUserVote(blogPost?.id || "", {
+    enabled: !!user,
+  });
 
   // Mutations
   const createComment = useCreateBlogComment(blogPost?.id || "");
   const voteMutation = useVoteBlogPost(blogPost?.id || "");
   const shareMutation = useShareBlogPost(blogPost?.id || "");
+  const publishMutation = usePublishBlogPost();
 
   const {
     register,
@@ -88,14 +92,23 @@ export default function BlogDetailPage() {
   };
 
   const handleShare = (platform?: string) => {
-    shareMutation.mutate({ platform });
-
-    // Copy link to clipboard
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-
-    // Show success message (you can add a toast here)
     toast.success("Link copied to clipboard!");
+    if (user) {
+      shareMutation.mutate({ platform });
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!blogPost) return;
+    try {
+      await publishMutation.mutateAsync(blogPost.id);
+      toast.success("Blog post published successfully!");
+    } catch (error) {
+      console.error("Failed to publish blog post:", error);
+      toast.error("Failed to publish blog post. Please try again.");
+    }
   };
 
   const onSubmitComment = (data: CommentFormData) => {
@@ -204,34 +217,44 @@ export default function BlogDetailPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-            <Button
-              variant={userVote?.voteType === "LIKE" ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleVote("LIKE")}
-              disabled={!user || voteMutation.isPending}
-              className={
-                userVote?.voteType === "LIKE"
-                  ? "bg-red-700 hover:bg-red-800"
-                  : ""
-              }
-            >
-              <ThumbsUp className="w-4 h-4 mr-2" />
-              {blogPost.likes}
-            </Button>
-            <Button
-              variant={userVote?.voteType === "DISLIKE" ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleVote("DISLIKE")}
-              disabled={!user || voteMutation.isPending}
-              className={
-                userVote?.voteType === "DISLIKE"
-                  ? "bg-red-700 hover:bg-red-800"
-                  : ""
-              }
-            >
-              <ThumbsDown className="w-4 h-4 mr-2" />
-              {blogPost.dislikes}
-            </Button>
+            {user ? (
+              <>
+                <Button
+                  variant={userVote?.voteType === "LIKE" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleVote("LIKE")}
+                  disabled={voteMutation.isPending}
+                  className={
+                    userVote?.voteType === "LIKE"
+                      ? "bg-red-700 hover:bg-red-800"
+                      : ""
+                  }
+                >
+                  <ThumbsUp className="w-4 h-4 mr-2" />
+                  {blogPost.likes}
+                </Button>
+                <Button
+                  variant={userVote?.voteType === "DISLIKE" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleVote("DISLIKE")}
+                  disabled={voteMutation.isPending}
+                  className={
+                    userVote?.voteType === "DISLIKE"
+                      ? "bg-red-700 hover:bg-red-800"
+                      : ""
+                  }
+                >
+                  <ThumbsDown className="w-4 h-4 mr-2" />
+                  {blogPost.dislikes}
+                </Button>
+              </>
+            ) : (
+              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`}>
+                <Button variant="outline" size="sm">
+                  Sign in to vote
+                </Button>
+              </Link>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -241,6 +264,54 @@ export default function BlogDetailPage() {
               <Share2 className="w-4 h-4 mr-2" />
               Share ({blogPost.shares})
             </Button>
+
+            {user?.id === blogPost.authorId && (
+              <span
+                className={
+                  blogPost.status !== "APPROVED" || blogPost.published
+                    ? "cursor-not-allowed inline-block"
+                    : "inline-block"
+                }
+                title={
+                  blogPost.published
+                    ? "Blog is live"
+                    : blogPost.status === "PENDING"
+                      ? "Waiting for admin approval"
+                      : blogPost.status === "REJECTED"
+                        ? "This blog was rejected"
+                        : "Publish your blog"
+                }
+              >
+                <Button
+                  variant={blogPost.published ? "secondary" : "default"}
+                  size="sm"
+                  onClick={() => !blogPost.published && handlePublish()}
+                  disabled={
+                    blogPost.status !== "APPROVED" ||
+                    blogPost.published ||
+                    publishMutation.isPending
+                  }
+                  className={
+                    !blogPost.published && blogPost.status === "APPROVED"
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : blogPost.published
+                        ? "bg-gray-100 text-gray-500 border-gray-200 opacity-60"
+                        : ""
+                  }
+                >
+                  {publishMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : blogPost.published ? (
+                    "Published"
+                  ) : (
+                    <>
+                      <ThumbsUp className="w-4 h-4 mr-2" />
+                      Publish
+                    </>
+                  )}
+                </Button>
+              </span>
+            )}
           </div>
         </header>
 
@@ -291,10 +362,10 @@ export default function BlogDetailPage() {
             </form>
           ) : (
             <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center">
-              <p className="text-gray-600 mb-2">Please login to comment</p>
-              <Link to="/login">
+              <p className="text-gray-600 mb-2">Sign in to comment</p>
+              <Link to={`/login?redirect=${encodeURIComponent(location.pathname)}`}>
                 <Button size="sm" className="bg-red-700 hover:bg-red-800">
-                  Login
+                  Sign in
                 </Button>
               </Link>
             </div>

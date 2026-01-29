@@ -47,6 +47,7 @@ export function ArtistProfileEnhanced({
   blogsCount = 0,
 }: ArtistProfileEnhancedProps) {
   const { user: currentUser } = useAuth();
+  const isGuest = !currentUser;
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [coverImageError, setCoverImageError] = useState(false);
@@ -56,7 +57,7 @@ export function ArtistProfileEnhanced({
   const [profileImageFailed, setProfileImageFailed] = useState(false);
   // Track if placeholder image has also failed
   const [placeholderImageFailed, setPlaceholderImageFailed] = useState(false);
-  
+
   // Check if viewing own profile
   const isOwnProfile = currentUser?.id === user.id;
 
@@ -133,10 +134,10 @@ export function ArtistProfileEnhanced({
     if (!artworks || artworks.length === 0) return '';
     return artworks.map(a => `${a.id}-${a.photos?.[0] || ''}-${a.likeCount || 0}`).join('|');
   }, [artworks]);
-  
+
   const featuredArtworks = useMemo(() => {
     if (!artworks || artworks.length === 0) return [];
-    
+
     // Create a stable array by filtering, sorting, and slicing
     const filtered = artworks.filter((art) => art.photos && art.photos.length > 0);
     const sorted = [...filtered].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
@@ -150,9 +151,9 @@ export function ArtistProfileEnhanced({
   const memberSinceDate = user.createdAt ? new Date(user.createdAt) : null;
   const memberSinceFormatted = memberSinceDate
     ? memberSinceDate.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      })
+      month: "short",
+      year: "numeric",
+    })
     : null;
 
   // Check if email is verified
@@ -349,24 +350,33 @@ export function ArtistProfileEnhanced({
             </div>
             {!isOwnProfile && (
               <div className="flex flex-wrap gap-2 items-center">
-                <FollowButton
-                  userId={user.id}
-                  isFollowing={user.isFollowing}
-                  variant="default"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="border-gray-300 hover:bg-gray-50"
-                  onClick={() => setIsLiked(!isLiked)}
-                  title="Like"
-                >
-                  <Heart
-                    className={`h-4 w-4 ${
-                      isLiked ? "fill-current text-red-500" : ""
-                    }`}
+                {isGuest ? (
+                  <Link to={`/login?redirect=${encodeURIComponent(`/artist/${user.id}`)}`}>
+                    <Button variant="outline" size="sm">
+                      Sign in to follow
+                    </Button>
+                  </Link>
+                ) : (
+                  <FollowButton
+                    userId={user.id}
+                    isFollowing={user.isFollowing}
+                    variant="default"
                   />
-                </Button>
+                )}
+                {!isGuest && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="border-gray-300 hover:bg-gray-50"
+                    onClick={() => setIsLiked(!isLiked)}
+                    title="Like"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${isLiked ? "fill-current text-red-500" : ""
+                        }`}
+                    />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="icon"

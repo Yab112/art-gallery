@@ -1,6 +1,6 @@
 import useMutationFunc from "@/hooks/use-mutation";
 import { toast } from "sonner";
-import { artworkKeys, favoriteKeys } from "@/queries/queryKeys";
+import { artworkKeys } from "@/queries/queryKeys";
 
 interface UnlikeArtworkResponse {
   success: boolean;
@@ -20,7 +20,7 @@ export const useUnlikeArtwork = () => {
 
   const unlikeArtwork = async (id: string) => {
     return mutateAsync({
-      url: `/artwork/${id}/like`,
+      url: `/artworks/${id}/like`,
       method: "DELETE",
     });
   };

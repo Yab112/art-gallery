@@ -19,7 +19,7 @@ import { PriceSection } from "./priceSection";
 import { BankingSection } from "./bankingSection";
 import { Card } from "../ui/card";
 import { useNavigate } from "react-router-dom";
-import type { CreateArtworkDto, Artwork } from "@/types/artwork.types";
+import type { Artwork } from "@/types/artwork.types";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -32,14 +32,16 @@ const artworkToFormData = (artwork: Artwork): ArtworkFormData => {
     : { height: 0, width: 0, depth: 0 };
 
   // Convert photos array to form format (fill with nulls up to MAX_PHOTOS)
-  const photos = [...artwork.photos || []];
+  const photos: (string | File | null)[] = [...artwork.photos || []];
   while (photos.length < MAX_PHOTOS) {
     photos.push(null);
   }
 
+  // Extract category IDs
+  const categoryIds = artwork.categories?.map(c => c.id) || [];
+
   return {
-    typeOfArtwork: "",
-    technique: artwork.technique || "",
+    categoryIds,
     artist: artwork.artist || "",
     support: artwork.support || "",
     titleOfArtwork: artwork.title || "",
@@ -57,7 +59,7 @@ const artworkToFormData = (artwork: Artwork): ArtworkFormData => {
     yearOfAcquisition: artwork.yearOfAcquisition || "",
     proofOfOrigin: artwork.proofOfOrigin || null,
     description: artwork.description || "",
-    photos: photos.slice(0, MAX_PHOTOS),
+    photos: photos.slice(0, MAX_PHOTOS) as (string | File | null)[],
     desiredPrice: String(artwork.desiredPrice || ""),
     acceptPriceNegotiation: artwork.acceptPriceNegotiation ? "yes" : "no",
     accountHolder: artwork.accountHolder || "",
@@ -154,7 +156,7 @@ export function EditArtworkForm({ artwork }: EditArtworkFormProps) {
       }
 
       // Step 2: Upload proof of origin if it's a new file
-      let proofOfOriginUrl: string | undefined = artwork.proofOfOrigin;
+      let proofOfOriginUrl: string | undefined = typeof artwork.proofOfOrigin === 'string' ? artwork.proofOfOrigin : undefined;
       if (data.proofOfOrigin instanceof File) {
         proofOfOriginUrl = await uploadDocumentToS3(data.proofOfOrigin);
       } else if (!data.proofOfOrigin) {
@@ -162,17 +164,18 @@ export function EditArtworkForm({ artwork }: EditArtworkFormProps) {
       }
 
       // Step 3: Convert form data to UpdateArtworkDto
-      const artworkData: Partial<CreateArtworkDto> = {
+      // Ensure dimensions are sent as strings as per backend DTO
+      const artworkData: any = {
         title: data.titleOfArtwork || undefined,
         artist: data.artist,
-        technique: data.technique,
+        categoryIds: data.categoryIds,
         support: data.support,
         state: data.state,
         yearOfArtwork: data.yearOfArtwork,
         dimensions: {
-          height: parseFloat(data.dimensions.height),
-          width: parseFloat(data.dimensions.width),
-          depth: data.dimensions.depth ? parseFloat(data.dimensions.depth) : undefined,
+          height: data.dimensions.height,
+          width: data.dimensions.width,
+          depth: data.dimensions.depth || undefined,
         },
         isFramed: data.isFramed === "yes",
         weight: data.weight,

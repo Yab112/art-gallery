@@ -68,14 +68,14 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
       // Use Better Auth signUp with proper error handling
       const result = await signUp.email(
         {
-          email: data.email, 
+          email: data.email,
           password: data.password,
           name: `${data.firstName} ${data.lastName}`,
           // Additional fields can be passed here if needed
         },
         {
           onSuccess: () => {
-             // Success - redirect to verify email page
+            // Success - redirect to verify email page
             reset();
             setIsLoading(false);
             navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
@@ -83,7 +83,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
           onError: (ctx) => {
             setError(
               ctx.error?.message ||
-                "Failed to create account. Please try again."
+              "Failed to create account. Please try again."
             );
             setIsLoading(false);
           },
@@ -144,9 +144,8 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
               type="text"
               placeholder="John"
               {...register("firstName", { required: "First name is required" })}
-              className={`h-12 ${
-                errors.firstName ? "border-red-500" : "border-gray-300"
-              } bg-white`}
+              className={`h-12 ${errors.firstName ? "border-red-500" : "border-gray-300"
+                } bg-white`}
             />
             {errors.firstName && (
               <p className="text-sm text-red-500">{errors.firstName.message}</p>
@@ -162,9 +161,8 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
               type="text"
               placeholder="Doe"
               {...register("lastName", { required: "Last name is required" })}
-              className={`h-12 ${
-                errors.lastName ? "border-red-500" : "border-gray-300"
-              } bg-white`}
+              className={`h-12 ${errors.lastName ? "border-red-500" : "border-gray-300"
+                } bg-white`}
             />
             {errors.lastName && (
               <p className="text-sm text-red-500">{errors.lastName.message}</p>
@@ -187,9 +185,8 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
                 message: "Invalid email address",
               },
             })}
-            className={`h-12 ${
-              errors.email ? "border-red-500" : "border-gray-300"
-            } bg-white`}
+            className={`h-12 ${errors.email ? "border-red-500" : "border-gray-300"
+              } bg-white`}
           />
           {errors.email && (
             <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -212,9 +209,8 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
                   message: "Password must be at least 8 characters",
                 },
               })}
-              className={`h-12 pr-10 ${
-                errors.password ? "border-red-500" : "border-gray-300"
-              } bg-white`}
+              className={`h-12 pr-10 ${errors.password ? "border-red-500" : "border-gray-300"
+                } bg-white`}
             />
             <button
               type="button"
@@ -247,9 +243,8 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
                 validate: (value, formValues) =>
                   value === formValues.password || "Passwords do not match",
               })}
-              className={`h-12 pr-10 ${
-                errors.confirmPassword ? "border-red-500" : "border-gray-300"
-              } bg-white`}
+              className={`h-12 pr-10 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                } bg-white`}
             />
             <button
               type="button"
@@ -320,7 +315,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
         </Button>
       </div>
 
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <p className="text-gray-600">
           Already have an account?{" "}
           <button
@@ -329,6 +324,15 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
             className="text-red-700 hover:text-red-800 font-medium"
           >
             Sign In
+          </button>
+        </p>
+        <p className="text-sm">
+          <button
+            type="button"
+            onClick={() => navigate("/buyart")}
+            className="text-gray-500 hover:text-gray-700 underline"
+          >
+            Explore as guest
           </button>
         </p>
       </div>

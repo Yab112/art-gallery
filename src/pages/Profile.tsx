@@ -76,13 +76,13 @@ export default function ProfilePage() {
   const { user: sessionUser } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
-  
+
   // If userId is provided and different from current user, fetch that user's profile
   // Otherwise, fetch current user's profile
   const isViewingOtherProfile = userId && userId !== sessionUser?.id;
   const { data: otherUserData, isLoading: isLoadingOtherUser, error: otherUserError } = useUser(userId || "");
   const { data: myProfileData, isLoading: isLoadingMyProfile, error: myProfileError } = useMyProfile();
-  
+
   // Use the appropriate data based on whether we're viewing another user's profile
   const profileData = isViewingOtherProfile ? otherUserData : myProfileData;
   const isLoading = isViewingOtherProfile ? isLoadingOtherUser : isLoadingMyProfile;
@@ -93,7 +93,7 @@ export default function ProfilePage() {
     1,
     3
   );
-  
+
   // Get profile ID for following query - use userId param or session user id
   const profileIdForFollowing = userId || sessionUser?.id;
   // Fetch following users for avatars display
@@ -109,13 +109,13 @@ export default function ProfilePage() {
   const { updateAvatar, isUpdating: isUpdatingAvatar } = useUpdateAvatar();
   const queryClient = useQueryClient();
   const [showCreateCollection, setShowCreateCollection] = useState(false);
-  
+
   // Profile cover image state
   const [profileCoverImageFile, setProfileCoverImageFile] = useState<File | null>(null);
   const [profileCoverImagePreview, setProfileCoverImagePreview] = useState<string>("");
   const [isUploadingProfileCover, setIsUploadingProfileCover] = useState(false);
   const profileCoverImageInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Profile avatar state
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
@@ -198,45 +198,44 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gray-50">
         {/* Cover Image - Full Width Black Banner */}
         <div className="px-4">
-          <div 
-            className={`relative w-full h-48 bg-black ${
-              !isViewingOtherProfile ? "cursor-pointer group" : ""
-            }`}
+          <div
+            className={`relative w-full h-48 bg-black ${!isViewingOtherProfile ? "cursor-pointer group" : ""
+              }`}
             onClick={() => {
               if (!isViewingOtherProfile) {
                 profileCoverImageInputRef.current?.click();
               }
             }}
           >
-          {profileCoverImagePreview ? (
-            <img
-              src={profileCoverImagePreview}
-              alt="Cover preview"
-              className="w-full h-full object-cover"
-            />
-          ) : (profile as any).coverImage ? (
-            <img
-              src={(profile as any).coverImage}
-              alt="Cover"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="bg-gray-600 rounded-lg p-4 inline-block">
-                  <Mountain className="h-12 w-12 text-gray-300 mx-auto" />
+            {profileCoverImagePreview ? (
+              <img
+                src={profileCoverImagePreview}
+                alt="Cover preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (profile as any).coverImage ? (
+              <img
+                src={(profile as any).coverImage}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="bg-gray-600 rounded-lg p-4 inline-block">
+                    <Mountain className="h-12 w-12 text-gray-300 mx-auto" />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {!isViewingOtherProfile && (
-            <>
-              {/* Full overlay with edit icon */}
-              <div className="absolute top-0 bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all pointer-events-none flex items-center justify-center">
-                <Edit className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </>
-          )}
+            )}
+            {!isViewingOtherProfile && (
+              <>
+                {/* Full overlay with edit icon */}
+                <div className="absolute top-0 bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all pointer-events-none flex items-center justify-center">
+                  <Edit className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </>
+            )}
           </div>
         </div>
         {/* Hidden file input for profile cover image */}
@@ -292,14 +291,14 @@ export default function ProfilePage() {
                 }
 
                 toast.success("Cover image updated successfully");
-                
+
                 // Clear preview after successful upload
                 setProfileCoverImageFile(null);
                 setProfileCoverImagePreview("");
               } catch (error: any) {
                 toast.error(
                   "Failed to upload cover image: " +
-                    (error?.message || "An error occurred")
+                  (error?.message || "An error occurred")
                 );
                 // Reset preview on error
                 setProfileCoverImageFile(null);
@@ -314,215 +313,215 @@ export default function ProfilePage() {
             }}
           />
         )}
-        
+
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           {/* Profile Header */}
           <div className="mb-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4 -mt-20 flex-1">
-                  <div 
-                    className={`relative ${!isViewingOtherProfile ? "cursor-pointer group" : ""}`}
-                    onClick={() => {
-                      if (!isViewingOtherProfile) {
-                        avatarInputRef.current?.click();
-                      }
-                    }}
-                  >
-                    {avatarPreview ? (
-                      <img
-                        src={avatarPreview}
-                        alt={profile.name || "User"}
-                        className="w-40 h-40 rounded-full object-cover border-[8px]"
-                        style={{ borderColor: '#F9FAFB' }}
-                      />
-                    ) : profile.image ? (
-                      <img
-                        src={profile.image}
-                        alt={profile.name || "User"}
-                        className="w-40 h-40 rounded-full object-cover border-[8px]"
-                        style={{ borderColor: '#F9FAFB' }}
-                      />
-                    ) : (
-                      <div className="w-40 h-40 bg-blue-600 rounded-full flex items-center justify-center border-[8px]"
-                        style={{ borderColor: '#F9FAFB' }}>
-                        <span className="text-4xl font-bold text-white">
-                          {(profile.name || "U")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    {!isViewingOtherProfile && (
-                      <>
-                        {/* Red edit icon at bottom-right - cutting into avatar */}
-                        <div className="absolute bottom-1 right-1 w-12 h-12 bg-red-700 rounded-full flex items-center justify-center border-[6px] border-white z-10">
-                          <Edit className="h-4 w-4 text-white" />
-                        </div>
-                        {/* Hidden file input */}
-                        <Input
-                          ref={avatarInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-
-                            // Validate file size (max 5MB)
-                            if (file.size > 5 * 1024 * 1024) {
-                              toast.error("Image size must be less than 5MB");
-                              return;
-                            }
-
-                            // Validate file type
-                            if (!file.type.startsWith("image/")) {
-                              toast.error("Please select an image file");
-                              return;
-                            }
-
-                            setAvatarFile(file);
-                            setAvatarPreview(URL.createObjectURL(file));
-
-                            // Upload and update avatar immediately
-                            setIsUploadingAvatar(true);
-                            try {
-                              const presignedResponse = await getPresignedUrl({
-                                fileName: file.name,
-                                contentType: file.type,
-                              });
-
-                              if (!presignedResponse.success || !presignedResponse.presignedUrl) {
-                                throw new Error("Failed to get upload URL");
-                              }
-
-                              await uploadFileToS3(presignedResponse.presignedUrl, file);
-                              const avatarUrl = presignedResponse.publicUrl;
-
-                              // Update avatar
-                              await updateAvatar(avatarUrl);
-
-                              // Invalidate profile queries to refresh the data
-                              queryClient.invalidateQueries({ queryKey: userKeys.me() });
-                              if (profile?.id) {
-                                queryClient.invalidateQueries({ queryKey: userKeys.detail(profile.id) });
-                              }
-
-                              toast.success("Profile picture updated successfully");
-                              
-                              // Clear preview after successful upload
-                              setAvatarFile(null);
-                              setAvatarPreview("");
-                            } catch (error: any) {
-                              toast.error(
-                                "Failed to upload profile picture: " +
-                                  (error?.message || "An error occurred")
-                              );
-                              // Reset preview on error
-                              setAvatarFile(null);
-                              setAvatarPreview("");
-                            } finally {
-                              setIsUploadingAvatar(false);
-                              // Reset file input
-                              if (avatarInputRef.current) {
-                                avatarInputRef.current.value = "";
-                              }
-                            }
-                          }}
-                        />
-                      </>
-                    )}
-                  </div>
-                  <div className="mt-12 flex-1">
-                    <h1 className="text-3xl font-bold text-gray-900 mt-2">
-                      {profile.name || "User"}
-                    </h1>
-                    {/* Heat Score and Views */}
-                    <div className="flex items-center gap-4 mt-2 text-sm">
-                      {/* Heat Score */}
-                      <div className="flex items-center gap-2">
-                        <Flame className="h-4 w-4 text-orange-500" />
-                        <span className="text-gray-500">Heat Score:</span>
-                        <span className="font-semibold text-gray-900">
-                          {((profile as any)?.heatScore ?? 0).toFixed(1)}
-                        </span>
-                      </div>
-
-                      {/* Profile Views */}
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-500">Views:</span>
-                        <span className="font-semibold text-gray-900">
-                          {((profile as any)?.profileViews ?? 0).toLocaleString()}
-                        </span>
-                      </div>
+                <div
+                  className={`relative ${!isViewingOtherProfile ? "cursor-pointer group" : ""}`}
+                  onClick={() => {
+                    if (!isViewingOtherProfile) {
+                      avatarInputRef.current?.click();
+                    }
+                  }}
+                >
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt={profile.name || "User"}
+                      className="w-40 h-40 rounded-full object-cover border-[8px]"
+                      style={{ borderColor: '#F9FAFB' }}
+                    />
+                  ) : profile.image ? (
+                    <img
+                      src={profile.image}
+                      alt={profile.name || "User"}
+                      className="w-40 h-40 rounded-full object-cover border-[8px]"
+                      style={{ borderColor: '#F9FAFB' }}
+                    />
+                  ) : (
+                    <div className="w-40 h-40 bg-blue-600 rounded-full flex items-center justify-center border-[8px]"
+                      style={{ borderColor: '#F9FAFB' }}>
+                      <span className="text-4xl font-bold text-white">
+                        {(profile.name || "U")[0].toUpperCase()}
+                      </span>
                     </div>
-                    {/* Inline Stats with Following Avatars */}
-                    <div className="flex items-center gap-4 mt-3">
+                  )}
+                  {!isViewingOtherProfile && (
+                    <>
+                      {/* Red edit icon at bottom-right - cutting into avatar */}
+                      <div className="absolute bottom-1 right-1 w-12 h-12 bg-red-700 rounded-full flex items-center justify-center border-[6px] border-white z-10">
+                        <Edit className="h-4 w-4 text-white" />
+                      </div>
+                      {/* Hidden file input */}
+                      <Input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          // Validate file size (max 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error("Image size must be less than 5MB");
+                            return;
+                          }
+
+                          // Validate file type
+                          if (!file.type.startsWith("image/")) {
+                            toast.error("Please select an image file");
+                            return;
+                          }
+
+                          setAvatarFile(file);
+                          setAvatarPreview(URL.createObjectURL(file));
+
+                          // Upload and update avatar immediately
+                          setIsUploadingAvatar(true);
+                          try {
+                            const presignedResponse = await getPresignedUrl({
+                              fileName: file.name,
+                              contentType: file.type,
+                            });
+
+                            if (!presignedResponse.success || !presignedResponse.presignedUrl) {
+                              throw new Error("Failed to get upload URL");
+                            }
+
+                            await uploadFileToS3(presignedResponse.presignedUrl, file);
+                            const avatarUrl = presignedResponse.publicUrl;
+
+                            // Update avatar
+                            await updateAvatar(avatarUrl);
+
+                            // Invalidate profile queries to refresh the data
+                            queryClient.invalidateQueries({ queryKey: userKeys.me() });
+                            if (profile?.id) {
+                              queryClient.invalidateQueries({ queryKey: userKeys.detail(profile.id) });
+                            }
+
+                            toast.success("Profile picture updated successfully");
+
+                            // Clear preview after successful upload
+                            setAvatarFile(null);
+                            setAvatarPreview("");
+                          } catch (error: any) {
+                            toast.error(
+                              "Failed to upload profile picture: " +
+                              (error?.message || "An error occurred")
+                            );
+                            // Reset preview on error
+                            setAvatarFile(null);
+                            setAvatarPreview("");
+                          } finally {
+                            setIsUploadingAvatar(false);
+                            // Reset file input
+                            if (avatarInputRef.current) {
+                              avatarInputRef.current.value = "";
+                            }
+                          }
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+                <div className="mt-12 flex-1">
+                  <h1 className="text-3xl font-bold text-gray-900 mt-2">
+                    {profile.name || "User"}
+                  </h1>
+                  {/* Heat Score and Views */}
+                  <div className="flex items-center gap-4 mt-2 text-sm">
+                    {/* Heat Score */}
+                    <div className="flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-orange-500" />
+                      <span className="text-gray-500">Heat Score:</span>
+                      <span className="font-semibold text-gray-900">
+                        {((profile as any)?.heatScore ?? 0).toFixed(1)}
+                      </span>
+                    </div>
+
+                    {/* Profile Views */}
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-500">Views:</span>
+                      <span className="font-semibold text-gray-900">
+                        {((profile as any)?.profileViews ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Inline Stats with Following Avatars */}
+                  <div className="flex items-center gap-4 mt-3">
+                    <Link
+                      to={`/profile/${profile.id}/followers`}
+                      className="text-gray-900 hover:text-red-600 transition-colors"
+                    >
+                      <span className="text-lg font-semibold">
+                        {(profile as any).followerCount || 0}
+                      </span>
+                      <span className="text-gray-600 ml-1">Followers</span>
+                    </Link>
+                    <div className="h-4 w-px bg-gray-300"></div>
+                    <div className="flex items-center gap-2">
                       <Link
-                        to={`/profile/${profile.id}/followers`}
+                        to={`/profile/${profile.id}/following`}
                         className="text-gray-900 hover:text-red-600 transition-colors"
                       >
                         <span className="text-lg font-semibold">
-                          {(profile as any).followerCount || 0}
+                          {(profile as any).followingCount || 0}
                         </span>
-                        <span className="text-gray-600 ml-1">Followers</span>
+                        <span className="text-gray-600 ml-1">Following</span>
                       </Link>
-                      <div className="h-4 w-px bg-gray-300"></div>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to={`/profile/${profile.id}/following`}
-                          className="text-gray-900 hover:text-red-600 transition-colors"
-                        >
-                          <span className="text-lg font-semibold">
-                            {(profile as any).followingCount || 0}
-                          </span>
-                          <span className="text-gray-600 ml-1">Following</span>
-                        </Link>
-                        {/* Following Avatars - Overlapping */}
-                        {followingUsers.length > 0 && (
-                          <div className="flex items-center -space-x-4 ml-2">
-                            {followingUsers.slice(0, 4).map((user, index) => (
-                              <Link
-                                key={user.id}
-                                to={`/profile/${user.id}`}
-                                className="relative block flex-shrink-0"
-                                style={{ zIndex: 4 - index }}
-                              >
-                                <img
-                                  src={getAvatarUrl(user.image, user.name || "User", 40)}
-                                  alt={user.name || "User"}
-                                  className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full border-2 border-white object-cover hover:scale-110 transition-transform bg-gray-200"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = getAvatarUrl(null, user.name || "User", 40);
-                                  }}
-                                  loading="lazy"
-                                />
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      {/* Following Avatars - Overlapping */}
+                      {followingUsers.length > 0 && (
+                        <div className="flex items-center -space-x-4 ml-2">
+                          {followingUsers.slice(0, 4).map((user, index) => (
+                            <Link
+                              key={user.id}
+                              to={`/profile/${user.id}`}
+                              className="relative block flex-shrink-0"
+                              style={{ zIndex: 4 - index }}
+                            >
+                              <img
+                                src={getAvatarUrl(user.image, user.name || "User", 40)}
+                                alt={user.name || "User"}
+                                className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full border-2 border-white object-cover hover:scale-110 transition-transform bg-gray-200"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = getAvatarUrl(null, user.name || "User", 40);
+                                }}
+                                loading="lazy"
+                              />
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {"role" in profile && profile.role && (
-                      <span className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
-                        {profile.role}
-                      </span>
-                    )}
                   </div>
+                  {"role" in profile && profile.role && (
+                    <span className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
+                      {profile.role}
+                    </span>
+                  )}
                 </div>
-                {!isViewingOtherProfile && (
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    asChild
-                  >
-                    <Link to="/profile/edit">
-                      <Edit className="h-4 w-4" />
-                      Edit Profile
-                    </Link>
-                  </Button>
-                )}
               </div>
+              {!isViewingOtherProfile && (
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <Link to="/profile/edit">
+                    <Edit className="h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                </Button>
+              )}
             </div>
+          </div>
 
           {/* Profile Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -532,42 +531,42 @@ export default function ProfilePage() {
               {((profile as any)?.bio ||
                 (profile as any)?.location ||
                 (profile as any)?.website) && (
-                <div className="space-y-4">
-                  {(profile as any)?.bio && (
-                    <div className="bg-red-50/30 rounded-lg p-5 border border-red-100/50">
-                      <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
-                        About
-                      </h3>
-                      <p className="text-gray-600 leading-relaxed text-sm">
-                        {(profile as any).bio}
-                      </p>
-                    </div>
-                  )}
-                  {((profile as any)?.location || (profile as any)?.website) && (
-                    <div className="flex flex-wrap items-center gap-5 text-sm">
-                      {(profile as any)?.location && (
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <MapPin className="h-4 w-4 text-gray-500" />
-                          <span className="font-medium">{(profile as any).location}</span>
-                        </div>
-                      )}
-                      {(profile as any)?.website && (
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-gray-500" />
-                          <a
-                            href={(profile as any).website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-red-600 hover:text-red-700 font-medium hover:underline transition-colors"
-                          >
-                            {(profile as any).website}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                  <div className="space-y-4">
+                    {(profile as any)?.bio && (
+                      <div className="bg-red-50/30 rounded-lg p-5 border border-red-100/50">
+                        <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                          About
+                        </h3>
+                        <p className="text-gray-600 leading-relaxed text-sm">
+                          {(profile as any).bio}
+                        </p>
+                      </div>
+                    )}
+                    {((profile as any)?.location || (profile as any)?.website) && (
+                      <div className="flex flex-wrap items-center gap-5 text-sm">
+                        {(profile as any)?.location && (
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span className="font-medium">{(profile as any).location}</span>
+                          </div>
+                        )}
+                        {(profile as any)?.website && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-gray-500" />
+                            <a
+                              href={(profile as any).website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-red-600 hover:text-red-700 font-medium hover:underline transition-colors"
+                            >
+                              {(profile as any).website}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* Engagement Metrics - Minimal inline design */}
               {(profile as any)?.lastActiveAt &&
@@ -648,17 +647,15 @@ export default function ProfilePage() {
                               image={artwork.photos?.[0] || "/placeholder.svg"}
                               title={artwork.title || "Untitled"}
                               artist={artwork.artist || "Unknown"}
-                              price={`$${
-                                artwork.desiredPrice?.toLocaleString() || "0"
-                              }`}
+                              price={`$${artwork.desiredPrice?.toLocaleString() || "0"
+                                }`}
                               year={artwork.yearOfArtwork || "N/A"}
                               medium={artwork.support || "N/A"}
                               dimensions={
                                 artwork.dimensions &&
-                                typeof artwork.dimensions === "object"
-                                  ? `${artwork.dimensions.height || 0}x${
-                                      artwork.dimensions.width || 0
-                                    } cm`
+                                  typeof artwork.dimensions === "object"
+                                  ? `${artwork.dimensions.height || 0}x${artwork.dimensions.width || 0
+                                  } cm`
                                   : "N/A"
                               }
                               seller={artwork.user?.name || "Unknown"}
@@ -700,16 +697,16 @@ export default function ProfilePage() {
                     {/* View All Button */}
                     {(artworksData.total || artworksData.artworks.length) >
                       3 && (
-                      <div className="mt-4 flex justify-center">
-                        <Button variant="outline" asChild>
-                          <Link to="/profile/my-artworks">
-                            View All My Artworks (
-                            {artworksData.total || artworksData.artworks.length}
-                            )
-                          </Link>
-                        </Button>
-                      </div>
-                    )}
+                        <div className="mt-4 flex justify-center">
+                          <Button variant="outline" asChild>
+                            <Link to="/profile/my-artworks">
+                              View All My Artworks (
+                              {artworksData.total || artworksData.artworks.length}
+                              )
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
                     {artworksData.artworks.length <= 3 && (
                       <div className="mt-4 flex justify-center">
                         <Button variant="link" asChild>
@@ -914,7 +911,7 @@ export default function ProfilePage() {
                         <Label htmlFor="collectionVisibility">Visibility</Label>
                         <Select
                           value={newCollection.visibility}
-                          onValueChange={(value) =>
+                          onValueChange={(value: "private" | "unlisted") =>
                             setNewCollection({
                               ...newCollection,
                               visibility: value,
@@ -926,10 +923,12 @@ export default function ProfilePage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="private">Private</SelectItem>
-                            <SelectItem value="public">Public</SelectItem>
                             <SelectItem value="unlisted">Unlisted</SelectItem>
                           </SelectContent>
                         </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Collections need at least 3 artworks to be published. Publish from the collection page once you’ve added enough.
+                        </p>
                       </div>
                       <MinimalButton
                         onClick={async () => {
@@ -970,7 +969,7 @@ export default function ProfilePage() {
                               } catch (error: any) {
                                 toast.error(
                                   "Failed to upload cover image: " +
-                                    (error?.message || "An error occurred")
+                                  (error?.message || "An error occurred")
                                 );
                                 setIsUploadingCover(false);
                                 return;
@@ -1018,8 +1017,8 @@ export default function ProfilePage() {
                         {isUploadingCover
                           ? "Uploading cover..."
                           : isCreating
-                          ? "Creating..."
-                          : "Create Collection"}
+                            ? "Creating..."
+                            : "Create Collection"}
                       </MinimalButton>
                     </div>
                   </div>
@@ -1057,13 +1056,12 @@ export default function ProfilePage() {
                                 {/* Visibility Badge Overlay */}
                                 <div className="absolute top-3 right-3 z-10">
                                   <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
-                                      collection.visibility === "public"
+                                    className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${collection.visibility === "public"
                                         ? "bg-green-500/90 text-white"
                                         : collection.visibility === "unlisted"
-                                        ? "bg-yellow-500/90 text-white"
-                                        : "bg-gray-500/90 text-white"
-                                    }`}
+                                          ? "bg-yellow-500/90 text-white"
+                                          : "bg-gray-500/90 text-white"
+                                      }`}
                                   >
                                     {collection.visibility}
                                   </span>
@@ -1079,11 +1077,11 @@ export default function ProfilePage() {
                                   <ImageIcon className="h-3 w-3" />
                                   <span>
                                     {"artworkCount" in collection &&
-                                    collection.artworkCount !== undefined
+                                      collection.artworkCount !== undefined
                                       ? collection.artworkCount
                                       : 0}{" "}
                                     {("artworkCount" in collection &&
-                                    collection.artworkCount !== undefined
+                                      collection.artworkCount !== undefined
                                       ? collection.artworkCount
                                       : 0) === 1
                                       ? "artwork"
@@ -1097,6 +1095,16 @@ export default function ProfilePage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  title={
+                                    collection.visibility !== "public" &&
+                                      (collection.artworkCount ?? 0) < 3
+                                      ? "Add at least 3 artworks to publish"
+                                      : undefined
+                                  }
+                                  disabled={
+                                    collection.visibility !== "public" &&
+                                    (collection.artworkCount ?? 0) < 3
+                                  }
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -1106,7 +1114,17 @@ export default function ProfilePage() {
                                           collection.id
                                         );
                                       } else {
-                                        await publishCollection(collection.id);
+                                        const count =
+                                          collection.artworkCount ?? 0;
+                                        if (count < 3) {
+                                          toast.error(
+                                            `Collection must have at least 3 artworks to be published. Currently has ${count}.`
+                                          );
+                                          return;
+                                        }
+                                        await publishCollection(
+                                          collection.id
+                                        );
                                       }
                                       queryClient.invalidateQueries({
                                         queryKey: collectionKeys.lists(),
@@ -1315,29 +1333,29 @@ export default function ProfilePage() {
                     )}
                   {((profile as any).followerCount !== undefined ||
                     (profile as any).followingCount !== undefined) && (
-                    <>
-                      <Link
-                        to={`/profile/${profile.id}/followers`}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
-                      >
-                        <Users className="h-3.5 w-3.5 text-gray-500 group-hover:text-red-600 transition-colors" />
-                        <span className="text-xs text-gray-500">Followers</span>
-                        <span className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
-                          {(profile as any).followerCount || 0}
-                        </span>
-                      </Link>
-                      <Link
-                        to={`/profile/${profile.id}/following`}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
-                      >
-                        <Users className="h-3.5 w-3.5 text-gray-500 group-hover:text-red-600 transition-colors" />
-                        <span className="text-xs text-gray-500">Following</span>
-                        <span className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
-                          {(profile as any).followingCount || 0}
-                        </span>
-                      </Link>
-                    </>
-                  )}
+                      <>
+                        <Link
+                          to={`/profile/${profile.id}/followers`}
+                          className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
+                        >
+                          <Users className="h-3.5 w-3.5 text-gray-500 group-hover:text-red-600 transition-colors" />
+                          <span className="text-xs text-gray-500">Followers</span>
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                            {(profile as any).followerCount || 0}
+                          </span>
+                        </Link>
+                        <Link
+                          to={`/profile/${profile.id}/following`}
+                          className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
+                        >
+                          <Users className="h-3.5 w-3.5 text-gray-500 group-hover:text-red-600 transition-colors" />
+                          <span className="text-xs text-gray-500">Following</span>
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                            {(profile as any).followingCount || 0}
+                          </span>
+                        </Link>
+                      </>
+                    )}
                   {"reviewCount" in profile &&
                     (profile as any).reviewCount !== undefined && (
                       <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
@@ -1364,53 +1382,53 @@ export default function ProfilePage() {
               {((profile as any)?.timezone ||
                 (profile as any)?.languagePreference ||
                 (profile as any)?.emailSubscription !== undefined) && (
-                <div className="bg-white rounded-md p-6 border border-gray-100">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">
-                    Preferences
-                  </h2>
-                  <div className="space-y-3">
-                    {(profile as any)?.timezone && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-400" />
-                        <div>
-                          <p className="text-xs text-gray-500">Timezone</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {(profile as any).timezone}
-                          </p>
+                  <div className="bg-white rounded-md p-6 border border-gray-100">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">
+                      Preferences
+                    </h2>
+                    <div className="space-y-3">
+                      {(profile as any)?.timezone && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-xs text-gray-500">Timezone</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {(profile as any).timezone}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {(profile as any)?.languagePreference && (
-                      <div className="flex items-center gap-2">
-                        <Languages className="h-4 w-4 text-gray-400" />
-                        <div>
-                          <p className="text-xs text-gray-500">Language</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {(
-                              (profile as any).languagePreference || "en"
-                            ).toUpperCase()}
-                          </p>
+                      )}
+                      {(profile as any)?.languagePreference && (
+                        <div className="flex items-center gap-2">
+                          <Languages className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-xs text-gray-500">Language</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {(
+                                (profile as any).languagePreference || "en"
+                              ).toUpperCase()}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {(profile as any)?.emailSubscription !== undefined && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <div>
-                          <p className="text-xs text-gray-500">
-                            Email Subscriptions
-                          </p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {(profile as any).emailSubscription
-                              ? "Enabled"
-                              : "Disabled"}
-                          </p>
+                      )}
+                      {(profile as any)?.emailSubscription !== undefined && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              Email Subscriptions
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {(profile as any).emailSubscription
+                                ? "Enabled"
+                                : "Disabled"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>

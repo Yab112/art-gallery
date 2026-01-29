@@ -24,9 +24,9 @@ function Logo() {
   }
 
   return (
-    <img 
-      src="/mainlogo.png" 
-      alt="Logo" 
+    <img
+      src="/mainlogo.png"
+      alt="Logo"
       className="h-10 w-auto"
       onError={() => setImageError(true)}
     />
@@ -38,22 +38,22 @@ const footerSections = [
     title: "Discover Art",
     icon: Palette,
     links: [
+      { label: "Art Marketplace", href: "/buyart" },
       { label: "Browse Collections", href: "/buyart" },
       { label: "Featured Artists", href: "/artists" },
-      { label: "New Arrivals", href: "/new-arrivals" },
-      { label: "Curated Galleries", href: "/galleries" },
-      { label: "Art Categories", href: "/categories" },
+      { label: "New Arrivals", href: "/buyart?sort=newest" },
+      { label: "Blogs", href: "/blog" },
     ],
   },
   {
     title: "For Artists",
     icon: Brush,
     links: [
-      { label: "Sell Your Art", href: "/sell-art" },
-      { label: "Artist Resources", href: "/artist-resources" },
-      { label: "Gallery Partnerships", href: "/gallery-partnerships" },
-      { label: "Commission Work", href: "/commissions" },
-      { label: "Artist Community", href: "/artist-community" },
+      { label: "Sell Your Art", href: "/sellart" },
+      { label: "Artist Feed", href: "/feed" },
+      { label: "My Artworks", href: "/profile/my-artworks" },
+      { label: "My Blogs", href: "/blog/my-blogs" },
+      { label: "My Collections", href: "/profile/collections" },
     ],
   },
   {
@@ -61,10 +61,7 @@ const footerSections = [
     icon: Camera,
     links: [
       { label: "Art Blog", href: "/blog" },
-      { label: "Art History", href: "/art-history" },
-      { label: "Collecting Guide", href: "/collecting-guide" },
-      { label: "Art Investment", href: "/art-investment" },
-      { label: "Exhibitions", href: "/exhibitions" },
+      { label: "About Artopia", href: "/how-it-works" },
     ],
   },
 ];
@@ -92,7 +89,7 @@ export function Footer() {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !email.trim()) {
       toast.error("Please enter a valid email address");
       return;
@@ -229,7 +226,7 @@ export function Footer() {
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 required
               />
-              <button 
+              <button
                 type="submit"
                 disabled={isSubscribing}
                 className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -253,22 +250,22 @@ export function Footer() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-600">
               <Link
-                to="/privacy"
+                to="/"
                 className="hover:text-gray-900 transition-colors"
               >
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="hover:text-gray-900 transition-colors">
+              <Link to="/" className="hover:text-gray-900 transition-colors">
                 Terms of Service
               </Link>
               <Link
-                to="/cookies"
+                to="/"
                 className="hover:text-gray-900 transition-colors"
               >
                 Cookie Policy
               </Link>
               <Link
-                to="/accessibility"
+                to="/"
                 className="hover:text-gray-900 transition-colors"
               >
                 Accessibility

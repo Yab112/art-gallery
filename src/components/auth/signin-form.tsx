@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -104,14 +104,14 @@ export function SigninForm({
     } catch (err: any) {
       // Also check catch block for verification errors
       const errorMessage = err?.message || "An error occurred. Please try again.";
-      if (err?.status === 403 || 
-          errorMessage.toLowerCase().includes("verify") ||
-          errorMessage.toLowerCase().includes("verification")) {
+      if (err?.status === 403 ||
+        errorMessage.toLowerCase().includes("verify") ||
+        errorMessage.toLowerCase().includes("verification")) {
         navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
         setIsLoading(false);
         return;
       }
-      
+
       setError(errorMessage);
       setIsLoading(false);
     }
@@ -142,9 +142,8 @@ export function SigninForm({
             type="email"
             placeholder="username@gmail.com"
             {...register("email", { required: "Email is required" })}
-            className={`h-12 ${
-              errors.email ? "border-red-500" : "border-gray-300"
-            } bg-white`}
+            className={`h-12 ${errors.email ? "border-red-500" : "border-gray-300"
+              } bg-white`}
           />
           {errors.email && (
             <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -161,9 +160,8 @@ export function SigninForm({
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               {...register("password", { required: "Password is required" })}
-              className={`h-12 pr-10 ${
-                errors.password ? "border-red-500" : "border-gray-300"
-              } bg-white`}
+              className={`h-12 pr-10 ${errors.password ? "border-red-500" : "border-gray-300"
+                } bg-white`}
             />
             <button
               type="button"
@@ -254,7 +252,7 @@ export function SigninForm({
         </Button>
       </div>
 
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <p className="text-gray-600">
           New User?{" "}
           <button
@@ -263,6 +261,15 @@ export function SigninForm({
             className="text-red-700 hover:text-red-800 font-medium"
           >
             Signup
+          </button>
+        </p>
+        <p className="text-sm">
+          <button
+            type="button"
+            onClick={() => navigate("/buyart")}
+            className="text-gray-500 hover:text-gray-700 underline"
+          >
+            Explore as guest
           </button>
         </p>
       </div>
