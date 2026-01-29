@@ -12,7 +12,7 @@ import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkT
 import { useQueryClient } from "@tanstack/react-query";
 import { collectionKeys } from "@/queries/queryKeys";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Square, Loader2, Image, Plus, Palette } from "lucide-react";
+import { CheckSquare, Square, Loader2, Plus, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -21,14 +21,14 @@ export default function ArtMarketplace() {
   const navigate = useNavigate();
   const artworksSectionRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  
-  // Check if we're in "add to collection" mode
+
+  // Check if we're in "add to collection" mode (guests cannot use it)
   const collectionId = searchParams.get("addToCollection");
-  const isSelectionMode = !!collectionId;
-  
+  const isSelectionMode = !!user && !!collectionId;
+
   // Selection state
   const [selectedArtworkIds, setSelectedArtworkIds] = useState<Set<string>>(new Set());
-  
+
   // Collection operations
   const { addArtwork, isAdding } = useAddArtworkToCollection();
   const queryClient = useQueryClient();
@@ -41,7 +41,7 @@ export default function ArtMarketplace() {
   const priceRange = searchParams.get("priceRange") || "price";
   const medium = searchParams.get("medium") || "medium";
   const rarity = searchParams.get("rarity") || "rarity";
-  
+
   // Get category from URL - can be slug (from mega menu) or IDs (from filters)
   const categorySlug = searchParams.get("category") || "";
   const categoryParam = searchParams.get("categories") || "";
@@ -104,7 +104,7 @@ export default function ArtMarketplace() {
 
   // Fetch categories from backend
   const { data: categoriesData, isLoading: isLoadingCategories } = useGetCategories();
-  
+
   // Transform categories to CategoryGrid format
   const categories = (categoriesData || []).map((category) => ({
     id: category.id,
@@ -113,16 +113,25 @@ export default function ArtMarketplace() {
     count: (category.artworkCount || 0).toLocaleString(),
   }));
 
+  // Strip addToCollection for guests — they must sign in to add to collection
+  useEffect(() => {
+    if (!user && collectionId) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("addToCollection");
+      setSearchParams(next, { replace: true });
+    }
+  }, [user, collectionId, searchParams, setSearchParams]);
+
   // Convert category slug to category ID if category slug is provided (from mega menu)
   useEffect(() => {
     if (categorySlug && categoriesData && categoriesData.length > 0) {
       const category = categoriesData.find((cat) => cat.slug === categorySlug);
       if (category && !selectedCategoryIds.includes(category.id)) {
         // Update URL to use category ID instead of slug
-        updateSearchParams({ 
+        updateSearchParams({
           category: null, // Remove slug param
           categories: [category.id], // Add category ID
-          page: 1 
+          page: 1
         });
       }
     }
@@ -141,7 +150,7 @@ export default function ArtMarketplace() {
     if (selectedCategoryIds.length > 0) {
       params.categoryIds = selectedCategoryIds;
     }
-    
+
     // Use search query if provided (can be combined with category filter)
     if (searchQuery) {
       params.search = searchQuery;
@@ -252,7 +261,7 @@ export default function ArtMarketplace() {
       queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
 
       toast.success(`Added ${selectedArtworkIds.size} artwork(s) to collection`);
-      
+
       // Redirect back to collection detail page
       navigate(`/collections/${collectionId}`);
     } catch (error: any) {
@@ -266,9 +275,9 @@ export default function ArtMarketplace() {
     const newSelectedIds = selectedCategoryIds.includes(categoryId)
       ? selectedCategoryIds.filter((id) => id !== categoryId)
       : [...selectedCategoryIds, categoryId];
-    
+
     updateSearchParams({ categories: newSelectedIds, page: 1 });
-    
+
     // Scroll to artworks section if a category is selected (user-initiated)
     if (newSelectedIds.length > 0 && artworksSectionRef.current) {
       requestAnimationFrame(() => {
@@ -299,23 +308,23 @@ export default function ArtMarketplace() {
       // Get first photo, or null if no photos exist
       const firstPhoto = artwork.photos?.[0];
       // Only use photo if it's a valid URL string
-      const imageUrl = firstPhoto && typeof firstPhoto === 'string' && firstPhoto.trim() !== '' 
-        ? firstPhoto 
+      const imageUrl = firstPhoto && typeof firstPhoto === 'string' && firstPhoto.trim() !== ''
+        ? firstPhoto
         : null;
-      
+
       return {
-      id: artwork.id,
+        id: artwork.id,
         image: imageUrl || "", // Empty string will trigger placeholder in ArtworkCard
-      title: artwork.title || "Untitled",
-      artist: artwork.artist,
-      price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
-      year: artwork.yearOfArtwork,
-      medium: artwork.support, // Changed from technique to support
-      dimensions: artwork.dimensions
-        ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
-        : "N/A",
-      seller: artwork.user?.name || "Unknown",
-      status: artwork.status,
+        title: artwork.title || "Untitled",
+        artist: artwork.artist,
+        price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
+        year: artwork.yearOfArtwork,
+        medium: artwork.support, // Changed from technique to support
+        dimensions: artwork.dimensions
+          ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+          : "N/A",
+        seller: artwork.user?.name || "Unknown",
+        status: artwork.status,
       };
     }) || [];
 
@@ -325,6 +334,7 @@ export default function ArtMarketplace() {
         title="Collect art and design online"
         subtitle="Discover exceptional artworks from galleries, artists, and collectors worldwide"
         buttonText="Browse by collection"
+        onButtonClick={() => navigate("/collections")}
       />
 
       {isLoadingCategories ? (
@@ -455,7 +465,7 @@ export default function ArtMarketplace() {
       )}
 
       <div ref={artworksSectionRef} className="min-h-[500px]">
-      {isLoading ? (
+        {isLoading ? (
           <div className="px-4 py-8">
             <div className="mx-auto max-w-7xl">
               {/* Skeleton loader matching grid layout */}
@@ -470,34 +480,35 @@ export default function ArtMarketplace() {
                 ))}
               </div>
             </div>
-        </div>
-      ) : error ? (
-          <div className="flex items-center justify-center py-12 min-h-[500px]">
-          <p className="text-red-600">
-            Failed to load artworks. Please try again.
-          </p>
-        </div>
-      ) : artworks.length > 0 ? (
-        <ArtworkGrid
-          artworks={artworks}
-          viewMode={viewMode}
-          onFavorite={handleFavorite}
-          currentPage={artworksData?.page ?? page ?? 1}
-          totalPages={Math.max(artworksData?.pages ?? 1, 1)}
-          onPageChange={handlePageChange}
-          isSelectionMode={isSelectionMode}
-          selectedArtworkIds={selectedArtworkIds}
-          onToggleSelection={handleToggleSelection}
-        />
-      ) : (
-          <div className="min-h-[500px]">
-        <ArtworkGrid
-          artworks={[]}
-          viewMode={viewMode}
-          onFavorite={handleFavorite}
-        />
           </div>
-      )}
+        ) : error ? (
+          <div className="flex items-center justify-center py-12 min-h-[500px]">
+            <p className="text-red-600">
+              Failed to load artworks. Please try again.
+            </p>
+          </div>
+        ) : artworks.length > 0 ? (
+          <ArtworkGrid
+            artworks={artworks}
+            viewMode={viewMode}
+            onFavorite={handleFavorite}
+            currentPage={artworksData?.page ?? page ?? 1}
+            totalPages={Math.max(artworksData?.pages ?? 1, 1)}
+            onPageChange={handlePageChange}
+            isSelectionMode={isSelectionMode}
+            selectedArtworkIds={selectedArtworkIds}
+            onToggleSelection={handleToggleSelection}
+          />
+        ) : (
+          <div className="min-h-[500px]">
+            <ArtworkGrid
+              artworks={[]}
+              viewMode={viewMode}
+              onFavorite={handleFavorite}
+              hideFavorite={!user}
+            />
+          </div>
+        )}
       </div>
 
       <CallToAction
@@ -505,6 +516,8 @@ export default function ArtMarketplace() {
         subtitle="Join thousands of collectors discovering exceptional art"
         primaryButtonText="Discover Artists"
         secondaryButtonText="Browse Collections"
+        onPrimaryClick={() => navigate("/artists")}
+        onSecondaryClick={() => navigate("/collections")}
       />
     </div>
   );

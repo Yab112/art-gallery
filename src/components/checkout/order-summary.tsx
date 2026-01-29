@@ -6,8 +6,6 @@ import { useRemoveFromCart } from "@/services/cart/useRemoveFromCart";
 import { useCheckout } from "@/contexts/CheckoutContext";
 import { useEffect } from "react";
 
-const PLATFORM_COMMISSION_RATE = 0.10; // 10% platform fee
-
 export function OrderSummary() {
   // Fetch cart data from backend
   const { data: cartData, isLoading } = useCartItems(1, 50);
@@ -20,7 +18,7 @@ export function OrderSummary() {
   useEffect(() => {
     if (cartItems.length > 0) {
       const currentItemIds = new Set(cartItems.map(item => item.id));
-      
+
       // If no items are selected, select all
       if (selectedCartItemIds.size === 0) {
         setSelectedCartItemIds(currentItemIds);
@@ -29,7 +27,7 @@ export function OrderSummary() {
         const newItemIds = cartItems
           .filter(item => !selectedCartItemIds.has(item.id))
           .map(item => item.id);
-        
+
         if (newItemIds.length > 0) {
           setSelectedCartItemIds(prev => {
             const newSet = new Set(prev);
@@ -37,12 +35,12 @@ export function OrderSummary() {
             return newSet;
           });
         }
-        
+
         // Remove items that no longer exist in cart
         const removedItemIds = Array.from(selectedCartItemIds).filter(
           id => !currentItemIds.has(id)
         );
-        
+
         if (removedItemIds.length > 0) {
           setSelectedCartItemIds(prev => {
             const newSet = new Set(prev);
@@ -66,15 +64,15 @@ export function OrderSummary() {
     const isNotApproved = item.artwork?.status !== "APPROVED";
     return isSelected && !isSold && !isNotApproved;
   });
-  
+
   // Calculate subtotal from SELECTED items only
   const subtotal = selectedItems.reduce((sum, item) => {
     const price = Number(item.artwork?.desiredPrice) || 0;
     return sum + (price * item.quantity);
   }, 0);
-  
-  const platformFee = subtotal * PLATFORM_COMMISSION_RATE;
-  const total = subtotal + platformFee;
+
+  // Total is now just the subtotal (inclusive of platform fee)
+  const total = subtotal;
 
   const handleToggleItem = (itemId: string) => {
     setSelectedCartItemIds(prev => {
@@ -144,13 +142,12 @@ export function OrderSummary() {
             const isSold = item.artwork?.status === "SOLD";
             const isNotApproved = item.artwork?.status !== "APPROVED";
             const isDisabled = isSold || isNotApproved;
-            
+
             return (
-              <div 
-                key={item.id} 
-                className={`flex gap-2 p-2 rounded border ${
-                  isSelected && !isDisabled ? "border-red-300" : "border-gray-200"
-                } ${isDisabled ? "opacity-60 bg-gray-50" : ""}`}
+              <div
+                key={item.id}
+                className={`flex gap-2 p-2 rounded border ${isSelected && !isDisabled ? "border-red-300" : "border-gray-200"
+                  } ${isDisabled ? "opacity-60 bg-gray-50" : ""}`}
               >
                 <div className="flex-shrink-0 pt-0.5">
                   <Checkbox
@@ -204,33 +201,14 @@ export function OrderSummary() {
         </div>
       )}
 
-      {/* Promo Code */}
-      {selectedItems.length > 0 && (
-        <div className="mb-3 pb-3 border-b border-gray-200">
-          <div className="flex gap-1">
-            <input
-              type="text"
-              placeholder="Promo code"
-              className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-red-500"
-            />
-            <Button variant="outline" size="sm" className="text-xs h-7 px-2">
-              Apply
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Price Breakdown */}
+      {/* Price Breakdown — Subtotal and Total are now the same (inclusive of fees) */}
       {selectedItems.length > 0 && (
         <div className="space-y-1.5 mb-4">
           <div className="flex justify-between text-xs py-1">
             <span className="text-gray-600">Subtotal</span>
             <span className="text-gray-900">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
-          <div className="flex justify-between text-xs py-1">
-            <span className="text-gray-600">Platform Fee ({Math.round(PLATFORM_COMMISSION_RATE * 100)}%)</span>
-            <span className="text-gray-900">${platformFee.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
+
           <div className="border-t border-gray-200 pt-2 mt-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-900">Total</span>

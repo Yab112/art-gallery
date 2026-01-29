@@ -150,7 +150,7 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
 
       // Refresh collections list
       const refetchResult = await refetch();
-      
+
       // Close create modal but keep the main modal open
       setIsCreateModalOpen(false);
 
@@ -235,18 +235,16 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
                       key={collection.id}
                       type="button"
                       onClick={() => handleToggleCollection(collection.id)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all ${
-                        isSelected
+                      className={`w-full text-left p-3 rounded-lg border transition-all ${isSelected
                           ? "border-red-700 bg-red-50"
                           : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                          isSelected
+                        <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${isSelected
                             ? "border-red-700 bg-red-700"
                             : "border-gray-300 bg-white"
-                        }`}>
+                          }`}>
                           {isSelected && (
                             <svg
                               className="w-3 h-3 text-white"
@@ -261,17 +259,15 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
                             </svg>
                           )}
                         </div>
-                        <FolderOpen className={`h-5 w-5 flex-shrink-0 ${
-                          isSelected
+                        <FolderOpen className={`h-5 w-5 flex-shrink-0 ${isSelected
                             ? "text-red-700"
                             : "text-gray-500"
-                        }`} />
+                          }`} />
                         <div className="flex-1 min-w-0">
-                          <div className={`font-medium text-sm ${
-                            isSelected
+                          <div className={`font-medium text-sm ${isSelected
                               ? "text-red-900"
                               : "text-gray-900"
-                          }`}>
+                            }`}>
                             {collection.name}
                           </div>
                           {collection.description && (
@@ -319,182 +315,182 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
         </div>
       </DialogContent>
 
-      {/* Create Collection Modal */}
+      {/* Create Collection Modal — z-index above Add to Collection dialog (101) so it appears on top */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} modal={true}>
         <DialogPortal>
-          {/* Transparent overlay so it doesn't darken the background further */}
-          <DialogOverlay className="bg-black/0" />
-          <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-[60] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              Create New Collection
-            </DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
-              Create a new collection and add this artwork to it.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="collectionName">
-                Collection Name *
-              </Label>
-              <Input
-                id="collectionName"
-                value={newCollection.name}
-                onChange={(e) =>
-                  setNewCollection({
-                    ...newCollection,
-                    name: e.target.value,
-                  })
-                }
-                placeholder="Enter collection name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="collectionDescription">
-                Description
-              </Label>
-              <Textarea
-                id="collectionDescription"
-                value={newCollection.description}
-                onChange={(e) =>
-                  setNewCollection({
-                    ...newCollection,
-                    description: e.target.value,
-                  })
-                }
-                placeholder="Enter collection description (optional)"
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="collectionCoverImage">
-                Cover Image (Optional)
-              </Label>
+          <DialogOverlay className="z-[110] bg-black/40" />
+          <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-[111] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Create New Collection
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600">
+                Create a new collection and add this artwork to it.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                {coverImagePreview ? (
-                  <div className="relative">
-                    <img
-                      src={coverImagePreview}
-                      alt="Cover preview"
-                      className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => {
-                        setCoverImageFile(null);
-                        setCoverImagePreview("");
-                        setNewCollection({
-                          ...newCollection,
-                          coverImage: "",
-                        });
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <Label
-                      htmlFor="coverImageInput"
-                      className="cursor-pointer text-sm text-gray-600 hover:text-gray-900"
-                    >
-                      Click to upload cover image
-                    </Label>
-                    <Input
-                      id="coverImageInput"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
+                <Label htmlFor="collectionName">
+                  Collection Name *
+                </Label>
+                <Input
+                  id="collectionName"
+                  value={newCollection.name}
+                  onChange={(e) =>
+                    setNewCollection({
+                      ...newCollection,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder="Enter collection name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="collectionDescription">
+                  Description
+                </Label>
+                <Textarea
+                  id="collectionDescription"
+                  value={newCollection.description}
+                  onChange={(e) =>
+                    setNewCollection({
+                      ...newCollection,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Enter collection description (optional)"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="collectionCoverImage">
+                  Cover Image (Optional)
+                </Label>
+                <div className="space-y-2">
+                  {coverImagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={coverImagePreview}
+                        alt="Cover preview"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          setCoverImageFile(null);
+                          setCoverImagePreview("");
+                          setNewCollection({
+                            ...newCollection,
+                            coverImage: "",
+                          });
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                      <Label
+                        htmlFor="coverImageInput"
+                        className="cursor-pointer text-sm text-gray-600 hover:text-gray-900"
+                      >
+                        Click to upload cover image
+                      </Label>
+                      <Input
+                        id="coverImageInput"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
 
-                        // Validate file size (max 5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                          toast.error("Image size must be less than 5MB");
-                          return;
-                        }
+                          // Validate file size (max 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error("Image size must be less than 5MB");
+                            return;
+                          }
 
-                        // Validate file type
-                        if (!file.type.startsWith("image/")) {
-                          toast.error("Please select an image file");
-                          return;
-                        }
+                          // Validate file type
+                          if (!file.type.startsWith("image/")) {
+                            toast.error("Please select an image file");
+                            return;
+                          }
 
-                        setCoverImageFile(file);
-                        setCoverImagePreview(URL.createObjectURL(file));
-                      }}
-                    />
-                  </div>
-                )}
+                          setCoverImageFile(file);
+                          setCoverImagePreview(URL.createObjectURL(file));
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="collectionVisibility">Visibility</Label>
+                <Select
+                  value={newCollection.visibility}
+                  onValueChange={(value) =>
+                    setNewCollection({
+                      ...newCollection,
+                      visibility: value,
+                    })
+                  }
+                >
+                  <SelectTrigger id="collectionVisibility">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="private">Private</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Collections need at least 3 artworks to be published. Create as private or unlisted, then publish from the collection page.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    setNewCollection({
+                      name: "",
+                      description: "",
+                      visibility: "private",
+                      coverImage: "",
+                    });
+                    setCoverImageFile(null);
+                    setCoverImagePreview("");
+                  }}
+                  disabled={isCreating || isUploadingCover}
+                  className="rounded-full"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateCollection}
+                  disabled={isCreating || isUploadingCover || !newCollection.name.trim()}
+                  className="bg-red-700 hover:bg-red-800 text-white rounded-full"
+                >
+                  {isCreating || isUploadingCover ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {isUploadingCover ? "Uploading..." : "Creating..."}
+                    </>
+                  ) : (
+                    "Create & Add Artwork"
+                  )}
+                </Button>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="collectionVisibility">Visibility</Label>
-              <Select
-                value={newCollection.visibility}
-                onValueChange={(value) =>
-                  setNewCollection({
-                    ...newCollection,
-                    visibility: value,
-                  })
-                }
-              >
-                <SelectTrigger id="collectionVisibility">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="private">Private</SelectItem>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="unlisted">Unlisted</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsCreateModalOpen(false);
-                  setNewCollection({
-                    name: "",
-                    description: "",
-                    visibility: "private",
-                    coverImage: "",
-                  });
-                  setCoverImageFile(null);
-                  setCoverImagePreview("");
-                }}
-                disabled={isCreating || isUploadingCover}
-                className="rounded-full"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateCollection}
-                disabled={isCreating || isUploadingCover || !newCollection.name.trim()}
-                className="bg-red-700 hover:bg-red-800 text-white rounded-full"
-              >
-                {isCreating || isUploadingCover ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {isUploadingCover ? "Uploading..." : "Creating..."}
-                  </>
-                ) : (
-                  "Create & Add Artwork"
-                )}
-              </Button>
-            </div>
-          </div>
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        </DialogPrimitive.Content>
+            <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogPrimitive.Close>
+          </DialogPrimitive.Content>
         </DialogPortal>
       </Dialog>
     </Dialog>

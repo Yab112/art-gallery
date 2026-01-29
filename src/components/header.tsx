@@ -1,8 +1,8 @@
-import { Search, ShoppingCart, X, Menu, User, LogOut, Settings, Heart, ShoppingBag, LogIn, UserPlus } from "lucide-react";
+import { Search, ShoppingCart, X, Menu, User, LogOut, Settings, Heart, ShoppingBag, LogIn, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { UserDropdown } from "./user-dropdown";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCartSummary } from "@/queries/cartQueries";
 import { useNavigate } from "react-router-dom";
 import { MegaMenu } from "./mega-menu";
@@ -10,6 +10,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { SigninForm } from "./auth/signin-form";
 import { SignupForm } from "./auth/signup-form";
 import { AuthLayout } from "./auth/auth-layout";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useArtworks } from "@/queries/artworkQueries";
+import { useCollections } from "@/queries/collectionQueries";
+import { useGetAllArtists } from "@/services/artist/useGetAllArtists";
 
 function Logo() {
   const [imageError, setImageError] = useState(false);
@@ -174,6 +178,15 @@ function MobileUserMenu({ onItemClick }: { onItemClick: () => void }) {
         <UserPlus className="h-4 w-4 mr-3 text-gray-500" />
         Create Account
       </button>
+      <button
+        className="flex items-center w-full px-2 py-2 text-sm text-gray-500 hover:bg-gray-50 rounded transition-colors"
+        onClick={() => {
+          onItemClick();
+          navigate("/buyart");
+        }}
+      >
+        Explore as guest
+      </button>
     </div>
   );
 }
@@ -183,12 +196,49 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Fetch cart summary for count
-  const { data: cartSummary } = useCartSummary();
-  // Use itemCount (number of unique artworks) instead of totalItems (sum of quantities)
+  // Fetch cart summary only when logged in (guests: hide cart, skip API)
+  const { data: cartSummary } = useCartSummary({ enabled: !!user });
   const cartCount = cartSummary?.itemCount || 0;
 
+  // Search functionality
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  const { data: artworksData, isLoading: isLoadingArtworks } = useArtworks(
+    { search: debouncedSearchQuery, limit: 5 },
+    { enabled: debouncedSearchQuery.length >= 2 }
+  );
+
+  const { data: collectionsData, isLoading: isLoadingCollections } = useCollections(
+    1,
+    5,
+    "public",
+    debouncedSearchQuery,
+    { enabled: debouncedSearchQuery.length >= 2 }
+  );
+
+  const { data: artistsData, isLoading: isLoadingArtists } = useGetAllArtists(
+    1,
+    5,
+    debouncedSearchQuery,
+    undefined,
+    undefined,
+    undefined,
+    { enabled: debouncedSearchQuery.length >= 2 }
+  );
+
+  const isSearching = isLoadingArtworks || isLoadingCollections || isLoadingArtists;
+  const hasResults =
+    (artworksData?.artworks?.length || 0) > 0 ||
+    (collectionsData?.collections?.length || 0) > 0 ||
+    (artistsData?.artists?.length || 0) > 0;
+
+  const handleResultClick = (path: string) => {
+    navigate(path);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  };
   const handleSearchToggle = () => {
     setIsSearchOpen(!isSearchOpen);
     if (isSearchOpen) {
@@ -198,6 +248,29 @@ export default function Header() {
       setIsMobileMenuOpen(false);
     }
   };
+
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+  const searchButtonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const isInsideDropdown = searchDropdownRef.current?.contains(target);
+      const isInsideButton = searchButtonRef.current?.contains(target);
+
+      if (!isInsideDropdown && !isInsideButton) {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSearchOpen]);
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -254,12 +327,14 @@ export default function Header() {
                   <Logo />
                 </Link>
                 <MegaMenu type="artist" label="Artists" />
-                <Link
-                  to="/orders"
-                  className="text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  Orders
-                </Link>
+                {user && (
+                  <Link
+                    to="/orders"
+                    className="text-gray-700 hover:text-gray-900 transition-colors"
+                  >
+                    Orders
+                  </Link>
+                )}
                 <Link
                   to="/blog"
                   className="text-gray-700 hover:text-gray-900 transition-colors"
@@ -270,7 +345,7 @@ export default function Header() {
             </div>
 
             {/* Action buttons - always visible */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" ref={searchButtonRef}>
               <Button
                 size="icon"
                 variant="ghost"
@@ -286,20 +361,22 @@ export default function Header() {
               <div className="hidden sm:block">
                 <UserDropdown />
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => navigate("/checkout")}
-              >
-                <div className="relative">
-                  <ShoppingCart className="h-5 w-5 cursor-pointer text-gray-600" />
-                  {cartCount > 0 && (
-                    <span className="-top-2 -right-2 absolute flex h-4 w-4 items-center justify-center rounded-full bg-black text-white text-xs">
-                      {cartCount}
-                    </span>
-                  )}
-                </div>
-              </Button>
+              {user && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => navigate("/checkout")}
+                >
+                  <div className="relative">
+                    <ShoppingCart className="h-5 w-5 cursor-pointer text-gray-600" />
+                    {cartCount > 0 && (
+                      <span className="-top-2 -right-2 absolute flex h-4 w-4 items-center justify-center rounded-full bg-black text-white text-xs">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -341,9 +418,9 @@ export default function Header() {
                   <span>How it works</span>
                 </Link>
                 <div className="border-t pt-4">
-                  <MegaMenu 
-                    type="artwork" 
-                    label="Artworks" 
+                  <MegaMenu
+                    type="artwork"
+                    label="Artworks"
                     mobileMode={true}
                     onItemClick={handleMobileMenuToggle}
                   />
@@ -356,9 +433,9 @@ export default function Header() {
                   Collections
                 </Link>
                 <div className="border-t pt-4">
-                  <MegaMenu 
-                    type="artist" 
-                    label="Artists" 
+                  <MegaMenu
+                    type="artist"
+                    label="Artists"
                     mobileMode={true}
                     onItemClick={handleMobileMenuToggle}
                   />
@@ -383,7 +460,10 @@ export default function Header() {
 
       {/* Beautiful Search Input Field */}
       {isSearchOpen && (
-        <div className="sticky top-[73px] z-40 bg-white border-b shadow-lg animate-in slide-in-from-top-2 duration-300">
+        <div
+          ref={searchDropdownRef}
+          className="sticky top-[73px] z-40 bg-white border-b shadow-lg animate-in slide-in-from-top-2 duration-300"
+        >
           <div className="mx-auto max-w-7xl px-4 py-4 md:py-6">
             <form onSubmit={handleSearchSubmit} className="relative">
               <div className="relative">
@@ -440,6 +520,113 @@ export default function Header() {
                 </button>
               </div>
             </form>
+
+            {/* Search Results Dropdown */}
+            {debouncedSearchQuery.length >= 2 && (
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8 pb-4 max-h-[60vh] overflow-y-auto">
+                {/* Artworks column */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                    Artworks
+                    {isLoadingArtworks && <Loader2 className="h-3 w-3 animate-spin" />}
+                  </h3>
+                  <div className="space-y-2">
+                    {artworksData?.artworks?.map((artwork) => (
+                      <button
+                        key={artwork.id}
+                        onClick={() => handleResultClick(`/artwork/${artwork.id}`)}
+                        className="flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-lg transition-colors text-left group"
+                      >
+                        <div className="h-12 w-12 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
+                          {artwork.photos?.[0] ? (
+                            <img src={artwork.photos[0]} alt={artwork.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">🎨</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{artwork.title}</p>
+                          <p className="text-xs text-gray-500 font-mono">${artwork.desiredPrice}</p>
+                        </div>
+                      </button>
+                    ))}
+                    {!isLoadingArtworks && artworksData?.artworks?.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">No artworks found</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Artists column */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                    Artists
+                    {isLoadingArtists && <Loader2 className="h-3 w-3 animate-spin" />}
+                  </h3>
+                  <div className="space-y-2">
+                    {artistsData?.artists?.map((artist) => (
+                      <button
+                        key={artist.id}
+                        onClick={() => handleResultClick(`/artist/${artist.id}`)}
+                        className="flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-lg transition-colors text-left group"
+                      >
+                        <div className="h-12 w-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
+                          {artist.avatar ? (
+                            <img src={artist.avatar} alt={artist.name} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">👨‍🎨</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{artist.name}</p>
+                          <p className="text-xs text-gray-500">{artist.country || 'Global Artist'}</p>
+                        </div>
+                      </button>
+                    ))}
+                    {!isLoadingArtists && artistsData?.artists?.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">No artists found</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Collections column */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                    Collections
+                    {isLoadingCollections && <Loader2 className="h-3 w-3 animate-spin" />}
+                  </h3>
+                  <div className="space-y-2">
+                    {collectionsData?.collections?.map((collection) => (
+                      <button
+                        key={collection.id}
+                        onClick={() => handleResultClick(`/collections/${collection.id}`)}
+                        className="flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-lg transition-colors text-left group"
+                      >
+                        <div className="h-12 w-12 rounded-md bg-gray-100 overflow-hidden flex-shrink-0 shadow-sm">
+                          {collection.coverImage ? (
+                            <img src={collection.coverImage} alt={collection.name} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">🖼️</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{collection.name}</p>
+                          <p className="text-xs text-gray-500">{collection.artworkCount || 0} items</p>
+                        </div>
+                      </button>
+                    ))}
+                    {!isLoadingCollections && collectionsData?.collections?.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">No collections found</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {debouncedSearchQuery.length >= 2 && !isSearching && !hasResults && (
+              <div className="mt-8 text-center py-8">
+                <p className="text-gray-500">No results found for "{debouncedSearchQuery}"</p>
+              </div>
+            )}
           </div>
         </div>
       )}

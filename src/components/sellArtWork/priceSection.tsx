@@ -24,15 +24,14 @@ interface PriceSectionProps {
 }
 
 export function PriceSection({ control, errors, formData }: PriceSectionProps) {
-  const { data: platformSettings } = usePlatformSettings();
-  
-  // Get commission rate from API or fallback to default (30%)
-  const commissionRate = platformSettings?.settings?.platformCommissionRate 
-    ? platformSettings.settings.platformCommissionRate / 100 // Convert percentage to decimal
-    : 0.1; // Default fallback
-  
-  const calculateNetPrice = () => {
-    // Remove $ and commas, then parse
+  const { data: platformSettings, isLoading: isLoadingSettings, isError: isSettingsError } = usePlatformSettings();
+  const commissionRate =
+    platformSettings?.settings?.platformCommissionRate != null
+      ? platformSettings.settings.platformCommissionRate / 100
+      : null;
+
+  const calculateNetPrice = (): number | null => {
+    if (commissionRate == null) return null;
     const priceStr = formData.desiredPrice?.replace(/[$,]/g, "") || "0";
     const price = Number.parseFloat(priceStr) || 0;
     const commission = price * commissionRate;
@@ -115,14 +114,22 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
 
         <div className="space-y-2">
           <Label>
-            For you (commission {Math.round(commissionRate * 100)}% + taxes)
+            For you
+            {commissionRate != null
+              ? ` (commission ${Math.round(commissionRate * 100)}%)`
+              : ""}
           </Label>
           <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
             <p className="text-sm text-gray-700">
-              ${calculateNetPrice().toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {commissionRate != null ? (
+                <>${(calculateNetPrice() ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+              ) : isLoadingSettings ? (
+                <span className="text-muted-foreground">Loading…</span>
+              ) : isSettingsError ? (
+                <span className="text-muted-foreground">Unavailable</span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
             </p>
           </div>
         </div>

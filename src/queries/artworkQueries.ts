@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, UseQueryOptions } from "@tanstack/react-query";
 import { artworkKeys } from "./queryKeys";
 import type {
   Artwork,
@@ -9,24 +9,24 @@ import useAxiosAuth from "@/hooks/use-axios-auth";
 import { useFetchData } from "@/hooks/use-query";
 
 // Query Hooks
-export const useArtworks = (params?: ArtworkQueryParams) => {
+export const useArtworks = (params?: ArtworkQueryParams, options?: Partial<UseQueryOptions<ArtworkListResponse>>) => {
   const queryString = params
     ? (() => {
-        const searchParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            if (Array.isArray(value)) {
-              // For arrays, add each item as a separate query param (NestJS will parse as array)
-              value.forEach((item) => {
-                searchParams.append(key, String(item));
-              });
-            } else {
-              searchParams.append(key, String(value));
-            }
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            // For arrays, add each item as a separate query param (NestJS will parse as array)
+            value.forEach((item) => {
+              searchParams.append(key, String(item));
+            });
+          } else {
+            searchParams.append(key, String(value));
           }
-        });
-        return searchParams.toString();
-      })()
+        }
+      });
+      return searchParams.toString();
+    })()
     : "";
 
   const axiosAuth = useAxiosAuth();
@@ -71,6 +71,7 @@ export const useArtworks = (params?: ArtworkQueryParams) => {
     staleTime: 10 * 60 * 1000, // Increase stale time to 10 minutes
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: false, // Prevent refetch on window focus
+    ...options,
   });
 };
 
@@ -97,7 +98,7 @@ export const useMyArtworks = (page: number = 1, limit: number = 10) => {
  */
 export const useSimilarArtworks = (artworkId: string, limit: number = 12) => {
   const axiosAuth = useAxiosAuth();
-  
+
   return useQuery<{ success: boolean; artworks: Artwork[] }>({
     queryKey: [...artworkKeys.detail(artworkId), "similar", limit],
     queryFn: async () => {

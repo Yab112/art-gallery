@@ -152,8 +152,8 @@ export default function BlogPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Create Blog Button - Top Right */}
-        {user && (
+        {/* Create Blog Button or Sign in CTA */}
+        {user ? (
           <div className="mb-6 flex justify-end">
             <Button 
               onClick={() => setIsCreateModalOpen(true)}
@@ -166,6 +166,14 @@ export default function BlogPage() {
               isOpen={isCreateModalOpen} 
               onClose={() => setIsCreateModalOpen(false)} 
             />
+          </div>
+        ) : (
+          <div className="mb-6 flex justify-end">
+            <Link to={`/login?redirect=${encodeURIComponent("/blog")}`}>
+              <Button variant="outline" className="rounded-full">
+                Sign in to create a post
+              </Button>
+            </Link>
           </div>
         )}
 

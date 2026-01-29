@@ -73,14 +73,14 @@ export default function EditProfilePage() {
   // This effect uses multiple strategies to detect and sync autofilled values
   useEffect(() => {
     const fieldsToWatch: Array<keyof ProfileFormData> = ['name', 'location', 'website', 'phone', 'bio'];
-    
+
     const syncAllAutofilledValues = () => {
       fieldsToWatch.forEach((fieldName) => {
         const input = document.getElementById(fieldName) as HTMLInputElement | HTMLTextAreaElement | null;
         if (input) {
           const currentFormValue = getValues(fieldName) || '';
           const inputValue = input.value || '';
-          
+
           // Only update if values differ (avoid infinite loops)
           if (inputValue !== currentFormValue && inputValue.trim() !== '') {
             setValue(fieldName, inputValue, { shouldValidate: true, shouldDirty: true });
@@ -131,7 +131,7 @@ export default function EditProfilePage() {
       form.addEventListener('focusin', handleFocus);
       form.addEventListener('focusout', handleBlur);
       form.addEventListener('animationstart', handleAnimationStart as EventListener);
-      
+
       // Observe the form for changes
       observer.observe(form, {
         childList: true,
@@ -245,7 +245,7 @@ export default function EditProfilePage() {
         } catch (error: any) {
           toast.error(
             "Failed to upload profile picture: " +
-              (error?.message || "An error occurred") 
+            (error?.message || "An error occurred")
           );
           setIsUploadingAvatar(false);
           return;
@@ -273,7 +273,7 @@ export default function EditProfilePage() {
         } catch (error: any) {
           toast.error(
             "Failed to upload cover image: " +
-              (error?.message || "An error occurred")
+            (error?.message || "An error occurred")
           );
           setIsUploadingCover(false);
           return;
@@ -538,8 +538,12 @@ export default function EditProfilePage() {
                   type="email"
                   {...register("email")}
                   placeholder="your.email@example.com"
-                  disabled // Email is usually not directly editable here
+                  disabled // Email is not directly editable
+                  className="bg-gray-50 cursor-not-allowed"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Email address cannot be changed directly.
+                </p>
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
@@ -658,8 +662,8 @@ export default function EditProfilePage() {
                   {isUploadingAvatar || isUploadingCover
                     ? "Uploading..."
                     : isUpdating
-                    ? "Saving..."
-                    : "Save Changes"}
+                      ? "Saving..."
+                      : "Save Changes"}
                 </Button>
               </div>
             </form>
