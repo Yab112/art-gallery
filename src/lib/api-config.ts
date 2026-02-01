@@ -8,11 +8,11 @@
 
 /**
  * Detects if the application is running in production
+ * Uses Vite's built-in environment mode for reliable detection
  */
 const isProduction = (): boolean => {
-  // Check if running on a production domain (not localhost)
-  const hostname = window.location.hostname;
-  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+  // Use Vite's built-in production mode check
+  return import.meta.env.PROD;
 };
 
 /**
@@ -26,7 +26,7 @@ export const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_BETTER_AUTH_URL;
   
   // If env variable is set and valid, use it
-  if (envUrl && envUrl !== 'undefined' && envUrl !== '') {
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
     return envUrl;
   }
   
@@ -46,7 +46,7 @@ export const getServerBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_SERVER_BASE_URL;
   
   // If env variable is set and valid, use it
-  if (envUrl && envUrl !== 'undefined' && envUrl !== '') {
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
     return envUrl;
   }
   
@@ -61,7 +61,7 @@ export const getFrontendUrl = (): string => {
   const envUrl = import.meta.env.VITE_FRONTEND_URL;
   
   // If env variable is set and valid, use it
-  if (envUrl && envUrl !== 'undefined' && envUrl !== '') {
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
     return envUrl;
   }
   
@@ -69,15 +69,12 @@ export const getFrontendUrl = (): string => {
   return window.location.origin;
 };
 
-// Log the configuration on initialization
-console.log('🔧 API Configuration:', {
-  apiBaseUrl: getApiBaseUrl(),
-  serverBaseUrl: getServerBaseUrl(),
-  frontendUrl: getFrontendUrl(),
-  isProduction: isProduction(),
-  envVars: {
-    VITE_BETTER_AUTH_URL: import.meta.env.VITE_BETTER_AUTH_URL,
-    VITE_SERVER_BASE_URL: import.meta.env.VITE_SERVER_BASE_URL,
-    VITE_FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL,
-  }
-});
+// Log the configuration on initialization (development only)
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:', {
+    apiBaseUrl: getApiBaseUrl(),
+    serverBaseUrl: getServerBaseUrl(),
+    frontendUrl: getFrontendUrl(),
+    isProduction: isProduction(),
+  });
+}
