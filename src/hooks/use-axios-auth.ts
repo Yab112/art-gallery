@@ -2,14 +2,18 @@ import { useEffect } from "react";
 import axios, { AxiosInstance } from "axios";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@/lib/auth";
+import { getServerBaseUrl } from "@/lib/api-config";
 
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_BASE_URL || '/api',
+  baseURL: getServerBaseUrl(),
   timeout: 10000, 
   withCredentials: true, // Important for Better Auth cookies - cookies are sent automatically
 });
 
-console.log("API base URL:", api.defaults.baseURL);
+// Log API base URL only in development
+if (import.meta.env.DEV) {
+  console.log("API base URL:", api.defaults.baseURL);
+}
 
 /** Paths viewable by guests. Don't redirect to login on 401 here (e.g. shared artwork links). */
 function isPublicPath(pathname: string): boolean {

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface Transaction {
   id: string;
@@ -59,7 +60,7 @@ const fetchTransactions = async (
   if (provider) params.provider = provider;
 
   const response = await axios.get(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/transactions/my-transactions`,
+    `${getApiBaseUrl()}/api/transactions/my-transactions`,
     {
       params,
       headers: {
