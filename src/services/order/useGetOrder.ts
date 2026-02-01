@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface OrderItem {
   id: string;
@@ -38,7 +39,7 @@ export interface Order {
 
 const fetchOrder = async (orderId: string): Promise<Order> => {
   const response = await axios.get(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/orders/${orderId}`,
+    `${getApiBaseUrl()}/api/orders/${orderId}`,
     {
       headers: {
         'Content-Type': 'application/json',

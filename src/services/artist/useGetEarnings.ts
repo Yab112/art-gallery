@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface Sale {
   artworkId: string;
@@ -25,7 +26,7 @@ export interface EarningsResponse {
 
 const fetchEarnings = async (): Promise<EarningsResponse> => {
   const response = await axios.get(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/artist/earnings`,
+    `${getApiBaseUrl()}/api/artist/earnings`,
     {
       headers: {
         'Content-Type': 'application/json',

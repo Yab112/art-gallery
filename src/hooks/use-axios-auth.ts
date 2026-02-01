@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import axios, { AxiosInstance } from "axios";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@/lib/auth";
+import { getServerBaseUrl } from "@/lib/api-config";
 
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_BASE_URL || '/api',
+  baseURL: getServerBaseUrl(),
   timeout: 10000, 
   withCredentials: true, // Important for Better Auth cookies - cookies are sent automatically
 });

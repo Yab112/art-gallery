@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface TransactionStats {
   byDate: Array<{
@@ -31,7 +32,7 @@ const fetchTransactionStats = async (
   period: "week" | "month" | "year" = "month"
 ): Promise<TransactionStats> => {
   const response = await axios.get(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/transactions/my-transactions/stats`,
+    `${getApiBaseUrl()}/api/transactions/my-transactions/stats`,
     {
       params: { period },
       headers: {

@@ -1,13 +1,14 @@
 import { createAuthClient } from "better-auth/react";
+import { getApiBaseUrl, getFrontendUrl } from "./api-config";
 
 // Better Auth client configuration
 // Note: baseURL should be the server origin only, not including /api/auth
 // Better Auth client automatically appends /api/auth to the baseURL
-const betterAuthBaseURL = import.meta.env.VITE_BETTER_AUTH_URL;
+const betterAuthBaseURL = getApiBaseUrl();
 console.log("🔐 Frontend Better Auth baseURL:", betterAuthBaseURL);
 
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_BETTER_AUTH_URL,
+  baseURL: betterAuthBaseURL,
   // Enable credentials for cookies (required for cross-origin requests)
   fetchOptions: {
     credentials: "include",
@@ -29,7 +30,7 @@ export const signInWithGoogle = async () => {
   try {
     // Use full frontend URL for callback to ensure proper redirect after OAuth
     // This ensures Better Auth redirects to the frontend, not the backend
-    const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+    const frontendUrl = getFrontendUrl();
     await authClient.signIn.social({
       provider: "google",
       callbackURL: `${frontendUrl}/`, // Full frontend URL for proper redirect
