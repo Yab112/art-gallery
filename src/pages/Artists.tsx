@@ -510,7 +510,7 @@ export default function ArtistsPage() {
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Filters Section - Minimal Design */}
-        <div className="mb-6 pb-4 border-b border-gray-200 sticky top-4 z-50">
+        <div className="mb-6 pb-4 border-b border-gray-200 sticky top-4 z-10">
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Artists */}
             <div className="flex-1 min-w-[150px]">
