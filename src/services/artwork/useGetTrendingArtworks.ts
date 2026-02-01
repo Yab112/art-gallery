@@ -18,29 +18,42 @@ export const useGetTrendingArtworks = (limit: number = 12) => {
         const url = baseURL.endsWith('/') 
           ? `artworks/trending?limit=${limit}`
           : `/artworks/trending?limit=${limit}`;
-        const fullUrl = `${baseURL}${url}`;
-        console.log("Fetching trending artworks from:", fullUrl);
+        
+        // Debug logging (development only)
+        if (import.meta.env.DEV) {
+          const fullUrl = `${baseURL}${url}`;
+          console.log("Fetching trending artworks from:", fullUrl);
+        }
 
         const response = await axiosAuth.get<TrendingArtworksResponse>(url);
 
-        console.log("Trending artworks response:", response.data);
-        console.log("Response status:", response.status);
+        // Debug logging (development only)
+        if (import.meta.env.DEV) {
+          console.log("Trending artworks response:", response.data);
+          console.log("Response status:", response.status);
+        }
 
         if (!response.data || !response.data.artworks) {
-          console.warn("Invalid response format:", response.data);
+          if (import.meta.env.DEV) {
+            console.warn("Invalid response format:", response.data);
+          }
           return { success: false, artworks: [] };
         }
 
         return response.data;
       } catch (error: any) {
         console.error("Error fetching trending artworks:", error);
-        console.error("Error details:", {
-          message: error?.message,
-          response: error?.response?.data,
-          status: error?.response?.status,
-          url: error?.config?.url,
-          baseURL: error?.config?.baseURL,
-        });
+        
+        // Detailed error logging (development only)
+        if (import.meta.env.DEV) {
+          console.error("Error details:", {
+            message: error?.message,
+            response: error?.response?.data,
+            status: error?.response?.status,
+            url: error?.config?.url,
+            baseURL: error?.config?.baseURL,
+          });
+        }
         throw error;
       }
     },

@@ -32,31 +32,44 @@ export const useGetTrendingArtists = (limit: number = 10) => {
         const url = baseURL.endsWith('/') 
           ? `artist/trending?limit=${limit}`
           : `/artist/trending?limit=${limit}`;
-        const fullUrl = `${baseURL}${url}`;
-        console.log("Fetching trending artists from:", fullUrl);
-        console.log("Base URL:", baseURL);
-        console.log("URL path:", url);
+        
+        // Debug logging (development only)
+        if (import.meta.env.DEV) {
+          const fullUrl = `${baseURL}${url}`;
+          console.log("Fetching trending artists from:", fullUrl);
+          console.log("Base URL:", baseURL);
+          console.log("URL path:", url);
+        }
         
         const response = await axiosAuth.get<TrendingArtistsResponse>(url);
         
-        console.log("Trending artists response:", response.data);
-        console.log("Response status:", response.status);
+        // Debug logging (development only)
+        if (import.meta.env.DEV) {
+          console.log("Trending artists response:", response.data);
+          console.log("Response status:", response.status);
+        }
         
         if (!response.data || !response.data.artists) {
-          console.warn("Invalid response format:", response.data);
+          if (import.meta.env.DEV) {
+            console.warn("Invalid response format:", response.data);
+          }
           return { success: false, artists: [] };
         }
         
         return response.data;
       } catch (error: any) {
         console.error("Error fetching trending artists:", error);
-        console.error("Error details:", {
-          message: error?.message,
-          response: error?.response?.data,
-          status: error?.response?.status,
-          url: error?.config?.url,
-          baseURL: error?.config?.baseURL,
-        });
+        
+        // Detailed error logging (development only)
+        if (import.meta.env.DEV) {
+          console.error("Error details:", {
+            message: error?.message,
+            response: error?.response?.data,
+            status: error?.response?.status,
+            url: error?.config?.url,
+            baseURL: error?.config?.baseURL,
+          });
+        }
         throw error;
       }
     },

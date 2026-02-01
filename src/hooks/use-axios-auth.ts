@@ -10,7 +10,10 @@ export const api: AxiosInstance = axios.create({
   withCredentials: true, // Important for Better Auth cookies - cookies are sent automatically
 });
 
-console.log("API base URL:", api.defaults.baseURL);
+// Log API base URL only in development
+if (import.meta.env.DEV) {
+  console.log("API base URL:", api.defaults.baseURL);
+}
 
 /** Paths viewable by guests. Don't redirect to login on 401 here (e.g. shared artwork links). */
 function isPublicPath(pathname: string): boolean {

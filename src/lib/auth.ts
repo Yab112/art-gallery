@@ -5,7 +5,11 @@ import { getApiBaseUrl, getFrontendUrl } from "./api-config";
 // Note: baseURL should be the server origin only, not including /api/auth
 // Better Auth client automatically appends /api/auth to the baseURL
 const betterAuthBaseURL = getApiBaseUrl();
-console.log("🔐 Frontend Better Auth baseURL:", betterAuthBaseURL);
+
+// Log configuration only in development
+if (import.meta.env.DEV) {
+  console.log("🔐 Frontend Better Auth baseURL:", betterAuthBaseURL);
+}
 
 export const authClient = createAuthClient({
   baseURL: betterAuthBaseURL,
