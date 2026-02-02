@@ -27,8 +27,8 @@ export function AuthLayout({ children, onClose }: AuthLayoutProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-6xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex min-h-[600px]">
+      <div className="relative w-full max-w-6xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh]">
+        <div className="flex min-h-[min(600px,85vh)] max-h-[90vh]">
           {/* Left side - Gradient background with organic shapes */}
           <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
             {/* Background gradient */}
@@ -62,7 +62,7 @@ export function AuthLayout({ children, onClose }: AuthLayoutProps) {
           </div>
 
           {/* Right side - Auth forms */}
-          <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 relative">
+          <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 relative overflow-y-auto">
             {/* Close button */}
             <Button
               variant="ghost"
