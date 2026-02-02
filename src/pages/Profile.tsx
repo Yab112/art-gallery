@@ -285,10 +285,10 @@ export default function ProfilePage() {
                                     coverImage: coverImageUrl
                                 })
 
-                                // Invalidate profile queries and wait for refetch before clearing preview
-                                await queryClient.invalidateQueries({ queryKey: userKeys.me() })
+                                // Refetch profile queries and wait for completion before clearing preview
+                                await queryClient.refetchQueries({ queryKey: userKeys.me() })
                                 if (profile?.id) {
-                                    await queryClient.invalidateQueries({
+                                    await queryClient.refetchQueries({
                                         queryKey: userKeys.detail(profile.id)
                                     })
                                 }
@@ -414,12 +414,12 @@ export default function ProfilePage() {
                                                         // Update avatar
                                                         await updateAvatar(avatarUrl)
 
-                                                        // Invalidate profile queries and wait for refetch before clearing preview
-                                                        await queryClient.invalidateQueries({
+                                                        // Refetch profile queries and wait for completion before clearing preview
+                                                        await queryClient.refetchQueries({
                                                             queryKey: userKeys.me()
                                                         })
                                                         if (profile?.id) {
-                                                            await queryClient.invalidateQueries({
+                                                            await queryClient.refetchQueries({
                                                                 queryKey: userKeys.detail(
                                                                     profile.id
                                                                 )
