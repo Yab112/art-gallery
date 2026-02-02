@@ -172,7 +172,7 @@ export function PaymentMethodSection() {
               Add Payment Method
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md bg-white">
             <DialogHeader>
               <DialogTitle>
                 {editingMethod ? "Edit Payment Method" : "Add Payment Method"}
@@ -289,7 +289,7 @@ export function PaymentMethodSection() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="bg-red-700 hover:bg-red-800">
                   {editingMethod ? "Update" : "Add"} Payment Method
                 </Button>
               </div>
@@ -323,8 +323,8 @@ export function PaymentMethodSection() {
                         {method.type === "BANK_ACCOUNT"
                           ? "Bank Account"
                           : method.type === "PAYPAL"
-                          ? "PayPal"
-                          : "Mobile Money"}
+                            ? "PayPal"
+                            : "Mobile Money"}
                       </p>
                       {method.isDefault && (
                         <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1">

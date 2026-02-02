@@ -22,16 +22,16 @@ export const artworkFormSchema = z.object({
   handDeliveryAccepted: z.string().min(1, "Hand delivery status is required"),
   origin: z.string().min(1, "Origin is required"),
   yearOfAcquisition: z.string().optional(),
-  proofOfOrigin: z.instanceof(File).optional().nullable(),
+  proofOfOrigin: z.union([z.instanceof(File), z.string()]).optional().nullable(),
 
   // Section 2: Description
   description: z.string().optional(),
 
   // Section 3: Photos - at least one photo is required
   photos: z
-    .array(z.instanceof(File).nullable())
+    .array(z.union([z.instanceof(File), z.string()]).nullable())
     .refine(
-      (photos) => photos.some((photo) => photo !== null),
+      (photos) => photos.some((photo) => photo !== null && photo !== ""),
       "At least one photo is required"
     ),
 

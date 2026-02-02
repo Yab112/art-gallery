@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface PaymentMethod {
   accountHolder: string;
@@ -14,7 +15,7 @@ export interface PaymentMethodsResponse {
 
 const fetchPaymentMethods = async (): Promise<PaymentMethodsResponse> => {
   const response = await axios.get(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/artist/payment-methods`,
+    `${getApiBaseUrl()}/api/artist/payment-methods`,
     {
       headers: {
         'Content-Type': 'application/json',

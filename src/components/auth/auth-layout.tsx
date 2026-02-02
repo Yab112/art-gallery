@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -8,17 +9,26 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children, onClose }: AuthLayoutProps) {
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    }
+    navigate("/");
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-6xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex min-h-[600px]">
+      <div className="relative w-full max-w-6xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh]">
+        <div className="flex min-h-[min(600px,85vh)] max-h-[90vh]">
           {/* Left side - Gradient background with organic shapes */}
           <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
             {/* Background gradient */}
@@ -52,18 +62,16 @@ export function AuthLayout({ children, onClose }: AuthLayoutProps) {
           </div>
 
           {/* Right side - Auth forms */}
-          <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 relative">
+          <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 relative overflow-y-auto">
             {/* Close button */}
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="absolute top-4 right-4 z-10"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              className="absolute top-4 right-4 z-10"
+            >
+              <X className="h-4 w-4" />
+            </Button>
 
             <div className="w-full max-w-md">{children}</div>
           </div>

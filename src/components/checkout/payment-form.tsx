@@ -16,7 +16,7 @@ interface PaymentFormProps {
 export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
   const { paymentData, setPaymentData } = useCheckout();
   const { data: preference } = useGetPaymentMethodPreference();
-  
+
   // Use user's preferred payment method as default, fallback to paymentData or 'paypal'
   const defaultMethod = preference?.paymentMethodPreference || paymentData?.provider || 'paypal';
   const [paymentMethod, setPaymentMethod] = useState<"chapa" | "paypal" | "card">(
@@ -150,7 +150,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                 className="flex items-center gap-2 cursor-pointer"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#00A86B">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
                 </svg>
                 Chapa (Mobile Money, Bank Transfer)
               </Label>
@@ -196,7 +196,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
               <div className="flex items-start gap-3">
                 <div className="bg-green-100 rounded-full p-2">
                   <svg className="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
                   </svg>
                 </div>
                 <div className="flex-1">
@@ -429,25 +429,38 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
         )}
 
         {paymentMethod === "paypal" && (
-          <div className="text-center py-8">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <p className="text-blue-800 mb-4">
-                You will be redirected to PayPal to complete your payment.
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex items-start gap-4">
+                <div className="bg-white rounded-full p-2 shadow-sm">
+                  <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="#003087" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-2 text-lg">
+                    International Payment via PayPal
+                  </h3>
+                  <p className="text-sm text-blue-700 mb-4 leading-relaxed">
+                    You've selected PayPal for your international transaction. Here's what will happen:
+                  </p>
+                  <ul className="text-sm text-blue-700 space-y-2 ml-4 list-disc mb-4">
+                    <li>Securely login to your PayPal account</li>
+                    <li>Choose your preferred funding source (Balance, Bank, or Card)</li>
+                    <li>Review the currency conversion and total amount</li>
+                    <li>Instant verification and order processing</li>
+                  </ul>
+                  <p className="text-xs text-blue-600 italic">
+                    Note: You will be redirected to PayPal's secure portal after clicking "Continue to Review" and proceeding to the final step.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-4 flex items-center justify-center gap-2">
+                <img src="/paypal.png" alt="PayPal" className="h-4 w-auto" />
+                Trusted by millions worldwide
               </p>
-              <Button 
-                type="button" 
-                className="bg-[#053352] hover:bg-[#042a47] text-white"
-                onClick={() => {
-                  // Save payment data and proceed
-                  setPaymentData({
-                    provider: 'paypal' as 'chapa' | 'paypal' | 'card',
-                    phoneNumber: formData.phoneNumber,
-                  });
-                  onNext();
-                }}
-              >
-                Continue with PayPal
-              </Button>
             </div>
           </div>
         )}

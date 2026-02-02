@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface UpdatePaymentMethodParams {
   accountHolder: string;
@@ -17,7 +18,7 @@ export interface UpdatePaymentMethodResponse {
 
 const updatePaymentMethod = async (params: UpdatePaymentMethodParams): Promise<UpdatePaymentMethodResponse> => {
   const response = await axios.put(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/artist/payment-method`,
+    `${getApiBaseUrl()}/api/artist/payment-method`,
     params,
     {
       headers: {

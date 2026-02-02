@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Palette, ChevronLeft, ChevronRight, CheckSquare, Square, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCheckFavorite } from "@/queries/favoriteQueries";
+import { useAuth } from "@/hooks/use-auth";
 
 // List view favorite button component
 function ListFavoriteButton({ artworkId, onFavorite }: { artworkId: string; onFavorite: (id: string) => void }) {
@@ -16,9 +17,8 @@ function ListFavoriteButton({ artworkId, onFavorite }: { artworkId: string; onFa
         e.stopPropagation();
         onFavorite(artworkId);
       }}
-      className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
-        isFavorited ? "text-red-500" : "text-gray-400"
-      }`}
+      className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${isFavorited ? "text-red-500" : "text-gray-400"
+        }`}
       aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
     >
       <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
@@ -49,6 +49,8 @@ interface ArtworkGridProps {
   isSelectionMode?: boolean;
   selectedArtworkIds?: Set<string>;
   onToggleSelection?: (id: string) => void;
+  /** Hide favorite button in card overlay (e.g. for guests) */
+  hideFavorite?: boolean;
 }
 
 export function ArtworkGrid({
@@ -61,7 +63,10 @@ export function ArtworkGrid({
   isSelectionMode = false,
   selectedArtworkIds = new Set(),
   onToggleSelection,
+  hideFavorite = false,
 }: ArtworkGridProps) {
+  const { isAuthenticated } = useAuth();
+  const showFavorite = !hideFavorite && isAuthenticated;
   const navigate = useNavigate();
   if (artworks.length === 0) {
     return (
@@ -71,7 +76,7 @@ export function ArtworkGrid({
             icon={Palette}
             title="No Artworks Found"
             description="We couldn't find any artworks matching your search. Try adjusting your filters or browse our collections."
-            actionLabel="Browse Collections"   
+            actionLabel="Browse Collections"
             onAction={() => {
               // Navigate to collections or clear filters
               window.location.href = "/";
@@ -87,10 +92,10 @@ export function ArtworkGrid({
     const safeTotalPages = totalPages ?? 1;
     const safeCurrentPage = currentPage ?? 1;
     if (!safeTotalPages || !safeCurrentPage) return [];
-    
+
     const pages: (number | string)[] = [];
     const maxVisible = 5;
-    
+
     if (safeTotalPages <= maxVisible) {
       // Show all pages if total is small
       for (let i = 1; i <= safeTotalPages; i++) {
@@ -99,27 +104,27 @@ export function ArtworkGrid({
     } else {
       // Always show first page
       pages.push(1);
-      
+
       if (safeCurrentPage > 3) {
         pages.push("...");
       }
-      
+
       // Show pages around current page
       const start = Math.max(2, safeCurrentPage - 1);
       const end = Math.min(safeTotalPages - 1, safeCurrentPage + 1);
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
-      
+
       if (safeCurrentPage < safeTotalPages - 2) {
         pages.push("...");
       }
-      
+
       // Always show last page
       pages.push(safeTotalPages);
     }
-    
+
     return pages;
   };
 
@@ -135,11 +140,10 @@ export function ArtworkGrid({
             {artworks.map((artwork) => (
               <div
                 key={artwork.id}
-                className={`group relative flex gap-6 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-md ${
-                  isSelectionMode && selectedArtworkIds.has(artwork.id)
-                    ? "ring-2 ring-blue-500"
-                    : ""
-                } ${!isSelectionMode ? "cursor-pointer" : ""}`}
+                className={`group relative flex gap-6 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-md ${isSelectionMode && selectedArtworkIds.has(artwork.id)
+                  ? "ring-2 ring-blue-500"
+                  : ""
+                  } ${!isSelectionMode ? "cursor-pointer" : ""}`}
                 onClick={(e) => {
                   if (isSelectionMode) {
                     e.preventDefault();
@@ -167,7 +171,7 @@ export function ArtworkGrid({
                     </button>
                   </div>
                 )}
-                
+
                 {/* Image */}
                 <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                   {artwork.image ? (
@@ -205,9 +209,11 @@ export function ArtworkGrid({
                         <span>Seller: {artwork.seller}</span>
                       </div>
                     </div>
-                    <div className="flex-shrink-0">
-                      <ListFavoriteButton artworkId={artwork.id} onFavorite={onFavorite} />
-                    </div>
+                    {showFavorite && (
+                      <div className="flex-shrink-0">
+                        <ListFavoriteButton artworkId={artwork.id} onFavorite={onFavorite} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -250,6 +256,7 @@ export function ArtworkGrid({
                     onFavorite={onFavorite}
                     isMasonry={false}
                     disableNavigation={isSelectionMode}
+                    hideFavorite={!showFavorite}
                   />
                 </div>
               </div>
@@ -273,7 +280,7 @@ export function ArtworkGrid({
                     <ChevronLeft className="h-5 w-5" />
                     <span className="font-medium">Previous</span>
                   </Button>
-                  
+
                   <div className="flex items-center gap-1">
                     {pageNumbers.map((pageNum, index) => (
                       <div key={index}>
@@ -284,11 +291,10 @@ export function ArtworkGrid({
                             variant={safeCurrentPage === pageNum ? "default" : "outline"}
                             size="sm"
                             onClick={() => onPageChange(pageNum as number)}
-                            className={`min-w-[40px] ${
-                              safeCurrentPage === pageNum
-                                ? "bg-black text-white hover:bg-gray-800"
-                                : "hover:bg-gray-50"
-                            }`}
+                            className={`min-w-[40px] ${safeCurrentPage === pageNum
+                              ? "bg-black text-white hover:bg-gray-800"
+                              : "hover:bg-gray-50"
+                              }`}
                           >
                             {pageNum}
                           </Button>
@@ -296,7 +302,7 @@ export function ArtworkGrid({
                       </div>
                     ))}
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="lg"
@@ -308,7 +314,7 @@ export function ArtworkGrid({
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
-                
+
                 <div className="text-sm text-gray-600">
                   Showing page {safeCurrentPage} of {safeTotalPages} ({artworks.length} artworks)
                 </div>

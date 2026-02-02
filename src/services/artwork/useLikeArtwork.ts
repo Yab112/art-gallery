@@ -1,6 +1,6 @@
 import useMutationFunc from "@/hooks/use-mutation";
 import { toast } from "sonner";
-import { artworkKeys, favoriteKeys } from "@/queries/queryKeys";
+import { artworkKeys } from "@/queries/queryKeys";
 
 interface LikeArtworkResponse {
   success: boolean;
@@ -20,7 +20,7 @@ export const useLikeArtwork = () => {
 
   const likeArtwork = async (id: string) => {
     const result = await mutateAsync({
-      url: `/artwork/${id}/like`,
+      url: `/artworks/${id}/like`,
       method: "POST",
     });
     return result;

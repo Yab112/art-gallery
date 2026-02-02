@@ -18,26 +18,28 @@ export function TrendingArtists() {
 
   const artists = trendingData?.artists || [];
 
-  // Debug logging
-  console.log("Trending Artists Component State:", {
-    isLoading,
-    isError,
-    hasData: !!trendingData,
-    artistsCount: artists.length,
-    error: error ? {
-      message: (error as any)?.message,
-      response: (error as any)?.response?.data,
-      status: (error as any)?.response?.status,
-    } : null,
-  });
-  
-  if (error) {
-    console.error("Error loading trending artists:", error);
-  }
-  
-  if (trendingData) {
-    console.log("Trending artists data:", trendingData);
-    console.log("Artists array:", artists);
+  // Debug logging (development only)
+  if (import.meta.env.DEV) {
+    console.log("Trending Artists Component State:", {
+      isLoading,
+      isError,
+      hasData: !!trendingData,
+      artistsCount: artists.length,
+      error: error ? {
+        message: (error as any)?.message,
+        response: (error as any)?.response?.data,
+        status: (error as any)?.response?.status,
+      } : null,
+    });
+    
+    if (error) {
+      console.error("Error loading trending artists:", error);
+    }
+    
+    if (trendingData) {
+      console.log("Trending artists data:", trendingData);
+      console.log("Artists array:", artists);
+    }
   }
 
   const scroll = (direction: "left" | "right") => {

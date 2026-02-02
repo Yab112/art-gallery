@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface RequestWithdrawalParams {
   amount: number;
@@ -19,7 +20,7 @@ export interface RequestWithdrawalResponse {
 
 const requestWithdrawal = async (params: RequestWithdrawalParams): Promise<RequestWithdrawalResponse> => {
   const response = await axios.post(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/artist/withdrawal/request`,
+    `${getApiBaseUrl()}/api/artist/withdrawal/request`,
     params,
     {
       headers: {

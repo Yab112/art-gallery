@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface VerifyPaymentParams {
   provider: 'chapa' | 'paypal';
@@ -24,7 +25,7 @@ export interface VerifyPaymentResponse {
 
 const verifyPayment = async (params: VerifyPaymentParams): Promise<VerifyPaymentResponse> => {
   const response = await axios.post(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/payment/verify`,
+    `${getApiBaseUrl()}/api/payment/verify`,
     params,
     {
       headers: {

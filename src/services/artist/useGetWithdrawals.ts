@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface Withdrawal {
   id: string;
@@ -25,7 +26,7 @@ export interface WithdrawalsResponse {
 
 const fetchWithdrawals = async (page: number = 1, limit: number = 20): Promise<WithdrawalsResponse> => {
   const response = await axios.get(
-    `${import.meta.env.VITE_BETTER_AUTH_URL}/api/artist/withdrawals`,
+    `${getApiBaseUrl()}/api/artist/withdrawals`,
     {
       params: {
         page,

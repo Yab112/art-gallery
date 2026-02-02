@@ -21,7 +21,7 @@ export const useUpdateArtwork = () => {
 
   const updateArtwork = async (id: string, data: Partial<CreateArtworkDto>) => {
     return mutateAsync({
-      url: `/artwork/${id}`,
+      url: `/artworks/${id}`,
       method: "PATCH",
       body: data,
     });

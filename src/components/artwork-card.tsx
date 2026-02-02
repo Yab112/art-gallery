@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Heart } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAddFavorite } from "@/services/favorites/useAddFavorite";
@@ -24,6 +25,8 @@ interface ArtworkCardProps {
   onImageClick?: (src: string) => void;
   artworks?: any[];
   disableNavigation?: boolean;
+  /** Hide favorite button in overlay (e.g. for guests on marketplace) */
+  hideFavorite?: boolean;
 }
 
 const statusConfig = {
@@ -49,9 +52,9 @@ export function ArtworkCard({
   seller,
   status,
   onFavorite,
-  onSearch,
   isMasonry = false,
   disableNavigation = false,
+  hideFavorite = false,
 }: ArtworkCardProps) {
   const isSold = status === "SOLD";
   const statusInfo = status ? statusConfig[status as keyof typeof statusConfig] : null;
@@ -62,10 +65,10 @@ export function ArtworkCard({
   // Check if artwork is favorited
   const { data: favoriteCheck } = useCheckFavorite(id);
   const serverIsFavorited = favoriteCheck?.isFavorite || false;
-  
+
   // Local state for optimistic updates - updates immediately before server response
   const [localIsFavorited, setLocalIsFavorited] = useState(serverIsFavorited);
-  
+
   // Sync local state with server state when it changes
   useEffect(() => {
     setLocalIsFavorited(serverIsFavorited);
@@ -78,14 +81,23 @@ export function ArtworkCard({
   const { addFavorite } = useAddFavorite();
   const { removeFavorite } = useRemoveFavorite();
 
+  // Check authentication status
+  const { isAuthenticated } = useAuth();
+
+  // Only show favorite button if not explicitly hidden AND user is authenticated
+  const showFavorite = !hideFavorite && isAuthenticated;
+
   const handleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
+    // Safety check - should not be reachable if button is hidden for guests
+    if (!isAuthenticated) return;
+
     // Optimistically update local state immediately for instant UI feedback
     const currentState = localIsFavorited;
     const newFavoritedState = !currentState;
     setLocalIsFavorited(newFavoritedState);
-    
+
     try {
       if (currentState) {
         await removeFavorite(id);
@@ -163,29 +175,31 @@ export function ArtworkCard({
             onError={() => setImageError(true)}
           />
         )}
-        {/* Overlay background on hover */}
-        <div
-          className={`pointer-events-none absolute inset-0 cursor-pointer transition-all duration-500 ease-in-out ${
-            isHovered ? "bg-black/60 opacity-100" : "bg-black/0 opacity-0"
-          }`}
-        />
-        {/* Hover Buttons - slide down from top */}
-        <div
-          className={`absolute top-24 right-0 left-0 z-10 flex cursor-pointer justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${
-            isHovered
+        {/* Overlay background on hover (only when favorite button shown) */}
+        {showFavorite && (
+          <div
+            className={`pointer-events-none absolute inset-0 cursor-pointer transition-all duration-500 ease-in-out ${isHovered ? "bg-black/60 opacity-100" : "bg-black/0 opacity-0"
+              }`}
+          />
+        )}
+        {/* Hover Buttons - slide down from top (hidden for guests) */}
+        {showFavorite && (
+          <div
+            className={`absolute top-24 right-0 left-0 z-10 flex cursor-pointer justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${isHovered
               ? "pointer-events-auto translate-y-10 opacity-100"
               : "-translate-y-full pointer-events-none opacity-0"
-          }`}
-        >
-          <Button
-            size="sm"
-            variant="secondary"
-            className={`bg-white/90 shadow-md hover:bg-white ${isFavorited ? "text-red-500" : ""}`}
-            onClick={handleFavorite}
+              }`}
           >
-            <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
-          </Button>
-        </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              className={`bg-white/90 shadow-md hover:bg-white ${isFavorited ? "text-red-500" : ""}`}
+              onClick={handleFavorite}
+            >
+              <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Artwork Details */}

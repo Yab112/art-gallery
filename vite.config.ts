@@ -13,7 +13,7 @@ export default defineConfig({
     proxy: {
       // Proxy all /api requests to AWS backend
       '/api': {
-        target: 'http://51.20.54.47:3099',
+        target: process.env.VITE_BETTER_AUTH_URL,
         changeOrigin: true,
         secure: false,
         // CRITICAL: Forward cookies from browser to backend

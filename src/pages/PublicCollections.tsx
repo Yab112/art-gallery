@@ -78,7 +78,7 @@ export default function PublicCollectionsPage() {
   const [newCollection, setNewCollection] = useState({
     name: "",
     description: "",
-    visibility: "public" as "public" | "private" | "unlisted",
+    visibility: "private" as "private" | "unlisted",
     coverImage: "",
   });
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -290,7 +290,7 @@ export default function PublicCollectionsPage() {
       setNewCollection({
         name: "",
         description: "",
-        visibility: "public",
+        visibility: "private",
         coverImage: "",
       });
       setCoverImageFile(null);
@@ -344,22 +344,33 @@ export default function PublicCollectionsPage() {
               </div>
               <div className="flex items-center gap-2">
                 {user && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate("/profile/collections")}
+                      className="rounded-full flex items-center gap-2"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      My Collections
+                    </Button>
+                    <Button
+                      onClick={handleCreateCollectionClick}
+                      className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create Collection
+                    </Button>
+                  </>
+                )}
+                {!user && (
                   <Button
                     variant="outline"
-                    onClick={() => navigate("/profile/collections")}
+                    onClick={() => navigate(`/login?redirect=${encodeURIComponent("/collections")}`)}
                     className="rounded-full flex items-center gap-2"
                   >
-                    <FolderOpen className="h-4 w-4" />
-                    My Collections
+                    Sign in to create a collection
                   </Button>
                 )}
-                <Button
-                  onClick={handleCreateCollectionClick}
-                  className="bg-red-700 hover:bg-red-800 text-white rounded-full flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Collection
-                </Button>
               </div>
             </div>
           </div>
@@ -703,7 +714,7 @@ export default function PublicCollectionsPage() {
                 <Label htmlFor="visibility">Visibility</Label>
                 <Select
                   value={newCollection.visibility}
-                  onValueChange={(value: "public" | "private" | "unlisted") =>
+                  onValueChange={(value: "private" | "unlisted") =>
                     setNewCollection({ ...newCollection, visibility: value })
                   }
                 >
@@ -711,11 +722,13 @@ export default function PublicCollectionsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="unlisted">Unlisted</SelectItem>
                     <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="unlisted">Unlisted</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Collections need at least 3 artworks to be published. Publish from the collection page once you’ve added enough.
+                </p>
               </div>
 
               <div>
@@ -768,7 +781,7 @@ export default function PublicCollectionsPage() {
                     setNewCollection({
                       name: "",
                       description: "",
-                      visibility: "public",
+                      visibility: "private",
                       coverImage: "",
                     });
                     setCoverImageFile(null);

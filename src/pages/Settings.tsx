@@ -99,7 +99,9 @@ export default function SettingsPage() {
 
   const onSubmit = async (data: SettingsFormData) => {
     try {
-      await updateProfile(data);
+      // Exclude email from the update payload as the backend doesn't allow it in profile updates
+      const { email: _, ...updateData } = data;
+      await updateProfile(updateData);
       toast.success("Profile updated successfully");
     } catch (error: any) {
       toast.error(
@@ -111,7 +113,7 @@ export default function SettingsPage() {
   const onPasswordSubmit = async (data: ChangePasswordFormData) => {
     // Clear any previous errors
     setPasswordError(null);
-    
+
     if (data.newPassword !== data.confirmPassword) {
       const errorMsg = "New passwords do not match";
       setPasswordError(errorMsg);
@@ -143,7 +145,7 @@ export default function SettingsPage() {
           // Better Auth returns error in ctx.error
           const error = ctx.error;
           let errorMessage = "Failed to change password. Please try again.";
-          
+
           if (error) {
             // Check for specific error codes
             if (error.code === "INVALID_PASSWORD") {
@@ -154,7 +156,7 @@ export default function SettingsPage() {
               errorMessage = `Error: ${error.code}`;
             }
           }
-          
+
           setPasswordError(errorMessage);
           toast.error(errorMessage);
           setIsChangingPassword(false);
@@ -231,22 +233,20 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setActiveTab("profile")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "profile"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === "profile"
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     <User className="h-5 w-5" />
                     Profile
                   </button>
                   <button
                     onClick={() => setActiveTab("security")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "security"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === "security"
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     <Shield className="h-5 w-5" />
                     Security
@@ -259,33 +259,30 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setActiveTab("earnings")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "earnings"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === "earnings"
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     <DollarSign className="h-5 w-5" />
                     Earnings
                   </button>
                   <button
                     onClick={() => setActiveTab("withdrawals")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "withdrawals"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === "withdrawals"
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     <Wallet className="h-5 w-5" />
                     Withdrawals
                   </button>
                   <button
                     onClick={() => setActiveTab("billing-payments")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "billing-payments"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === "billing-payments"
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     <CreditCard className="h-5 w-5" />
                     Billing & Payments
@@ -298,11 +295,10 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setActiveTab("transactions")}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === "transactions"
-                        ? "bg-red-50 text-red-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === "transactions"
+                      ? "bg-red-50 text-red-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     <Receipt className="h-5 w-5" />
                     Transactions
@@ -339,15 +335,14 @@ export default function SettingsPage() {
                       <Input
                         id="email"
                         type="email"
-                        {...register("email", {
-                          required: "Email is required",
-                          pattern: {
-                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message: "Invalid email address",
-                          },
-                        })}
+                        {...register("email")}
                         placeholder="your.email@example.com"
+                        disabled
+                        className="bg-gray-50 cursor-not-allowed"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Email address cannot be changed directly.
+                      </p>
                       {errors.email && (
                         <p className="text-sm text-red-500">
                           {errors.email.message}

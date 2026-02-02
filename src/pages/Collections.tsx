@@ -127,11 +127,23 @@ export default function CollectionsPage() {
     }
   };
 
-  const handlePublishToggle = async (collectionId: string, currentVisibility: string) => {
+  const minArtworksToPublish = 3;
+
+  const handlePublishToggle = async (
+    collectionId: string,
+    currentVisibility: string,
+    artworkCount: number = 0
+  ) => {
     try {
       if (currentVisibility === "public") {
         await unpublishCollection(collectionId);
       } else {
+        if (artworkCount < minArtworksToPublish) {
+          toast.error(
+            `Collection must have at least ${minArtworksToPublish} artworks to be published. Currently has ${artworkCount}.`
+          );
+          return;
+        }
         await publishCollection(collectionId);
       }
       queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
@@ -342,10 +354,24 @@ export default function CollectionsPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                title={
+                                  collection.visibility !== "public" &&
+                                  (collection.artworkCount ?? 0) < minArtworksToPublish
+                                    ? `Add at least ${minArtworksToPublish} artworks to publish`
+                                    : undefined
+                                }
+                                disabled={
+                                  collection.visibility !== "public" &&
+                                  (collection.artworkCount ?? 0) < minArtworksToPublish
+                                }
                                 onClick={async (e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  await handlePublishToggle(collection.id, collection.visibility);
+                                  await handlePublishToggle(
+                                    collection.id,
+                                    collection.visibility,
+                                    collection.artworkCount ?? 0
+                                  );
                                 }}
                                 className="h-6 px-2 text-xs"
                               >
@@ -436,10 +462,24 @@ export default function CollectionsPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                title={
+                                  collection.visibility !== "public" &&
+                                  (collection.artworkCount ?? 0) < minArtworksToPublish
+                                    ? `Add at least ${minArtworksToPublish} artworks to publish`
+                                    : undefined
+                                }
+                                disabled={
+                                  collection.visibility !== "public" &&
+                                  (collection.artworkCount ?? 0) < minArtworksToPublish
+                                }
                                 onClick={async (e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  await handlePublishToggle(collection.id, collection.visibility);
+                                  await handlePublishToggle(
+                                    collection.id,
+                                    collection.visibility,
+                                    collection.artworkCount ?? 0
+                                  );
                                 }}
                                 className="h-7 px-2 text-xs"
                               >
@@ -532,7 +572,7 @@ export default function CollectionsPage() {
               <Label htmlFor="visibility">Visibility</Label>
               <Select
                 value={newCollection.visibility}
-                onValueChange={(value: "public" | "private" | "unlisted") =>
+                onValueChange={(value: "private" | "unlisted") =>
                   setNewCollection({ ...newCollection, visibility: value })
                 }
               >
@@ -540,11 +580,13 @@ export default function CollectionsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="unlisted">Unlisted</SelectItem>
                   <SelectItem value="private">Private</SelectItem>
+                  <SelectItem value="unlisted">Unlisted</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Collections need at least 3 artworks to be published. Publish from the collection page once you’ve added enough.
+              </p>
             </div>
 
             <div>

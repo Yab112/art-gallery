@@ -23,10 +23,9 @@ import { ArtworkCollectionManager } from "@/components/artwork/artwork-collectio
 import { ArtworkOwnerPanel } from "@/components/artwork/artwork-owner-panel";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
-import { Link } from "react-router-dom";
 import { ArtworkDetailSkeleton } from "@/components/skeletons/artwork-detail-skeleton";
 import { useCartItems } from "@/queries/cartQueries";
+import { toast } from "sonner";
 
 export default function ArtworkDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +34,7 @@ export default function ArtworkDetailPage() {
 
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isGuest = !user;
 
   // Fetch artwork data
   const { data: artworkResponse, isLoading, error } = useArtwork(id || "");
@@ -47,12 +47,12 @@ export default function ArtworkDetailPage() {
     }
   }, [artworkResponse]);
   
-  // Handle different response formats
+  // Handle different response formats  
   // Backend returns { success: true, artwork } or just artwork directly
   const artwork = artworkResponse?.artwork 
     ? artworkResponse.artwork 
     : (artworkResponse && typeof artworkResponse === 'object' && 'id' in artworkResponse)
-    ? artworkResponse as Artwork
+    ? artworkResponse as unknown as Artwork
     : undefined;
   
   // Check if artwork is favorited
@@ -67,8 +67,8 @@ export default function ArtworkDetailPage() {
   const { removeFavorite } = useRemoveFavorite();
   const { addToCart, isAdding } = useAddToCart();
 
-  // Check if artwork is already in cart
-  const { data: cartData } = useCartItems(1, 100); // Get all cart items
+  // Check if artwork is already in cart (skip when guest — cart API requires auth; prevents 401 → login redirect on shared links)
+  const { data: cartData } = useCartItems(1, 100, { enabled: !!user });
   const isInCart = cartData?.items?.some(item => item.artworkId === id) || false;
 
   // Scroll to top on mount
@@ -95,6 +95,16 @@ export default function ArtworkDetailPage() {
       await addToCart({ artworkId: id, quantity: 1 });
     } catch (error) {
       console.error("Failed to add to cart:", error);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/artwork/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy link");
     }
   };
 
@@ -178,6 +188,7 @@ export default function ArtworkDetailPage() {
                     <ArtworkActions
                       isSaved={isSaved}
                       onSave={handleSave}
+                      onShare={handleShare}
                     />
                     {user && (
                       <ArtworkCollectionManager artworkId={id || ""} />
@@ -197,7 +208,7 @@ export default function ArtworkDetailPage() {
                     <ArtworkGalleryInfo artwork={artwork} isOwner={isOwner} />
                   </div>
                 </div>
-                <ArtworkAbout artwork={artwork} isOwner={isOwner} />
+                {!isGuest && <ArtworkAbout artwork={artwork} isOwner={isOwner} />}
                 <RelatedArtworks 
                   artworkId={id || ""} 
                   artist={artwork.artist}
@@ -231,6 +242,8 @@ export default function ArtworkDetailPage() {
                 <ArtworkActions
                   isSaved={isSaved}
                   onSave={handleSave}
+                  isGuest={isGuest}
+                  onShare={handleShare}
                 />
                 {user && (
                   <ArtworkCollectionManager artworkId={id || ""} />
@@ -239,28 +252,37 @@ export default function ArtworkDetailPage() {
               {/* Right Column - Artwork Details */}
               <div className="space-y-3">
                 <ArtworkDetails artwork={artwork} />
-                <ArtworkPurchase artwork={artwork} onAddToCart={handleAddToCart} isOwner={isOwner} isAdding={isAdding} isInCart={isInCart} />
-                <ArtworkCollapsibles
+                <ArtworkPurchase
                   artwork={artwork}
-                  isShippingOpen={isShippingOpen}
-                  setIsShippingOpen={setIsShippingOpen}
-                  isGuaranteeOpen={isGuaranteeOpen}
-                  setIsGuaranteeOpen={setIsGuaranteeOpen}
+                  onAddToCart={handleAddToCart}
+                  isOwner={isOwner}
+                  isAdding={isAdding}
+                  isInCart={isInCart}
+                  isGuest={isGuest}
                 />
+                {!isGuest && (
+                  <ArtworkCollapsibles
+                    artwork={artwork}
+                    isShippingOpen={isShippingOpen}
+                    setIsShippingOpen={setIsShippingOpen}
+                    isGuaranteeOpen={isGuaranteeOpen}
+                    setIsGuaranteeOpen={setIsGuaranteeOpen}
+                  />
+                )}
                 <ArtworkGalleryInfo artwork={artwork} isOwner={isOwner} />
               </div>
             </div>
           )}
           {!isOwner && (
             <div className="mt-4 space-y-3">
-              <ArtworkAbout artwork={artwork} isOwner={isOwner} />
+              {!isGuest && <ArtworkAbout artwork={artwork} isOwner={isOwner} />}
               <RelatedArtworks 
                 artworkId={id || ""} 
                 artist={artwork.artist}
                 categoryIds={artwork.categories}
               />
               <SimilarArtworks artworkId={id || ""} />
-              {artwork.userId && (
+              {!isGuest && artwork.userId && (
                 <>
                   <div className="flex items-center justify-between mb-4 mt-8">
                     <h3 className="text-lg font-semibold">Blog Posts by This Artist</h3>

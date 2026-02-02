@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Bell, Heart, Share2, MapPin, Globe, Palette } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { UserProfile } from "@/types/user.types";
 import { getAvatarUrl } from "@/utils/avatar";
 import { FollowButton } from "@/components/follow/follow-button";
@@ -12,11 +13,11 @@ interface ArtistProfileProps {
 
 export function ArtistProfile({ user }: ArtistProfileProps) {
   const { user: currentUser } = useAuth();
+  const isGuest = !currentUser;
   const [isLiked, setIsLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [coverImageError, setCoverImageError] = useState(false);
-  
-  // Check if viewing own profile
+
   const isOwnProfile = currentUser?.id === user.id;
 
   const avatarUrl = getAvatarUrl(user.image, user.name || "Artist", 200);
@@ -95,14 +96,21 @@ export function ArtistProfile({ user }: ArtistProfileProps) {
 
           {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 mt-4 lg:mt-0">
-            {!isOwnProfile && (
-              <FollowButton
-                userId={user.id}
-                isFollowing={user.isFollowing}
-                variant="default"
-                className="bg-red-700 hover:bg-red-800 text-white shadow-sm"
-              />
-            )}
+            {!isOwnProfile &&
+              (isGuest ? (
+                <Link to={`/login?redirect=${encodeURIComponent(`/artist/${user.id}`)}`}>
+                  <Button variant="outline" size="sm" className="rounded-full">
+                    Sign in to follow
+                  </Button>
+                </Link>
+              ) : (
+                <FollowButton
+                  userId={user.id}
+                  isFollowing={user.isFollowing}
+                  variant="default"
+                  className="bg-red-700 hover:bg-red-800 text-white shadow-sm"
+                />
+              ))}
             <Button
               variant="outline"
               size="icon"

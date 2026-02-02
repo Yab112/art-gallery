@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 export interface OrderItem {
   artworkId: string;
@@ -39,7 +40,7 @@ export interface CreateOrderResponse {
 const createOrder = async (params: CreateOrderParams): Promise<CreateOrderResponse> => {
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_BETTER_AUTH_URL}/api/orders/create`,
+      `${getApiBaseUrl()}/api/orders/create`,
       params,
       {
         headers: {

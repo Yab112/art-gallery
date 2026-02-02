@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { collectionKeys } from "./queryKeys";
 import type { Collection, CollectionListResponse } from "@/types/collection.types";
 import type { ArtworkListResponse } from "@/types/artwork.types";
@@ -8,10 +8,12 @@ import useAxiosAuth from "@/hooks/use-axios-auth";
 export const useCollections = (
   page: number = 1,
   limit: number = 10,
-  visibility?: string // Optional - defaults to "public" on backend if not provided
+  visibility?: string, // Optional - defaults to "public" on backend if not provided
+  search?: string,
+  options?: Partial<UseQueryOptions<CollectionListResponse>>
 ) => {
   const axiosAuth = useAxiosAuth();
-  
+
   // Only pass visibility if it's provided and not empty
   // For public collections page, don't pass visibility param - backend defaults to "public"
   const params: { page: number; limit: number; visibility?: string } = { page, limit };
@@ -19,10 +21,10 @@ export const useCollections = (
     // Only add visibility param if it's explicitly set and not "public" (since that's the default)
     params.visibility = visibility;
   }
-  
+
   // Use "public" as the key when visibility is not provided (since that's the backend default)
   const effectiveVisibility = visibility || "public";
-  
+
   // Build query string
   const queryParams = new URLSearchParams();
   if (params.page) {
@@ -34,22 +36,26 @@ export const useCollections = (
   if (params.visibility && params.visibility !== "") {
     queryParams.append("visibility", params.visibility);
   }
+  if (search) {
+    queryParams.append("search", search);
+  }
   const queryString = queryParams.toString();
   const url = `collections${queryString ? `?${queryString}` : ""}`;
-  
+
   return useQuery<CollectionListResponse>({
-    queryKey: [...collectionKeys.lists(), page, limit, effectiveVisibility],
+    queryKey: [...collectionKeys.lists(), page, limit, effectiveVisibility, search],
     queryFn: async () => {
       const response = await axiosAuth.get<CollectionListResponse>(url);
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    ...options,
   });
 };
 
 export const useMyCollections = (page: number = 1, limit: number = 10) => {
   const axiosAuth = useAxiosAuth();
-  
+
   return useQuery<CollectionListResponse>({
     queryKey: collectionKeys.list(page, limit),
     queryFn: async () => {
@@ -64,7 +70,7 @@ export const useMyCollections = (page: number = 1, limit: number = 10) => {
 
 export const useCollection = (id: string) => {
   const axiosAuth = useAxiosAuth();
-  
+
   return useQuery<{ success: boolean; collection: Collection }>({
     queryKey: collectionKeys.detail(id),
     queryFn: async () => {
@@ -87,23 +93,23 @@ export const useCollectionArtworks = (
   limit: number = 12
 ) => {
   const axiosAuth = useAxiosAuth();
-  
+
   return useQuery<ArtworkListResponse>({
     queryKey: [...collectionKeys.detail(collectionId), "artworks", page, limit],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       queryParams.append("page", page.toString());
       queryParams.append("limit", limit.toString());
-      
-      const response = await axiosAuth.get<{ 
-        success: boolean; 
-        artworks: any[]; 
+
+      const response = await axiosAuth.get<{
+        success: boolean;
+        artworks: any[];
         count: number;
         page: number;
         limit: number;
         pages: number;
       }>(`collections/${collectionId}/artworks?${queryParams.toString()}`);
-      
+
       // Transform the response to match ArtworkListResponse format
       return {
         success: true,
@@ -124,7 +130,7 @@ export const useCollectionArtworks = (
  */
 export const useHotCollections = (limit: number = 10) => {
   const axiosAuth = useAxiosAuth();
-  
+
   return useQuery<{ success: boolean; collections: Collection[] }>({
     queryKey: [...collectionKeys.lists(), "hot", limit],
     queryFn: async () => {

@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useCollection } from "@/queries/collectionQueries";
-import { ProtectedRoute } from "@/components/auth/protected-route";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   FolderOpen,
@@ -9,8 +8,6 @@ import {
   Image as ImageIcon,
   Edit2,
   Plus,
-  Grid3x3,
-  List,
   X,
   Loader2,
 } from "lucide-react";
@@ -75,6 +72,8 @@ export default function CollectionDetailPage() {
 
   const collection = data?.collection;
   const isOwner = collection?.createdBy === user?.id;
+  const isGuest = !user;
+  const backHref = isGuest ? "/collections" : "/profile/collections";
 
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -88,8 +87,7 @@ export default function CollectionDetailPage() {
   const [coverImagePreview, setCoverImagePreview] = useState("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
-  // View mode state
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
 
   // Delete and remove confirmation dialogs
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -185,7 +183,7 @@ export default function CollectionDetailPage() {
     } catch (error: any) {
       toast.error(
         "Failed to delete collection: " +
-          (error?.message || "An error occurred")
+        (error?.message || "An error occurred")
       );
     }
   };
@@ -245,7 +243,7 @@ export default function CollectionDetailPage() {
         } catch (error: any) {
           toast.error(
             "Failed to upload cover image: " +
-              (error?.message || "An error occurred")
+            (error?.message || "An error occurred")
           );
           setIsUploadingCover(false);
           return;
@@ -270,11 +268,7 @@ export default function CollectionDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <ProtectedRoute>
-        <CollectionDetailSkeleton />
-      </ProtectedRoute>
-    );
+    return <CollectionDetailSkeleton />;
   }
 
   if (error || !collection) {
@@ -285,7 +279,7 @@ export default function CollectionDetailPage() {
           title="Collection Not Found"
           description="This collection doesn't exist or you don't have access to it."
           actionLabel="Back to Collections"
-          onAction={() => navigate("/profile/collections")}
+          onAction={() => navigate(backHref)}
         />
       </div>
     );
@@ -306,179 +300,148 @@ export default function CollectionDetailPage() {
   const remainingArtworks = mappedArtworks.slice(3);
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-6 max-w-7xl">
-          {/* Cover Image Section */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
-            <div className="w-full h-48 md:h-64 bg-gray-100 relative overflow-hidden">
-              {collection.coverImage ? (
-                <img
-                  src={collection.coverImage}
-                  alt={collection.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                  <FolderOpen className="h-16 w-16 md:h-24 md:w-24 text-gray-400" />
-                </div>
-              )}
-              {/* Visibility Badge Overlay */}
-              <div className="absolute top-3 right-3">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
-                    collection.visibility === "public"
-                      ? "bg-green-500/90 text-white"
-                      : collection.visibility === "unlisted"
-                      ? "bg-yellow-500/90 text-white"
-                      : "bg-gray-500/90 text-white"
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Cover Image Section */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+          <div className="w-full h-48 md:h-64 bg-gray-100 relative overflow-hidden">
+            {collection.coverImage ? (
+              <img
+                src={collection.coverImage}
+                alt={collection.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                <FolderOpen className="h-16 w-16 md:h-24 md:w-24 text-gray-400" />
+              </div>
+            )}
+            {/* Visibility Badge Overlay */}
+            <div className="absolute top-3 right-3">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${collection.visibility === "public"
+                  ? "bg-green-500/90 text-white"
+                  : collection.visibility === "unlisted"
+                    ? "bg-yellow-500/90 text-white"
+                    : "bg-gray-500/90 text-white"
                   }`}
-                >
-                  {collection.visibility}
-                </span>
-              </div>
-              {/* Back Button Overlay */}
-              <div className="absolute top-3 left-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate("/profile/collections")}
-                  className="bg-white/90 hover:bg-white backdrop-blur-sm h-8 w-8"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </div>
+              >
+                {collection.visibility}
+              </span>
             </div>
+            {/* Back Button Overlay */}
+            <div className="absolute top-3 left-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(backHref)}
+                className="bg-white/90 hover:bg-white backdrop-blur-sm h-8 w-8"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-            {/* Collection Name Only */}
-            <div className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  {collection.name}
-                </h1>
-                {isOwner && (
-                  <div className="flex items-center gap-2">
+          {/* Collection Name Only */}
+          <div className="p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                {collection.name}
+              </h1>
+              {isOwner && (
+                <div className="flex items-center gap-2">
+                  <div
+                    title={collection.visibility !== "public" && artworks.length < 3 ? "At least 3 artworks are required to publish this collection" : undefined}
+                    className="inline-block"
+                  >
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant="default"
                       onClick={handlePublishToggle}
-                      className="text-xs md:text-sm"
+                      className="h-7 px-3 text-[10px] md:text-xs bg-red-700 hover:bg-red-800 text-white disabled:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                      disabled={collection.visibility !== "public" && artworks.length < 3}
                     >
                       {collection.visibility === "public"
                         ? "Unpublish"
                         : "Publish"}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEditClick}
-                      className="text-xs md:text-sm"
-                    >
-                      <Edit2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDeleteClick}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs md:text-sm"
-                    >
-                      <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                      Delete
-                    </Button>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Newspaper Style Layout: Description and Artworks */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            {/* Left Column: Description */}
-            <div className="lg:col-span-1">
-              {collection.description && (
-                <div className="border-l-2 border-gray-200 pl-4 py-2">
-                  <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2.5">
-                    Description
-                  </h2>
-                  <p className="text-sm text-gray-700 leading-relaxed break-words whitespace-normal">
-                    {collection.description}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: Featured Artworks */}
-            <div className="lg:col-span-1">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  <span>
-                    {artworks.length}{" "}
-                    {artworks.length === 1 ? "artwork" : "artworks"}
-                  </span>
-                </div>
-                {isOwner && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleAddArtwork}
-                    className="h-7 px-2 text-xs"
+                    onClick={handleEditClick}
+                    className="text-xs md:text-sm"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Artwork
+                    <Edit2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    Edit
                   </Button>
-                )}
-              </div>
-              {featuredArtworks.length > 0 ? (
-                <div className="flex justify-end gap-3">
-                  {featuredArtworks.map((artwork) => (
-                    <div key={artwork.id} className="relative group w-1/3">
-                      <ArtworkCard {...artwork} />
-                      {isOwner && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleRemoveArtworkClick(artwork.id);
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white rounded border border-gray-200 p-6 text-center">
-                  <FolderOpen className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                  <p className="text-xs text-gray-600">
-                    No artworks in this collection yet.
-                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeleteClick}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs md:text-sm"
+                  >
+                    <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    Delete
+                  </Button>
                 </div>
               )}
             </div>
           </div>
+        </div>
 
-          {/* Continuous Artworks Grid Below */}
-          {remainingArtworks.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-base font-semibold text-gray-900 mb-3">
-                All Artworks
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {remainingArtworks.map((artwork) => (
-                  <div key={artwork.id} className="relative group">
+        {/* Newspaper Style Layout: Description and Artworks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* Left Column: Description */}
+          <div className="lg:col-span-1">
+            {collection.description && (
+              <div className="border-l-2 border-gray-200 pl-4 py-2">
+                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2.5">
+                  Description
+                </h2>
+                <p className="text-sm text-gray-700 leading-relaxed break-words whitespace-normal">
+                  {collection.description}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Featured Artworks */}
+          <div className="lg:col-span-1">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                <ImageIcon className="h-3.5 w-3.5" />
+                <span>
+                  {artworks.length}{" "}
+                  {artworks.length === 1 ? "artwork" : "artworks"}
+                </span>
+              </div>
+              {isOwner && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddArtwork}
+                  className="h-7 px-2 text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Artwork
+                </Button>
+              )}
+            </div>
+            {featuredArtworks.length > 0 ? (
+              <div className="flex justify-end gap-3">
+                {featuredArtworks.map((artwork) => (
+                  <div key={artwork.id} className="relative group w-1/3">
                     <ArtworkCard {...artwork} />
                     {isOwner && (
                       <Button
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-10"
-                        onClick={() => handleRemoveArtworkClick(artwork.id)}
+                        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-20"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleRemoveArtworkClick(artwork.id);
+                        }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -486,203 +449,249 @@ export default function CollectionDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="bg-white rounded border border-gray-200 p-6 text-center">
+                <FolderOpen className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                <p className="text-xs text-gray-600">
+                  No artworks in this collection yet.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* Empty State */}
-          {mappedArtworks.length === 0 && (
-            <EmptyState
-              icon={FolderOpen}
-              title="No Artworks in Collection"
-              description={
-                isOwner
-                  ? "This collection is empty. Add artworks to get started!"
-                  : "This collection doesn't have any artworks yet."
-              }
-              actionLabel={isOwner ? "Browse Artworks" : undefined}
-              onAction={isOwner ? handleAddArtwork : undefined}
-            />
-          )}
-
-          {/* Edit Collection Modal */}
-          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Edit Collection</DialogTitle>
-                <DialogDescription>
-                  Update your collection details below.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="edit-name">Collection Name *</Label>
-                  <Input
-                    id="edit-name"
-                    value={editForm.name}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, name: e.target.value })
-                    }
-                    placeholder="My Collection"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-description">Description</Label>
-                  <Textarea
-                    id="edit-description"
-                    value={editForm.description}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, description: e.target.value })
-                    }
-                    placeholder="Describe your collection..."
-                    rows={4}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-visibility">Visibility</Label>
-                  <Select
-                    value={editForm.visibility}
-                    onValueChange={(value: "public" | "private" | "unlisted") =>
-                      setEditForm({ ...editForm, visibility: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private</SelectItem>
-                      <SelectItem value="unlisted">Unlisted</SelectItem>
-                      <SelectItem value="public">Public</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-cover">Cover Image</Label>
-                  <div className="mt-2 space-y-2">
-                    {coverImagePreview || collection.coverImage ? (
-                      <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
-                        <img
-                          src={coverImagePreview || collection.coverImage}
-                          alt="Cover preview"
-                          className="w-full h-full object-cover"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6"
-                          onClick={() => {
-                            setCoverImageFile(null);
-                            setCoverImagePreview("");
-                            setEditForm({ ...editForm, coverImage: "" });
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : null}
-                    <label
-                      htmlFor="edit-cover-upload"
-                      className="flex items-center justify-center w-full h-10 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
+        {/* Continuous Artworks Grid Below */}
+        {remainingArtworks.length > 0 && (
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-gray-900 mb-3">
+              All Artworks
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {remainingArtworks.map((artwork) => (
+                <div key={artwork.id} className="relative group">
+                  <ArtworkCard {...artwork} />
+                  {isOwner && (
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 z-10"
+                      onClick={() => handleRemoveArtworkClick(artwork.id)}
                     >
-                      <Upload className="h-4 w-4 mr-2 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {coverImagePreview || collection.coverImage
-                          ? "Change Cover Image"
-                          : "Upload Cover Image"}
-                      </span>
-                      <input
-                        id="edit-cover-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleCoverImageChange}
-                      />
-                    </label>
-                  </div>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditModalOpen(false)}
-                    disabled={isUpdating || isUploadingCover}
+        {/* Empty State */}
+        {mappedArtworks.length === 0 && (
+          <EmptyState
+            icon={FolderOpen}
+            title="No Artworks in Collection"
+            description={
+              isOwner
+                ? "This collection is empty. Add artworks to get started!"
+                : "This collection doesn't have any artworks yet."
+            }
+            actionLabel={
+              isOwner
+                ? "Browse Artworks"
+                : isGuest
+                  ? "Sign in to create a collection"
+                  : undefined
+            }
+            onAction={
+              isOwner
+                ? handleAddArtwork
+                : isGuest
+                  ? () => navigate(`/login?redirect=${encodeURIComponent(`/collections/${id}`)}`)
+                  : undefined
+            }
+          />
+        )}
+
+        {/* Edit Collection Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white">
+            <DialogHeader>
+              <DialogTitle>Edit Collection</DialogTitle>
+              <DialogDescription>
+                Update your collection details below.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Collection Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, name: e.target.value })
+                  }
+                  placeholder="My Collection"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
+                  placeholder="Describe your collection..."
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-visibility">Visibility</Label>
+                <Select
+                  value={editForm.visibility}
+                  onValueChange={(value: "public" | "private" | "unlisted") =>
+                    setEditForm({ ...editForm, visibility: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="unlisted">Unlisted</SelectItem>
+                    <SelectItem value="public">Public</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-cover">Cover Image</Label>
+                <div className="mt-2 space-y-2">
+                  {coverImagePreview || collection.coverImage ? (
+                    <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
+                      <img
+                        src={coverImagePreview || collection.coverImage}
+                        alt="Cover preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6"
+                        onClick={() => {
+                          setCoverImageFile(null);
+                          setCoverImagePreview("");
+                          setEditForm({ ...editForm, coverImage: "" });
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : null}
+                  <label
+                    htmlFor="edit-cover-upload"
+                    className="flex items-center justify-center w-full h-10 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUpdateCollection}
-                    disabled={isUpdating || isUploadingCover}
-                  >
-                    {isUpdating || isUploadingCover ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {isUploadingCover ? "Uploading..." : "Saving..."}
-                      </>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </Button>
+                    <Upload className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      {coverImagePreview || collection.coverImage
+                        ? "Change Cover Image"
+                        : "Upload Cover Image"}
+                    </span>
+                    <input
+                      id="edit-cover-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCoverImageChange}
+                    />
+                  </label>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
 
-          {/* Delete Collection Confirmation Dialog */}
-          <AlertDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Collection</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this collection? This action
-                  cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteConfirm}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isUpdating || isUploadingCover}
                 >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          {/* Remove Artwork Confirmation Dialog */}
-          <AlertDialog
-            open={removeArtworkDialogOpen}
-            onOpenChange={setRemoveArtworkDialogOpen}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remove Artwork</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to remove this artwork from the
-                  collection?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setArtworkToRemove(null)}>
                   Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleRemoveArtworkConfirm}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                </Button>
+                <Button
+                  onClick={handleUpdateCollection}
+                  disabled={isUpdating || isUploadingCover}
+                  className="bg-red-700 hover:bg-red-800 text-white"
                 >
-                  Remove
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+                  {isUpdating || isUploadingCover ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {isUploadingCover ? "Uploading..." : "Saving..."}
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Collection Confirmation Dialog */}
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this collection? This action
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Remove Artwork Confirmation Dialog */}
+        <AlertDialog
+          open={removeArtworkDialogOpen}
+          onOpenChange={setRemoveArtworkDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Artwork</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove this artwork from the
+                collection?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setArtworkToRemove(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRemoveArtworkConfirm}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-    </ProtectedRoute>
+    </div>
   );
 }

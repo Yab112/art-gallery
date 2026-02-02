@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import useAxiosAuth from "@/hooks/use-axios-auth";
 
 export interface TalentType {
@@ -37,7 +37,8 @@ export const useGetAllArtists = (
   search?: string,
   country?: string,
   talentTypeId?: string,
-  email?: string
+  email?: string,
+  options?: Partial<UseQueryOptions<GetAllArtistsResponse>>
 ) => {
   const axiosAuth = useAxiosAuth();
 
@@ -75,6 +76,7 @@ export const useGetAllArtists = (
     placeholderData: (previousData) => previousData,
     // Only show loading state on initial fetch, not on refetches
     refetchOnWindowFocus: false,
+    ...options,
   });
 };
 
