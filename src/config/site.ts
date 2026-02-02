@@ -1,6 +1,6 @@
 export const siteConfig = {
-  name: "",
-  description: "",
-  url: "",
-  keyWords: [],
-};
+    name: "",
+    description: "",
+    url: "",
+    keyWords: []
+}

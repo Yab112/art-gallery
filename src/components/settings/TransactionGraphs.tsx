@@ -1,391 +1,424 @@
-import { useState } from "react";
-import { BarChart3, PieChart, TrendingUp } from "lucide-react";
-import { useGetTransactionStats } from "@/services/transactions/useGetTransactionStats";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { useGetTransactionStats } from "@/services/transactions/useGetTransactionStats"
+import { BarChart3, PieChart, TrendingUp } from "lucide-react"
+import { useState } from "react"
 
 // Simple bar chart component using CSS - Compact (for single data series)
-const SimpleBarChart = ({ 
-  data, 
-  color = "bg-red-600",
-  hoverColor = "hover:bg-red-700"
-}: { 
-  data: Array<{ date: string; amount: number; count: number }>;
-  color?: string;
-  hoverColor?: string;
+const SimpleBarChart = ({
+    data,
+    color = "bg-red-600",
+    hoverColor = "hover:bg-red-700"
+}: {
+    data: Array<{ date: string; amount: number; count: number }>
+    color?: string
+    hoverColor?: string
 }) => {
-  if (data.length === 0) {
+    if (data.length === 0) {
+        return (
+            <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                No data
+            </div>
+        )
+    }
+
+    const maxAmount = Math.max(...data.map((d) => d.amount), 1)
+
     return (
-      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-        No data
-      </div>
-    );
-  }
-
-  const maxAmount = Math.max(...data.map((d) => d.amount), 1);
-
-  return (
-    <div className="h-48 flex items-end justify-between gap-1.5">
-      {data.map((item, index) => (
-        <div key={index} className="flex-1 flex flex-col items-center gap-1">
-          <div className="w-full flex flex-col items-center justify-end h-36">
-            <div
-              className={`w-full ${color} rounded-t transition-all ${hoverColor}`}
-              style={{
-                height: `${(item.amount / maxAmount) * 100}%`,
-                minHeight: item.amount > 0 ? "3px" : "0",
-              }}
-              title={`$${item.amount.toFixed(2)}`}
-            />
-          </div>
-          <span className="text-[10px] text-gray-600 text-center leading-tight">{item.date}</span>
-          <span className="text-[10px] font-medium text-gray-900">
-            ${item.amount.toFixed(0)}
-          </span>
+        <div className="flex h-48 items-end justify-between gap-1.5">
+            {data.map((item, index) => (
+                <div key={index} className="flex flex-1 flex-col items-center gap-1">
+                    <div className="flex h-36 w-full flex-col items-center justify-end">
+                        <div
+                            className={`w-full ${color} rounded-t transition-all ${hoverColor}`}
+                            style={{
+                                height: `${(item.amount / maxAmount) * 100}%`,
+                                minHeight: item.amount > 0 ? "3px" : "0"
+                            }}
+                            title={`$${item.amount.toFixed(2)}`}
+                        />
+                    </div>
+                    <span className="text-center text-[10px] text-gray-600 leading-tight">
+                        {item.date}
+                    </span>
+                    <span className="font-medium text-[10px] text-gray-900">
+                        ${item.amount.toFixed(0)}
+                    </span>
+                </div>
+            ))}
         </div>
-      ))}
-    </div>
-  );
-};
+    )
+}
 
 // Dual bar chart for credits and debits
-const DualBarChart = ({ 
-  creditsData, 
-  debitsData 
-}: { 
-  creditsData: Array<{ date: string; amount: number; count: number }>;
-  debitsData: Array<{ date: string; amount: number; count: number }>;
+const DualBarChart = ({
+    creditsData,
+    debitsData
+}: {
+    creditsData: Array<{ date: string; amount: number; count: number }>
+    debitsData: Array<{ date: string; amount: number; count: number }>
 }) => {
-  if (creditsData.length === 0 && debitsData.length === 0) {
-    return (
-      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-        No data
-      </div>
-    );
-  }
-
-  // Combine dates from both datasets
-  const allDates = [...new Set([...creditsData.map(d => d.date), ...debitsData.map(d => d.date)])];
-  const maxAmount = Math.max(
-    ...creditsData.map(d => d.amount),
-    ...debitsData.map(d => d.amount),
-    1
-  );
-
-  return (
-    <div className="h-48 flex items-end justify-between gap-1.5">
-      {allDates.map((date, index) => {
-        const credit = creditsData.find(d => d.date === date) || { amount: 0, count: 0 };
-        const debit = debitsData.find(d => d.date === date) || { amount: 0, count: 0 };
-        
+    if (creditsData.length === 0 && debitsData.length === 0) {
         return (
-          <div key={index} className="flex-1 flex flex-col items-center gap-1">
-            <div className="w-full flex flex-col items-center justify-end h-36 gap-0.5">
-              {/* Credits bar (green) */}
-              {credit.amount > 0 && (
-                <div
-                  className="w-full bg-green-600 rounded-t transition-all hover:bg-green-700"
-                  style={{
-                    height: `${(credit.amount / maxAmount) * 100}%`,
-                    minHeight: "3px",
-                  }}
-                  title={`Credits: $${credit.amount.toFixed(2)}`}
-                />
-              )}
-              {/* Debits bar (red) */}
-              {debit.amount > 0 && (
-                <div
-                  className="w-full bg-red-600 rounded-t transition-all hover:bg-red-700"
-                  style={{
-                    height: `${(debit.amount / maxAmount) * 100}%`,
-                    minHeight: "3px",
-                  }}
-                  title={`Debits: $${debit.amount.toFixed(2)}`}
-                />
-              )}
+            <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                No data
             </div>
-            <span className="text-[10px] text-gray-600 text-center leading-tight">{date}</span>
-            <div className="flex flex-col items-center gap-0.5">
-              {credit.amount > 0 && (
-                <span className="text-[10px] font-medium text-green-600">
-                  +${credit.amount.toFixed(0)}
-                </span>
-              )}
-              {debit.amount > 0 && (
-                <span className="text-[10px] font-medium text-red-600">
-                  -${debit.amount.toFixed(0)}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+        )
+    }
+
+    // Combine dates from both datasets
+    const allDates = [
+        ...new Set([...creditsData.map((d) => d.date), ...debitsData.map((d) => d.date)])
+    ]
+    const maxAmount = Math.max(
+        ...creditsData.map((d) => d.amount),
+        ...debitsData.map((d) => d.amount),
+        1
+    )
+
+    return (
+        <div className="flex h-48 items-end justify-between gap-1.5">
+            {allDates.map((date, index) => {
+                const credit = creditsData.find((d) => d.date === date) || { amount: 0, count: 0 }
+                const debit = debitsData.find((d) => d.date === date) || { amount: 0, count: 0 }
+
+                return (
+                    <div key={index} className="flex flex-1 flex-col items-center gap-1">
+                        <div className="flex h-36 w-full flex-col items-center justify-end gap-0.5">
+                            {/* Credits bar (green) */}
+                            {credit.amount > 0 && (
+                                <div
+                                    className="w-full rounded-t bg-green-600 transition-all hover:bg-green-700"
+                                    style={{
+                                        height: `${(credit.amount / maxAmount) * 100}%`,
+                                        minHeight: "3px"
+                                    }}
+                                    title={`Credits: $${credit.amount.toFixed(2)}`}
+                                />
+                            )}
+                            {/* Debits bar (red) */}
+                            {debit.amount > 0 && (
+                                <div
+                                    className="w-full rounded-t bg-red-600 transition-all hover:bg-red-700"
+                                    style={{
+                                        height: `${(debit.amount / maxAmount) * 100}%`,
+                                        minHeight: "3px"
+                                    }}
+                                    title={`Debits: $${debit.amount.toFixed(2)}`}
+                                />
+                            )}
+                        </div>
+                        <span className="text-center text-[10px] text-gray-600 leading-tight">
+                            {date}
+                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                            {credit.amount > 0 && (
+                                <span className="font-medium text-[10px] text-green-600">
+                                    +${credit.amount.toFixed(0)}
+                                </span>
+                            )}
+                            {debit.amount > 0 && (
+                                <span className="font-medium text-[10px] text-red-600">
+                                    -${debit.amount.toFixed(0)}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
 
 // Simple pie chart component - Compact
 const SimplePieChart = ({
-  data,
-  title,
+    data,
+    title
 }: {
-  data: Record<string, { count: number; amount: number }>;
-  title: string;
+    data: Record<string, { count: number; amount: number }>
+    title: string
 }) => {
-  const entries = Object.entries(data).filter(([_, value]) => value.count > 0);
+    const entries = Object.entries(data).filter(([_, value]) => value.count > 0)
 
-  if (entries.length === 0) {
+    if (entries.length === 0) {
+        return (
+            <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                No data
+            </div>
+        )
+    }
+
+    const total = entries.reduce((sum, [_, value]) => sum + value.count, 0)
+    const colors = ["#dc2626", "#2563eb", "#16a34a", "#ea580c", "#9333ea"]
+
     return (
-      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-        No data
-      </div>
-    );
-  }
-
-  const total = entries.reduce((sum, [_, value]) => sum + value.count, 0);
-  const colors = ["#dc2626", "#2563eb", "#16a34a", "#ea580c", "#9333ea"];
-
-  return (
-    <div className="space-y-2">
-      <div className="flex-1 space-y-2">
-        {entries.map(([key, value], index) => {
-          const percentage = ((value.count / total) * 100).toFixed(1);
-          return (
-            <div key={key} className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded flex-shrink-0"
-                style={{ backgroundColor: colors[index % colors.length] }}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between text-xs mb-0.5">
-                  <span className="text-gray-700 capitalize truncate">{key.toLowerCase()}</span>
-                  <span className="text-gray-900 font-medium ml-2">{value.count}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div
-                    className="h-1.5 rounded-full transition-all"
-                    style={{
-                      width: `${percentage}%`,
-                      backgroundColor: colors[index % colors.length],
-                    }}
-                  />
-                </div>
-              </div>
+        <div className="space-y-2">
+            <div className="flex-1 space-y-2">
+                {entries.map(([key, value], index) => {
+                    const percentage = ((value.count / total) * 100).toFixed(1)
+                    return (
+                        <div key={key} className="flex items-center gap-2">
+                            <div
+                                className="h-3 w-3 flex-shrink-0 rounded"
+                                style={{ backgroundColor: colors[index % colors.length] }}
+                            />
+                            <div className="min-w-0 flex-1">
+                                <div className="mb-0.5 flex items-center justify-between text-xs">
+                                    <span className="truncate text-gray-700 capitalize">
+                                        {key.toLowerCase()}
+                                    </span>
+                                    <span className="ml-2 font-medium text-gray-900">
+                                        {value.count}
+                                    </span>
+                                </div>
+                                <div className="h-1.5 w-full rounded-full bg-gray-200">
+                                    <div
+                                        className="h-1.5 rounded-full transition-all"
+                                        style={{
+                                            width: `${percentage}%`,
+                                            backgroundColor: colors[index % colors.length]
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-export function TransactionGraphs() {
-  const [period, setPeriod] = useState<"week" | "month" | "year">("month");
-  const { data: stats, isLoading } = useGetTransactionStats(period);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
-        <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-        <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600 font-medium">No transaction data available</p>
-        <p className="text-sm text-gray-500 mt-1">
-          Transaction statistics will appear here once you have transaction history.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Period Selector - Compact */}
-      <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-        <h3 className="text-base font-semibold text-gray-900">Analytics</h3>
-        <div className="flex gap-1">
-          <Button
-            variant={period === "week" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setPeriod("week")}
-            className={`text-xs h-7 px-2 ${period === "week" ? "bg-red-700 hover:bg-red-800" : ""}`}
-          >
-            Week
-          </Button>
-          <Button
-            variant={period === "month" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setPeriod("month")}
-            className={`text-xs h-7 px-2 ${period === "month" ? "bg-red-700 hover:bg-red-800" : ""}`}
-          >
-            Month
-          </Button>
-          <Button
-            variant={period === "year" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setPeriod("year")}
-            className={`text-xs h-7 px-2 ${period === "year" ? "bg-red-700 hover:bg-red-800" : ""}`}
-          >
-            Year
-          </Button>
         </div>
-      </div>
-
-      {/* Summary Cards - Compact */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-200 rounded-md p-3">
-          <div className="flex items-center gap-1.5 mb-1">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <p className="text-xs text-gray-600">Credits</p>
-          </div>
-          <p className="text-lg font-bold text-green-600">
-            +${(stats.totalCredits || 0).toLocaleString("en-US", {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            })}
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-md p-3">
-          <div className="flex items-center gap-1.5 mb-1">
-            <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />
-            <p className="text-xs text-gray-600">Debits</p>
-          </div>
-          <p className="text-lg font-bold text-red-600">
-            -${(stats.totalDebits || 0).toLocaleString("en-US", {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            })}
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-md p-3">
-          <div className="flex items-center gap-1.5 mb-1">
-            <BarChart3 className="h-4 w-4 text-blue-600" />
-            <p className="text-xs text-gray-600">Net</p>
-          </div>
-          <p className={`text-lg font-bold ${
-            (stats.totalCredits || 0) - (stats.totalDebits || 0) >= 0 
-              ? 'text-green-600' 
-              : 'text-red-600'
-          }`}>
-            ${((stats.totalCredits || 0) - (stats.totalDebits || 0)).toLocaleString("en-US", {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            })}
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-md p-3">
-          <div className="flex items-center gap-1.5 mb-1">
-            <PieChart className="h-4 w-4 text-purple-600" />
-            <p className="text-xs text-gray-600">Count</p>
-          </div>
-          <p className="text-lg font-bold text-gray-900">{stats.totalCount}</p>
-        </div>
-      </div>
-
-      {/* Charts - Compact Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Credits and Debits Over Time */}
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Credits & Debits Over Time</h3>
-          {stats.byDateCredits && stats.byDateDebits ? (
-            <DualBarChart creditsData={stats.byDateCredits} debitsData={stats.byDateDebits} />
-          ) : (
-            <SimpleBarChart data={stats.byDate} />
-          )}
-          <div className="flex items-center justify-center gap-4 mt-3 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-green-600 rounded"></div>
-              <span className="text-gray-600">Credits (Earnings)</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-red-600 rounded"></div>
-              <span className="text-gray-600">Debits (Purchases/Withdrawals)</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Credits Over Time */}
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Credits (Earnings) Over Time</h3>
-          {stats.byDateCredits ? (
-            <SimpleBarChart 
-              data={stats.byDateCredits} 
-              color="bg-green-600" 
-              hoverColor="hover:bg-green-700"
-            />
-          ) : (
-            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-              No data
-            </div>
-          )}
-        </div>
-        
-        {/* Debits Over Time */}
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Debits (Purchases/Withdrawals) Over Time</h3>
-          {stats.byDateDebits ? (
-            <SimpleBarChart 
-              data={stats.byDateDebits} 
-              color="bg-red-600" 
-              hoverColor="hover:bg-red-700"
-            />
-          ) : (
-            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-              No data
-            </div>
-          )}
-        </div>
-
-        {/* Transactions by Status */}
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">By Status</h3>
-          <SimplePieChart data={stats.byStatus} title="" />
-        </div>
-
-        {/* Transactions by Provider */}
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">By Provider</h3>
-          <SimplePieChart data={stats.byProvider} title="" />
-        </div>
-
-        {/* Transaction Count Over Time */}
-        <div className="bg-white border border-gray-200 rounded-md p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Count Over Time</h3>
-          {stats.byDate.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
-              No data
-            </div>
-          ) : (
-            <div className="h-48 flex items-end justify-between gap-1.5">
-              {stats.byDate.map((item, index) => {
-                const maxCount = Math.max(...stats.byDate.map((d) => d.count), 1);
-                return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full flex flex-col items-center justify-end h-36">
-                      <div
-                        className="w-full bg-blue-600 rounded-t transition-all hover:bg-blue-700"
-                        style={{
-                          height: `${(item.count / maxCount) * 100}%`,
-                          minHeight: item.count > 0 ? "3px" : "0",
-                        }}
-                        title={`${item.count} transactions`}
-                      />
-                    </div>
-                    <span className="text-[10px] text-gray-600 text-center leading-tight">{item.date}</span>
-                    <span className="text-[10px] font-medium text-gray-900">{item.count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    )
 }
 
+export function TransactionGraphs() {
+    const [period, setPeriod] = useState<"week" | "month" | "year">("month")
+    const { data: stats, isLoading } = useGetTransactionStats(period)
+
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                <div className="h-64 animate-pulse rounded-lg bg-gray-100" />
+                <div className="h-48 animate-pulse rounded-lg bg-gray-100" />
+            </div>
+        )
+    }
+
+    if (!stats) {
+        return (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 py-12 text-center">
+                <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <p className="font-medium text-gray-600">No transaction data available</p>
+                <p className="mt-1 text-gray-500 text-sm">
+                    Transaction statistics will appear here once you have transaction history.
+                </p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Period Selector - Compact */}
+            <div className="flex items-center justify-between border-gray-200 border-b pb-2">
+                <h3 className="font-semibold text-base text-gray-900">Analytics</h3>
+                <div className="flex gap-1">
+                    <Button
+                        variant={period === "week" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPeriod("week")}
+                        className={`h-7 px-2 text-xs ${period === "week" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                    >
+                        Week
+                    </Button>
+                    <Button
+                        variant={period === "month" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPeriod("month")}
+                        className={`h-7 px-2 text-xs ${period === "month" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                    >
+                        Month
+                    </Button>
+                    <Button
+                        variant={period === "year" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPeriod("year")}
+                        className={`h-7 px-2 text-xs ${period === "year" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                    >
+                        Year
+                    </Button>
+                </div>
+            </div>
+
+            {/* Summary Cards - Compact */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="rounded-md border border-gray-200 bg-white p-3">
+                    <div className="mb-1 flex items-center gap-1.5">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <p className="text-gray-600 text-xs">Credits</p>
+                    </div>
+                    <p className="font-bold text-green-600 text-lg">
+                        +$
+                        {(stats.totalCredits || 0).toLocaleString("en-US", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        })}
+                    </p>
+                </div>
+                <div className="rounded-md border border-gray-200 bg-white p-3">
+                    <div className="mb-1 flex items-center gap-1.5">
+                        <TrendingUp className="h-4 w-4 rotate-180 text-red-600" />
+                        <p className="text-gray-600 text-xs">Debits</p>
+                    </div>
+                    <p className="font-bold text-lg text-red-600">
+                        -$
+                        {(stats.totalDebits || 0).toLocaleString("en-US", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        })}
+                    </p>
+                </div>
+                <div className="rounded-md border border-gray-200 bg-white p-3">
+                    <div className="mb-1 flex items-center gap-1.5">
+                        <BarChart3 className="h-4 w-4 text-blue-600" />
+                        <p className="text-gray-600 text-xs">Net</p>
+                    </div>
+                    <p
+                        className={`font-bold text-lg ${
+                            (stats.totalCredits || 0) - (stats.totalDebits || 0) >= 0
+                                ? "text-green-600"
+                                : "text-red-600"
+                        }`}
+                    >
+                        $
+                        {((stats.totalCredits || 0) - (stats.totalDebits || 0)).toLocaleString(
+                            "en-US",
+                            {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            }
+                        )}
+                    </p>
+                </div>
+                <div className="rounded-md border border-gray-200 bg-white p-3">
+                    <div className="mb-1 flex items-center gap-1.5">
+                        <PieChart className="h-4 w-4 text-purple-600" />
+                        <p className="text-gray-600 text-xs">Count</p>
+                    </div>
+                    <p className="font-bold text-gray-900 text-lg">{stats.totalCount}</p>
+                </div>
+            </div>
+
+            {/* Charts - Compact Grid */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {/* Credits and Debits Over Time */}
+                <div className="rounded-md border border-gray-200 bg-white p-4">
+                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">
+                        Credits & Debits Over Time
+                    </h3>
+                    {stats.byDateCredits && stats.byDateDebits ? (
+                        <DualBarChart
+                            creditsData={stats.byDateCredits}
+                            debitsData={stats.byDateDebits}
+                        />
+                    ) : (
+                        <SimpleBarChart data={stats.byDate} />
+                    )}
+                    <div className="mt-3 flex items-center justify-center gap-4 text-xs">
+                        <div className="flex items-center gap-1.5">
+                            <div className="h-3 w-3 rounded bg-green-600" />
+                            <span className="text-gray-600">Credits (Earnings)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="h-3 w-3 rounded bg-red-600" />
+                            <span className="text-gray-600">Debits (Purchases/Withdrawals)</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Credits Over Time */}
+                <div className="rounded-md border border-gray-200 bg-white p-4">
+                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">
+                        Credits (Earnings) Over Time
+                    </h3>
+                    {stats.byDateCredits ? (
+                        <SimpleBarChart
+                            data={stats.byDateCredits}
+                            color="bg-green-600"
+                            hoverColor="hover:bg-green-700"
+                        />
+                    ) : (
+                        <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                            No data
+                        </div>
+                    )}
+                </div>
+
+                {/* Debits Over Time */}
+                <div className="rounded-md border border-gray-200 bg-white p-4">
+                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">
+                        Debits (Purchases/Withdrawals) Over Time
+                    </h3>
+                    {stats.byDateDebits ? (
+                        <SimpleBarChart
+                            data={stats.byDateDebits}
+                            color="bg-red-600"
+                            hoverColor="hover:bg-red-700"
+                        />
+                    ) : (
+                        <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                            No data
+                        </div>
+                    )}
+                </div>
+
+                {/* Transactions by Status */}
+                <div className="rounded-md border border-gray-200 bg-white p-4">
+                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">By Status</h3>
+                    <SimplePieChart data={stats.byStatus} title="" />
+                </div>
+
+                {/* Transactions by Provider */}
+                <div className="rounded-md border border-gray-200 bg-white p-4">
+                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">By Provider</h3>
+                    <SimplePieChart data={stats.byProvider} title="" />
+                </div>
+
+                {/* Transaction Count Over Time */}
+                <div className="rounded-md border border-gray-200 bg-white p-4">
+                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">Count Over Time</h3>
+                    {stats.byDate.length === 0 ? (
+                        <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                            No data
+                        </div>
+                    ) : (
+                        <div className="flex h-48 items-end justify-between gap-1.5">
+                            {stats.byDate.map((item, index) => {
+                                const maxCount = Math.max(...stats.byDate.map((d) => d.count), 1)
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex flex-1 flex-col items-center gap-1"
+                                    >
+                                        <div className="flex h-36 w-full flex-col items-center justify-end">
+                                            <div
+                                                className="w-full rounded-t bg-blue-600 transition-all hover:bg-blue-700"
+                                                style={{
+                                                    height: `${(item.count / maxCount) * 100}%`,
+                                                    minHeight: item.count > 0 ? "3px" : "0"
+                                                }}
+                                                title={`${item.count} transactions`}
+                                            />
+                                        </div>
+                                        <span className="text-center text-[10px] text-gray-600 leading-tight">
+                                            {item.date}
+                                        </span>
+                                        <span className="font-medium text-[10px] text-gray-900">
+                                            {item.count}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}

@@ -6,125 +6,125 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 204, 89%, 17%, 1;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 204, 89%, 17%, 1;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-  }
+    :root {
+        --background: 204, 89%, 17%, 1;
+        --foreground: 0 0% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+        --primary: 204, 89%, 17%, 1;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 0 0% 3.9%;
+        --chart-1: 12 76% 61%;
+        --chart-2: 173 58% 39%;
+        --chart-3: 197 37% 24%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+        --radius: 0.5rem;
+    }
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+    .dark {
+        --background: 0 0% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 3.9%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 0 0% 9%;
+        --secondary: 0 0% 14.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 14.9%;
+        --muted-foreground: 0 0% 63.9%;
+        --accent: 0 0% 14.9%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 14.9%;
+        --input: 0 0% 14.9%;
+        --ring: 0 0% 83.1%;
+        --chart-1: 220 70% 50%;
+        --chart-2: 160 60% 45%;
+        --chart-3: 30 80% 55%;
+        --chart-4: 280 65% 60%;
+        --chart-5: 340 75% 55%;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+    * {
+        @apply border-border;
+    }
 
-  body {
-    overflow-x: hidden;
-  }
+    body {
+        overflow-x: hidden;
+    }
 
-  html {
-    overflow-x: hidden;
-  }
+    html {
+        overflow-x: hidden;
+    }
 
-  /* Subtle outline on focus for all input fields */
-  input:focus,
-  textarea:focus,
-  select:focus,
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible {
-    outline: 1px solid rgba(0, 0, 0, 0.1) !important;
-    outline-offset: 0px !important;
-    box-shadow: none !important;
-    --tw-ring-offset-shadow: 0 0 #0000 !important;
-    --tw-ring-shadow: 0 0 #0000 !important;
-    --tw-ring-offset-width: 0px !important;
-    --tw-ring-width: 0px !important;
-  }
+    /* Subtle outline on focus for all input fields */
+    input:focus,
+    textarea:focus,
+    select:focus,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+        outline: 1px solid rgba(0, 0, 0, 0.1) !important;
+        outline-offset: 0px !important;
+        box-shadow: none !important;
+        --tw-ring-offset-shadow: 0 0 #0000 !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+        --tw-ring-offset-width: 0px !important;
+        --tw-ring-width: 0px !important;
+    }
 }
 
 @layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  @keyframes scroll {
-    0% {
-      transform: translateX(0);
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
-    100% {
-      transform: translateX(-50%);
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
     }
-  }
 
-  .animate-scroll {
-    animation: scroll 30s linear infinite;
-    display: flex;
-    width: fit-content;
-  }
+    @keyframes scroll {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
 
-  .animate-scroll:hover {
-    animation-play-state: paused;
-  }
+    .animate-scroll {
+        animation: scroll 30s linear infinite;
+        display: flex;
+        width: fit-content;
+    }
+
+    .animate-scroll:hover {
+        animation-play-state: paused;
+    }
 }
 
 /* Blog Content Styling */
 .blog-content {
-  @apply text-gray-700 leading-relaxed;
+    @apply text-gray-700 leading-relaxed;
 }
 
 .blog-content h1,
@@ -133,64 +133,64 @@
 .blog-content h4,
 .blog-content h5,
 .blog-content h6 {
-  @apply font-bold text-gray-900 mt-8 mb-4;
+    @apply font-bold text-gray-900 mt-8 mb-4;
 }
 
 .blog-content h1 {
-  @apply text-4xl;
+    @apply text-4xl;
 }
 
 .blog-content h2 {
-  @apply text-3xl;
+    @apply text-3xl;
 }
 
 .blog-content h3 {
-  @apply text-2xl;
+    @apply text-2xl;
 }
 
 .blog-content p {
-  @apply mb-6 leading-relaxed;
+    @apply mb-6 leading-relaxed;
 }
 
 .blog-content a {
-  @apply text-red-700 no-underline hover:underline;
+    @apply text-red-700 no-underline hover:underline;
 }
 
 .blog-content ul,
 .blog-content ol {
-  @apply mb-6 ml-6;
+    @apply mb-6 ml-6;
 }
 
 .blog-content li {
-  @apply mb-2;
+    @apply mb-2;
 }
 
 .blog-content img {
-  @apply rounded-lg shadow-md my-8 w-full;
+    @apply rounded-lg shadow-md my-8 w-full;
 }
 
 .blog-content blockquote {
-  @apply border-l-4 border-red-700 pl-4 italic my-6 text-gray-600;
+    @apply border-l-4 border-red-700 pl-4 italic my-6 text-gray-600;
 }
 
 .blog-content code {
-  @apply bg-gray-100 px-2 py-1 rounded text-sm;
+    @apply bg-gray-100 px-2 py-1 rounded text-sm;
 }
 
 .blog-content pre {
-  @apply bg-gray-100 p-4 rounded-lg overflow-x-auto my-6;
+    @apply bg-gray-100 p-4 rounded-lg overflow-x-auto my-6;
 }
 
 .blog-content pre code {
-  @apply bg-transparent p-0;
+    @apply bg-transparent p-0;
 }
 
 .blog-content strong {
-  @apply font-bold text-gray-900;
+    @apply font-bold text-gray-900;
 }
 
 .blog-content em {
-  @apply italic;
+    @apply italic;
 }
 
 /* Fix for Radix UI Select dropdown page shift issue */
@@ -199,31 +199,31 @@ body[data-scroll-locked],
 html[data-scroll-locked],
 body[data-radix-scroll-lock],
 html[data-radix-scroll-lock] {
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
 }
 
 /* Fix for Dialog overlay blocking page interactions */
 [data-radix-dialog-overlay][data-state="closed"] {
-  display: none !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
 }
 
 /* Ensure body is always clickable when no dialog is open */
 body:not(:has([data-radix-dialog-overlay][data-state="open"])) {
-  pointer-events: auto !important;
+    pointer-events: auto !important;
 }
 
 /* Force cleanup - remove any stuck overlays */
 body:not(:has([data-radix-dialog-overlay][data-state="open"])) [data-radix-dialog-overlay] {
-  display: none !important;
-  pointer-events: none !important;
+    display: none !important;
+    pointer-events: none !important;
 }
 
 /* Emergency fix - if body has pointer-events none, force it back */
 body[style*="pointer-events: none"]:not(:has([data-radix-dialog-overlay][data-state="open"])) {
-  pointer-events: auto !important;
+    pointer-events: auto !important;
 }
