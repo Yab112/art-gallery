@@ -285,17 +285,17 @@ export default function ProfilePage() {
                                     coverImage: coverImageUrl
                                 })
 
-                                // Invalidate profile queries to refresh the data
-                                queryClient.invalidateQueries({ queryKey: userKeys.me() })
+                                // Invalidate profile queries and wait for refetch before clearing preview
+                                await queryClient.invalidateQueries({ queryKey: userKeys.me() })
                                 if (profile?.id) {
-                                    queryClient.invalidateQueries({
+                                    await queryClient.invalidateQueries({
                                         queryKey: userKeys.detail(profile.id)
                                     })
                                 }
 
                                 toast.success("Cover image updated successfully")
 
-                                // Clear preview after successful upload
+                                // Clear preview after successful upload and data refetch
                                 setProfileCoverImageFile(null)
                                 setProfileCoverImagePreview("")
                             } catch (error: any) {
@@ -414,12 +414,12 @@ export default function ProfilePage() {
                                                         // Update avatar
                                                         await updateAvatar(avatarUrl)
 
-                                                        // Invalidate profile queries to refresh the data
-                                                        queryClient.invalidateQueries({
+                                                        // Invalidate profile queries and wait for refetch before clearing preview
+                                                        await queryClient.invalidateQueries({
                                                             queryKey: userKeys.me()
                                                         })
                                                         if (profile?.id) {
-                                                            queryClient.invalidateQueries({
+                                                            await queryClient.invalidateQueries({
                                                                 queryKey: userKeys.detail(
                                                                     profile.id
                                                                 )
@@ -430,7 +430,7 @@ export default function ProfilePage() {
                                                             "Profile picture updated successfully"
                                                         )
 
-                                                        // Clear preview after successful upload
+                                                        // Clear preview after successful upload and data refetch
                                                         setAvatarFile(null)
                                                         setAvatarPreview("")
                                                     } catch (error: any) {
