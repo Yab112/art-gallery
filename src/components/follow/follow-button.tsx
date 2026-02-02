@@ -1,80 +1,79 @@
-import { MinimalButton } from "@/components/ui/minimal-button";
-import { useFollowUser } from "@/services/follow/useFollowUser";
-import { useUnfollowUser } from "@/services/follow/useUnfollowUser";
-import { useFollowStatus } from "@/services/follow/useFollowStatus";
-import { useQueryClient } from "@tanstack/react-query";
-import { followKeys } from "@/queries/queryKeys";
-import { userKeys } from "@/queries/queryKeys";
-import { UserPlus } from "lucide-react";
+import { MinimalButton } from "@/components/ui/minimal-button"
+import { followKeys } from "@/queries/queryKeys"
+import { userKeys } from "@/queries/queryKeys"
+import { useFollowStatus } from "@/services/follow/useFollowStatus"
+import { useFollowUser } from "@/services/follow/useFollowUser"
+import { useUnfollowUser } from "@/services/follow/useUnfollowUser"
+import { useQueryClient } from "@tanstack/react-query"
+import { UserPlus } from "lucide-react"
 
 interface FollowButtonProps {
-  userId: string;
-  isFollowing?: boolean;
-  variant?: "default" | "outline" | "ghost" | "secondary";
-  size?: "default" | "sm" | "lg" | "icon";
-  className?: string;
-  onFollowChange?: (isFollowing: boolean) => void;
-  showFollowBack?: boolean; // Show "Follow Back" instead of "Follow"
+    userId: string
+    isFollowing?: boolean
+    variant?: "default" | "outline" | "ghost" | "secondary"
+    size?: "default" | "sm" | "lg" | "icon"
+    className?: string
+    onFollowChange?: (isFollowing: boolean) => void
+    showFollowBack?: boolean // Show "Follow Back" instead of "Follow"
 }
 
 export function FollowButton({
-  userId,
-  isFollowing: initialIsFollowing,
-  variant = "default",
-  size = "default",
-  className,
-  onFollowChange,
-  showFollowBack = false,
+    userId,
+    isFollowing: initialIsFollowing,
+    variant = "default",
+    size = "default",
+    className,
+    onFollowChange,
+    showFollowBack = false
 }: FollowButtonProps) {
-  const { followUser, isFollowing: isFollowingUser } = useFollowUser();
-  const { unfollowUser, isUnfollowing } = useUnfollowUser();
-  const { data: followStatus } = useFollowStatus(userId);
-  const queryClient = useQueryClient();
+    const { followUser, isFollowing: isFollowingUser } = useFollowUser()
+    const { unfollowUser, isUnfollowing } = useUnfollowUser()
+    const { data: followStatus } = useFollowStatus(userId)
+    const queryClient = useQueryClient()
 
-  // Use followStatus if available, otherwise fall back to initialIsFollowing
-  const isFollowing = followStatus?.isFollowing ?? initialIsFollowing ?? false;
-  const isLoading = isFollowingUser || isUnfollowing;
+    // Use followStatus if available, otherwise fall back to initialIsFollowing
+    const isFollowing = followStatus?.isFollowing ?? initialIsFollowing ?? false
+    const isLoading = isFollowingUser || isUnfollowing
 
-  const handleToggleFollow = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      if (isFollowing) {
-        await unfollowUser(userId);
-        onFollowChange?.(false);
-      } else {
-        await followUser(userId);
-        onFollowChange?.(true);
-      }
+    const handleToggleFollow = async (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        try {
+            if (isFollowing) {
+                await unfollowUser(userId)
+                onFollowChange?.(false)
+            } else {
+                await followUser(userId)
+                onFollowChange?.(true)
+            }
 
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: followKeys.all() });
-      queryClient.invalidateQueries({ queryKey: userKeys.all });
-    } catch (error) {
-      console.error("Failed to toggle follow:", error);
+            // Invalidate relevant queries
+            queryClient.invalidateQueries({ queryKey: followKeys.all() })
+            queryClient.invalidateQueries({ queryKey: userKeys.all })
+        } catch (error) {
+            console.error("Failed to toggle follow:", error)
+        }
     }
-  };
 
-  return (
-    <MinimalButton
-      icon={!isFollowing ? UserPlus : undefined}
-      onClick={handleToggleFollow}
-      disabled={isLoading}
-      isLoading={isLoading}
-      variant={variant}
-      size={size}
-      className={className}
-    >
-      {isLoading
-        ? isFollowing
-          ? "Unfollowing..."
-          : "Following..."
-        : isFollowing
-        ? "Unfollow"
-        : showFollowBack
-        ? "Follow Back"
-        : "Follow"}
-    </MinimalButton>
-  );
+    return (
+        <MinimalButton
+            icon={!isFollowing ? UserPlus : undefined}
+            onClick={handleToggleFollow}
+            disabled={isLoading}
+            isLoading={isLoading}
+            variant={variant}
+            size={size}
+            className={className}
+        >
+            {isLoading
+                ? isFollowing
+                    ? "Unfollowing..."
+                    : "Following..."
+                : isFollowing
+                  ? "Unfollow"
+                  : showFollowBack
+                    ? "Follow Back"
+                    : "Follow"}
+        </MinimalButton>
+    )
 }
-

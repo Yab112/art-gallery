@@ -1,62 +1,62 @@
-import { useGetCategories } from "@/services/category/useGetCategories";
-import { useNavigate } from "react-router-dom";
+import { useGetCategories } from "@/services/category/useGetCategories"
+import { useNavigate } from "react-router-dom"
 
 export function CategoriesSection() {
-  const { data: categoriesData, isLoading } = useGetCategories();
-  const navigate = useNavigate();
+    const { data: categoriesData, isLoading } = useGetCategories()
+    const navigate = useNavigate()
 
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(`/buyart?categories=${categoryId}`);
-  };
+    const handleCategoryClick = (categoryId: string) => {
+        navigate(`/buyart?categories=${categoryId}`)
+    }
 
-  return (
-    <div className="py-16 lg:py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Explore Our Collection
-          </h2>
-          <p className="text-xl text-gray-600">
-            Discover art across all mediums and styles
-          </p>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-square rounded-lg bg-gray-200 mb-3" />
-                <div className="h-4 w-20 mx-auto rounded bg-gray-200 mb-2" />
-                <div className="h-3 w-16 mx-auto rounded bg-gray-200" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categoriesData?.slice(0, 6).map((category) => (
-              <div
-                key={category.id}
-                className="group cursor-pointer"
-                onClick={() => handleCategoryClick(category.id)}
-              >
-                <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden mb-3 group-hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
-                  <img
-                    src={category.image || "/placeholder.svg"}
-                    alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+    return (
+        <div className="py-16 lg:py-24">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="mb-16 text-center">
+                    <h2 className="mb-4 font-bold text-3xl text-gray-900 lg:text-4xl">
+                        Explore Our Collection
+                    </h2>
+                    <p className="text-gray-600 text-xl">
+                        Discover art across all mediums and styles
+                    </p>
                 </div>
-                <h3 className="font-semibold text-gray-900 text-center group-hover:text-red-700 transition-colors">
-                  {category.name}
-                </h3>
-                <p className="text-sm text-gray-500 text-center">
-                  {(category.artworkCount || 0).toLocaleString()} works
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+
+                {isLoading ? (
+                    <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="animate-pulse">
+                                <div className="mb-3 aspect-square rounded-lg bg-gray-200" />
+                                <div className="mx-auto mb-2 h-4 w-20 rounded bg-gray-200" />
+                                <div className="mx-auto h-3 w-16 rounded bg-gray-200" />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+                        {categoriesData?.slice(0, 6).map((category) => (
+                            <div
+                                key={category.id}
+                                className="group cursor-pointer"
+                                onClick={() => handleCategoryClick(category.id)}
+                            >
+                                <div className="group-hover:-translate-y-1 mb-3 aspect-square overflow-hidden rounded-lg bg-gray-200 transition-all duration-300 group-hover:shadow-lg">
+                                    <img
+                                        src={category.image || "/placeholder.svg"}
+                                        alt={category.name}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                </div>
+                                <h3 className="text-center font-semibold text-gray-900 transition-colors group-hover:text-red-700">
+                                    {category.name}
+                                </h3>
+                                <p className="text-center text-gray-500 text-sm">
+                                    {(category.artworkCount || 0).toLocaleString()} works
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
 }

@@ -1,10 +1,1 @@
-export { AnimatedFavoriteButton } from "./animated-favorite-button";
-
-
-
-
-
-
-
-
-
+export { AnimatedFavoriteButton } from "./animated-favorite-button"
