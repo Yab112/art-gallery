@@ -60,6 +60,7 @@ export function ArtworkCard({
     const statusInfo = status ? statusConfig[status as keyof typeof statusConfig] : null
     const [isHovered, setIsHovered] = useState(false)
     const [imageError, setImageError] = useState(false)
+    const [imagePosition, setImagePosition] = useState({ x: 50, y: 50 })
     const navigate = useNavigate()
 
     // Check if artwork is favorited
@@ -111,6 +112,22 @@ export function ArtworkCard({
             console.error("Failed to toggle favorite:", error)
         }
     }
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = ((e.clientX - rect.left) / rect.width) * 100
+        const y = ((e.clientY - rect.top) / rect.height) * 100
+        setImagePosition({ x, y })
+    }
+
+    const handleMouseLeave = () => {
+        setImagePosition({ x: 50, y: 50 })
+        setIsHovered(false)
+    }
+
+    const handleMouseEnter = () => {
+        setIsHovered(true)
+    }
     return (
         <div
             className="group relative cursor-pointer"
@@ -128,8 +145,9 @@ export function ArtworkCard({
                     !isMasonry && "aspect-[4/5]",
                     isSold && "opacity-75"
                 )}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseMove={handleMouseMove}
             >
                 {/* Status Badge */}
                 {statusInfo && (
@@ -165,7 +183,14 @@ export function ArtworkCard({
                     <img
                         src={image}
                         alt={`${title} by ${artist}`}
-                        className={cn("h-full w-full object-cover", isSold && "grayscale")}
+                        className={cn(
+                            "h-full w-full object-cover transition-transform duration-300 ease-in-out",
+                            isSold && "grayscale"
+                        )}
+                        style={{
+                            transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
+                            transform: isHovered ? "scale(1.2)" : "scale(1)"
+                        }}
                         onError={() => setImageError(true)}
                     />
                 )}
