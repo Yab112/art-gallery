@@ -189,7 +189,7 @@ export function ArtworkCard({
                         )}
                         style={{
                             transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
-                            transform: isHovered ? "scale(1.2)" : "scale(1)"
+                            transform: isHovered && !isSold ? "scale(1.2)" : "scale(1)"
                         }}
                         onError={() => setImageError(true)}
                     />
