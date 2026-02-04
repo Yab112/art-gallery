@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type React from "react"
 import { useState } from "react"
+import { ArtworkImage } from "./artwork-image"
 
 interface ArtworkImageGalleryProps {
     photos: string[]
@@ -90,13 +91,17 @@ export const ArtworkImageGallery: React.FC<ArtworkImageGalleryProps> = ({ photos
                         </div>
                     ) : (
                         <>
-                            <img
-                                src={currentPhoto}
-                                alt={`${alt} - Image ${currentIndex + 1}`}
-                                className="h-full w-full cursor-pointer object-cover transition-transform duration-300 group-hover:scale-105"
+                            <div
+                                className="h-full w-full cursor-pointer"
                                 onClick={() => setIsModalOpen(true)}
-                                onError={() => handleImageError(currentIndex)}
-                            />
+                            >
+                                <ArtworkImage
+                                    src={currentPhoto}
+                                    alt={`${alt} - Image ${currentIndex + 1}`}
+                                    magnifierSize={250}
+                                    magnificationLevel={4}
+                                />
+                            </div>
 
                             {/* Navigation Arrows - Only show if multiple photos */}
                             {hasMultiplePhotos && (
@@ -139,11 +144,10 @@ export const ArtworkImageGallery: React.FC<ArtworkImageGalleryProps> = ({ photos
                             <button
                                 key={index}
                                 onClick={() => handleThumbnailClick(index)}
-                                className={`h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all ${
-                                    index === currentIndex
-                                        ? "border-red-600 ring-2 ring-red-200"
-                                        : "border-gray-200 hover:border-gray-300"
-                                }`}
+                                className={`h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all ${index === currentIndex
+                                    ? "border-red-600 ring-2 ring-red-200"
+                                    : "border-gray-200 hover:border-gray-300"
+                                    }`}
                                 aria-label={`View image ${index + 1}`}
                             >
                                 {imageErrors.has(index) ? (
