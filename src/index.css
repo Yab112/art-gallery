@@ -193,16 +193,26 @@
     @apply italic;
 }
 
+/* Prevent page shift when dropdowns open */
+/* Ensure scrollbar is always visible to prevent layout shifts */
+html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+}
+
 /* Fix for Radix UI Select dropdown page shift issue */
 /* Prevents margin/padding from being added when dropdowns open */
 body[data-scroll-locked],
-html[data-scroll-locked],
+html[data-scroll-locked] {
+    margin: 0 !important;
+    padding-right: 0 !important;
+    overflow-y: scroll !important;
+}
+
 body[data-radix-scroll-lock],
 html[data-radix-scroll-lock] {
-    margin-right: 0 !important;
-    margin-left: 0 !important;
+    margin: 0 !important;
     padding-right: 0 !important;
-    padding-left: 0 !important;
 }
 
 /* Fix for Dialog overlay blocking page interactions */
