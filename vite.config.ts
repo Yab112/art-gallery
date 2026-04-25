@@ -11,7 +11,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Proxy all /api requests to AWS backend
+      // Proxy all /api requests to configured backend
       '/api': {
         target: process.env.VITE_BETTER_AUTH_URL,
         changeOrigin: true,

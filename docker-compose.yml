@@ -11,6 +11,6 @@ services:
     # We can keep these for documentation or if you have runtime config logic.
     environment:
       - VITE_FRONTEND_URL=http://localhost:5173
-      - VITE_BETTER_AUTH_URL=http://13.60.211.105:3099
-      - VITE_SERVER_BASE_URL=http://13.60.211.105:3099/api
+      - VITE_BETTER_AUTH_URL=https://art-store-backend-x1bi.onrender.com
+      - VITE_SERVER_BASE_URL=https://art-store-backend-x1bi.onrender.com/api
     
