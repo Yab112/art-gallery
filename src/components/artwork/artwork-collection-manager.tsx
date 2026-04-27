@@ -235,7 +235,7 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
                                     New Collection
                                 </Button>
                             </div>
-                            <div className="max-h-[300px] space-y-2 overflow-y-auto">
+                            <div className="max-h-[300px] space-y-2 overflow-y-auto overflow-x-hidden">
                                 {collections.map((collection) => {
                                     const isSelected = selectedCollectionIds.has(collection.id)
                                     return (
@@ -243,19 +243,17 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
                                             key={collection.id}
                                             type="button"
                                             onClick={() => handleToggleCollection(collection.id)}
-                                            className={`w-full rounded-lg border p-3 text-left transition-all ${
-                                                isSelected
-                                                    ? "border-red-700 bg-red-50"
-                                                    : "border-gray-200 bg-white hover:border-gray-300"
-                                            }`}
+                                            className={`w-full rounded-lg border p-3 text-left transition-all ${isSelected
+                                                ? "border-red-700 bg-red-50"
+                                                : "border-gray-200 bg-white hover:border-gray-300"
+                                                }`}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div
-                                                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${
-                                                        isSelected
-                                                            ? "border-red-700 bg-red-700"
-                                                            : "border-gray-300 bg-white"
-                                                    }`}
+                                                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-all ${isSelected
+                                                        ? "border-red-700 bg-red-700"
+                                                        : "border-gray-300 bg-white"
+                                                        }`}
                                                 >
                                                     {isSelected && (
                                                         <svg
@@ -272,19 +270,17 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
                                                     )}
                                                 </div>
                                                 <FolderOpen
-                                                    className={`h-5 w-5 flex-shrink-0 ${
-                                                        isSelected
-                                                            ? "text-red-700"
-                                                            : "text-gray-500"
-                                                    }`}
+                                                    className={`h-5 w-5 flex-shrink-0 ${isSelected
+                                                        ? "text-red-700"
+                                                        : "text-gray-500"
+                                                        }`}
                                                 />
                                                 <div className="min-w-0 flex-1">
                                                     <div
-                                                        className={`font-medium text-sm ${
-                                                            isSelected
-                                                                ? "text-red-900"
-                                                                : "text-gray-900"
-                                                        }`}
+                                                        className={`font-medium text-sm ${isSelected
+                                                            ? "text-red-900"
+                                                            : "text-gray-900"
+                                                            }`}
                                                     >
                                                         {collection.name}
                                                     </div>
@@ -341,7 +337,7 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} modal={true}>
                 <DialogPortal>
                     <DialogOverlay className="z-[110] bg-black/40" />
-                    <DialogPrimitive.Content className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-[111] grid max-h-[90vh] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-white p-6 shadow-lg duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in sm:rounded-lg">
+                    <DialogPrimitive.Content className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-[111] grid max-h-[90vh] w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overflow-x-hidden border bg-white p-6 shadow-lg duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in sm:rounded-lg">
                         <DialogHeader>
                             <DialogTitle className="font-semibold text-gray-900 text-lg">
                                 Create New Collection

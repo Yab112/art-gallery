@@ -12,11 +12,11 @@ export function CategoriesSection() {
     return (
         <div className="py-16 lg:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="mb-16 text-center">
-                    <h2 className="mb-4 font-bold text-3xl text-gray-900 lg:text-4xl">
+                <div className="mb-12 lg:mb-16 text-left">
+                    <h2 className="mb-4 font-bold text-2xl text-gray-900 lg:text-4xl">
                         Explore Our Collection
                     </h2>
-                    <p className="text-gray-600 text-xl">
+                    <p className="text-base text-gray-500 lg:text-lg max-w-2xl">
                         Discover art across all mediums and styles
                     </p>
                 </div>
@@ -46,10 +46,10 @@ export function CategoriesSection() {
                                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                 </div>
-                                <h3 className="text-center font-semibold text-gray-900 transition-colors group-hover:text-red-700">
+                                <h3 className="text-center font-semibold text-gray-900 transition-colors group-hover:text-red-700 text-lg">
                                     {category.name}
                                 </h3>
-                                <p className="text-center text-gray-500 text-sm">
+                                <p className="text-center text-gray-500 text-[13px]">
                                     {(category.artworkCount || 0).toLocaleString()} works
                                 </p>
                             </div>

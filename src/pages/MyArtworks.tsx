@@ -57,14 +57,19 @@ export default function MyArtworksPage() {
     const [page, setPage] = useState(1)
     const limit = 12
     const navigate = useNavigate()
-    const { data, isLoading, error } = useMyArtworks(page, limit)
+    const { data, isLoading, error } = useMyArtworks({ page, limit })
     const { deleteArtwork, isDeleting } = useDeleteArtwork()
     const queryClient = useQueryClient()
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [artworkToDelete, setArtworkToDelete] = useState<string | null>(null)
 
     const artworks = data?.artworks || []
-    const pagination = data?.pagination || { page: 1, limit, total: 0, pages: 1 }
+    const pagination = {
+        page: data?.page || 1,
+        limit: data?.limit || limit,
+        total: data?.total || 0,
+        pages: data?.pages || 1
+    }
 
     const handleDeleteClick = (artworkId: string) => {
         setArtworkToDelete(artworkId)
@@ -115,7 +120,7 @@ export default function MyArtworksPage() {
                 <div className="container mx-auto max-w-7xl px-4 py-4">
                     {/* Header */}
                     <div className="mb-4 border-gray-200 border-b bg-white py-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-3">
                                 <Button
                                     variant="ghost"
@@ -130,7 +135,7 @@ export default function MyArtworksPage() {
                             </div>
                             <Button
                                 onClick={() => navigate("/sellart")}
-                                className="flex items-center gap-2 rounded-full bg-red-700 text-white hover:bg-red-800"
+                                className="flex items-center justify-center gap-2 rounded-full bg-red-700 text-white hover:bg-red-800 w-full sm:w-auto"
                             >
                                 <Plus className="h-4 w-4" />
                                 Create Artwork

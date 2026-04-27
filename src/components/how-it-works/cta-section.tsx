@@ -6,10 +6,10 @@ export function CTASection() {
     return (
         <div className="bg-red-700 py-16 lg:py-24">
             <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-                <h2 className="mb-4 font-bold text-3xl text-white lg:text-4xl">
+                <h2 className="mb-4 font-bold text-2xl text-white lg:text-4xl">
                     Ready to Start Your Art Journey?
                 </h2>
-                <p className="mx-auto mb-8 max-w-2xl text-red-100 text-xl">
+                <p className="mx-auto mb-8 max-w-2xl text-red-50/90 text-base lg:text-lg">
                     Join thousands of art lovers who trust Artopia for their collecting needs
                 </p>
                 <div className="flex flex-col justify-center gap-4 sm:flex-row">

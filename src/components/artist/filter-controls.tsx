@@ -6,6 +6,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { ArrowUpDown, Bell, ChevronDown, Filter } from "lucide-react"
+import { useState } from "react"
 
 interface FilterControlsProps {
     sortBy?: string
@@ -28,6 +29,8 @@ export function FilterControls({
     status = "APPROVED",
     onStatusChange
 }: FilterControlsProps) {
+    const [openMenu, setOpenMenu] = useState<string | null>(null)
+
     const getSortLabel = (value: string) => {
         switch (value) {
             case "price-low":
@@ -58,7 +61,10 @@ export function FilterControls({
                     All Filters
                 </Button>
 
-                <DropdownMenu>
+                <DropdownMenu
+                    open={openMenu === "rarity"}
+                    onOpenChange={(open) => setOpenMenu(open ? "rarity" : null)}
+                >
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="gap-2 rounded-full bg-transparent">
                             Rarity
@@ -73,7 +79,10 @@ export function FilterControls({
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <DropdownMenu>
+                <DropdownMenu
+                    open={openMenu === "medium"}
+                    onOpenChange={(open) => setOpenMenu(open ? "medium" : null)}
+                >
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="gap-2 rounded-full bg-transparent">
                             Medium
@@ -99,7 +108,10 @@ export function FilterControls({
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <DropdownMenu>
+                <DropdownMenu
+                    open={openMenu === "availability"}
+                    onOpenChange={(open) => setOpenMenu(open ? "availability" : null)}
+                >
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="gap-2 rounded-full bg-transparent">
                             Availability
@@ -121,7 +133,10 @@ export function FilterControls({
             </div>
 
             {/* Right side sort */}
-            <DropdownMenu>
+            <DropdownMenu
+                open={openMenu === "sort"}
+                onOpenChange={(open) => setOpenMenu(open ? "sort" : null)}
+            >
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2 rounded-full bg-transparent">
                         <ArrowUpDown className="h-4 w-4" />

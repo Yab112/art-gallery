@@ -299,13 +299,12 @@ export default function CollectionDetailPage() {
                         {/* Visibility Badge Overlay */}
                         <div className="absolute top-3 right-3">
                             <span
-                                className={`rounded-full px-2 py-1 font-medium text-xs backdrop-blur-sm ${
-                                    collection.visibility === "public"
-                                        ? "bg-green-500/90 text-white"
-                                        : collection.visibility === "unlisted"
-                                          ? "bg-yellow-500/90 text-white"
-                                          : "bg-gray-500/90 text-white"
-                                }`}
+                                className={`rounded-full px-2 py-1 font-medium text-xs backdrop-blur-sm ${collection.visibility === "public"
+                                    ? "bg-green-500/90 text-white"
+                                    : collection.visibility === "unlisted"
+                                        ? "bg-yellow-500/90 text-white"
+                                        : "bg-gray-500/90 text-white"
+                                    }`}
                             >
                                 {collection.visibility}
                             </span>
@@ -334,7 +333,7 @@ export default function CollectionDetailPage() {
                                     <div
                                         title={
                                             collection.visibility !== "public" &&
-                                            artworks.length < 3
+                                                artworks.length < 3
                                                 ? "At least 3 artworks are required to publish this collection"
                                                 : undefined
                                         }
@@ -417,9 +416,9 @@ export default function CollectionDetailPage() {
                             )}
                         </div>
                         {featuredArtworks.length > 0 ? (
-                            <div className="flex justify-end gap-3">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 {featuredArtworks.map((artwork) => (
-                                    <div key={artwork.id} className="group relative w-1/3">
+                                    <div key={artwork.id} className="group relative">
                                         <ArtworkCard {...artwork} />
                                         {isOwner && (
                                             <Button
@@ -453,7 +452,7 @@ export default function CollectionDetailPage() {
                 {remainingArtworks.length > 0 && (
                     <div className="mb-4">
                         <h2 className="mb-3 font-semibold text-base text-gray-900">All Artworks</h2>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                             {remainingArtworks.map((artwork) => (
                                 <div key={artwork.id} className="group relative">
                                     <ArtworkCard {...artwork} />
@@ -487,18 +486,18 @@ export default function CollectionDetailPage() {
                             isOwner
                                 ? "Browse Artworks"
                                 : isGuest
-                                  ? "Sign in to create a collection"
-                                  : undefined
+                                    ? "Sign in to create a collection"
+                                    : undefined
                         }
                         onAction={
                             isOwner
                                 ? handleAddArtwork
                                 : isGuest
-                                  ? () =>
+                                    ? () =>
                                         navigate(
                                             `/login?redirect=${encodeURIComponent(`/collections/${id}`)}`
                                         )
-                                  : undefined
+                                    : undefined
                         }
                     />
                 )}

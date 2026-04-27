@@ -35,12 +35,14 @@ export const useUpdatePaymentMethodPreference = () => {
 
     return useMutation({
         mutationFn: updatePaymentMethodPreference,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["payment-method-preference"] })
+        onSuccess: (data) => {
+            queryClient.setQueryData(["payment-method-preference"], data)
             toast.success("Payment method updated successfully")
         },
         onError: (error: any) => {
             toast.error(error?.response?.data?.message || "Failed to update payment method")
+            // Revert on error by invalidating
+            queryClient.invalidateQueries({ queryKey: ["payment-method-preference"] })
         }
     })
 }

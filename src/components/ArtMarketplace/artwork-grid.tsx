@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { ArtworkCard } from "@/components/artwork-card"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -20,9 +21,8 @@ function ListFavoriteButton({
                 e.stopPropagation()
                 onFavorite(artworkId)
             }}
-            className={`rounded-full p-2 transition-colors hover:bg-gray-100 ${
-                isFavorited ? "text-red-500" : "text-gray-400"
-            }`}
+            className={`rounded-full p-2 transition-colors hover:bg-gray-100 ${isFavorited ? "text-red-500" : "text-gray-400"
+                }`}
             aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
         >
             <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
@@ -37,7 +37,7 @@ interface Artwork {
     artist: string
     price: string
     year: string
-    medium: string
+    medium?: string
     dimensions: string
     seller: string
     status?: string
@@ -72,6 +72,8 @@ export function ArtworkGrid({
     const { isAuthenticated } = useAuth()
     const showFavorite = !hideFavorite && isAuthenticated
     const navigate = useNavigate()
+    const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
+
     if (artworks.length === 0) {
         return (
             <section className="flex min-h-[500px] items-center px-4">
@@ -144,11 +146,10 @@ export function ArtworkGrid({
                         {artworks.map((artwork) => (
                             <div
                                 key={artwork.id}
-                                className={`group relative flex gap-6 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-md ${
-                                    isSelectionMode && selectedArtworkIds.has(artwork.id)
-                                        ? "ring-2 ring-blue-500"
-                                        : ""
-                                } ${!isSelectionMode ? "cursor-pointer" : ""}`}
+                                className={`group relative flex items-center gap-3 sm:gap-4 border-b border-gray-100 bg-white py-3 px-2 sm:px-4 transition-colors hover:bg-gray-50 ${isSelectionMode && selectedArtworkIds.has(artwork.id)
+                                    ? "bg-blue-50/50"
+                                    : ""
+                                    } ${!isSelectionMode ? "cursor-pointer" : ""}`}
                                 onClick={(e) => {
                                     if (isSelectionMode) {
                                         e.preventDefault()
@@ -160,65 +161,80 @@ export function ArtworkGrid({
                                 }}
                             >
                                 {isSelectionMode && (
-                                    <div className="absolute top-4 left-4 z-20">
+                                    <div className="flex-shrink-0">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 onToggleSelection?.(artwork.id)
                                             }}
-                                            className="rounded-md bg-white p-1.5 shadow-md transition-colors hover:bg-gray-50"
+                                            className="rounded-md p-1 transition-colors hover:bg-gray-100"
                                         >
                                             {selectedArtworkIds.has(artwork.id) ? (
                                                 <CheckSquare className="h-5 w-5 text-blue-600" />
                                             ) : (
-                                                <Square className="h-5 w-5 text-gray-400" />
+                                                <Square className="h-5 w-5 text-gray-300" />
                                             )}
                                         </button>
                                     </div>
                                 )}
 
                                 {/* Image */}
-                                <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                                    {artwork.image ? (
+                                <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                                    {artwork.image && !imageErrors.has(artwork.id) ? (
                                         <img
                                             src={artwork.image}
                                             alt={`${artwork.title} by ${artwork.artist}`}
-                                            className="h-full w-full object-cover"
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement
-                                                target.src = "/placeholder.svg"
+                                            className="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            onError={() => {
+                                                setImageErrors((prev) => {
+                                                    const next = new Set(prev)
+                                                    next.add(artwork.id)
+                                                    return next
+                                                })
                                             }}
                                         />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center bg-gray-200">
-                                            <Palette className="h-8 w-8 text-gray-400" />
+                                            <div className="text-center">
+                                                <svg className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* Status badge if available */}
+                                    {artwork.status && (
+                                        <div className="absolute bottom-1 left-1 rounded bg-white/90 px-1 py-0.5 text-[8px] font-bold tracking-wider text-gray-900 shadow-sm backdrop-blur-sm scale-[0.8] origin-bottom-left">
+                                            {artwork.status}
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Details */}
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <h3 className="truncate font-semibold text-black text-sm uppercase tracking-wide">
-                                                {artwork.artist}
-                                            </h3>
-                                            <p className="mt-1 text-gray-600 text-sm">
-                                                <span className="text-orange-500">🏆</span>{" "}
+                                <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="truncate font-semibold text-gray-900 text-sm sm:text-base uppercase tracking-wide">
+                                            {artwork.artist}
+                                        </h3>
+                                        <div className="flex items-center gap-2 mt-0.5 text-gray-500 text-xs sm:text-sm">
+                                            <p className="truncate">
                                                 {artwork.title}
                                                 {artwork.year && ` (${artwork.year})`}
                                             </p>
-                                            <p className="mt-2 font-bold text-lg">
-                                                {artwork.price}
-                                            </p>
-                                            <div className="mt-2 flex flex-wrap gap-4 text-gray-600 text-sm">
-                                                <span>{artwork.medium}</span>
-                                                <span>{artwork.dimensions}</span>
-                                                <span>Seller: {artwork.seller}</span>
-                                            </div>
+                                            {artwork.medium && (
+                                                <>
+                                                    <span className="hidden sm:inline-block h-1 w-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                                    <span className="hidden sm:inline-block truncate">{artwork.medium}</span>
+                                                </>
+                                            )}
                                         </div>
-                                        {showFavorite && (
-                                            <div className="flex-shrink-0">
+                                    </div>
+                                    <div className="flex flex-shrink-0 items-center justify-end gap-2 sm:gap-3">
+                                        <p className="font-semibold text-gray-900 text-base sm:text-lg">
+                                            {artwork.price}
+                                        </p>
+                                        {showFavorite && !isSelectionMode && (
+                                            <div className="-mr-2">
                                                 <ListFavoriteButton
                                                     artworkId={artwork.id}
                                                     onFavorite={onFavorite}
@@ -231,7 +247,7 @@ export function ArtworkGrid({
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                         {artworks.map((artwork) => (
                             <div key={artwork.id} className="group relative">
                                 {isSelectionMode && (
@@ -284,19 +300,34 @@ export function ArtworkGrid({
                     <div className="mt-12 flex flex-col items-center justify-center gap-4 pb-8">
                         {safeTotalPages > 1 ? (
                             <>
-                                <div className="flex items-center justify-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="lg"
-                                        disabled={safeCurrentPage === 1}
-                                        onClick={() => onPageChange(safeCurrentPage - 1)}
-                                        className="flex items-center gap-2 border-2 px-6 py-2 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <ChevronLeft className="h-5 w-5" />
-                                        <span className="font-medium">Previous</span>
-                                    </Button>
+                                <div className="flex w-full flex-col items-center gap-6 sm:flex-row sm:justify-center">
+                                    {/* Navigation Buttons - First row on mobile, split on desktop */}
+                                    <div className="flex w-full items-center justify-between gap-4 sm:order-1 sm:w-auto">
+                                        <Button
+                                            variant="outline"
+                                            size="lg"
+                                            disabled={safeCurrentPage === 1}
+                                            onClick={() => onPageChange(safeCurrentPage - 1)}
+                                            className="h-12 flex-1 items-center gap-2 border-gray-200 px-6 sm:h-10 sm:flex-none sm:border-2"
+                                        >
+                                            <ChevronLeft className="h-5 w-5" />
+                                            <span className="font-medium">Previous</span>
+                                        </Button>
 
-                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="outline"
+                                            size="lg"
+                                            disabled={safeCurrentPage >= safeTotalPages}
+                                            onClick={() => onPageChange(safeCurrentPage + 1)}
+                                            className="h-12 flex-1 items-center gap-2 border-gray-200 px-6 sm:h-10 sm:flex-none sm:border-2"
+                                        >
+                                            <span className="font-medium">Next</span>
+                                            <ChevronRight className="h-5 w-5" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Page Numbers - Second row on mobile, middle on desktop */}
+                                    <div className="flex flex-wrap items-center justify-center gap-2 sm:order-2">
                                         {pageNumbers.map((pageNum, index) => (
                                             <div key={index}>
                                                 {pageNum === "..." ? (
@@ -312,11 +343,10 @@ export function ArtworkGrid({
                                                         onClick={() =>
                                                             onPageChange(pageNum as number)
                                                         }
-                                                        className={`min-w-[40px] ${
-                                                            safeCurrentPage === pageNum
-                                                                ? "bg-black text-white hover:bg-gray-800"
-                                                                : "hover:bg-gray-50"
-                                                        }`}
+                                                        className={`h-10 min-w-[40px] rounded-lg sm:h-9 ${safeCurrentPage === pageNum
+                                                                ? "bg-gray-900 font-bold text-white hover:bg-black"
+                                                                : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                                                            }`}
                                                     >
                                                         {pageNum}
                                                     </Button>
@@ -324,21 +354,10 @@ export function ArtworkGrid({
                                             </div>
                                         ))}
                                     </div>
-
-                                    <Button
-                                        variant="outline"
-                                        size="lg"
-                                        disabled={safeCurrentPage >= safeTotalPages}
-                                        onClick={() => onPageChange(safeCurrentPage + 1)}
-                                        className="flex items-center gap-2 border-2 px-6 py-2 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <span className="font-medium">Next</span>
-                                        <ChevronRight className="h-5 w-5" />
-                                    </Button>
                                 </div>
 
-                                <div className="text-gray-600 text-sm">
-                                    Showing page {safeCurrentPage} of {safeTotalPages} (
+                                <div className="mt-2 text-center text-gray-500 text-xs sm:text-sm">
+                                    Showing page <span className="font-semibold text-gray-900">{safeCurrentPage}</span> of <span className="font-semibold text-gray-900">{safeTotalPages}</span> (
                                     {artworks.length} artworks)
                                 </div>
                             </>

@@ -121,13 +121,17 @@ export function EarningsDashboard() {
     return (
         <div className="space-y-6">
             {/* Time Range Filter */}
-            <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600 text-sm">Filter:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
                     <Button
                         variant={timeRange === "all" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setTimeRange("all")}
+                        className="rounded-full px-4"
                     >
                         All Time
                     </Button>
@@ -135,6 +139,7 @@ export function EarningsDashboard() {
                         variant={timeRange === "month" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setTimeRange("month")}
+                        className="rounded-full px-4"
                     >
                         This Month
                     </Button>
@@ -142,6 +147,7 @@ export function EarningsDashboard() {
                         variant={timeRange === "year" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setTimeRange("year")}
+                        className="rounded-full px-4"
                     >
                         This Year
                     </Button>

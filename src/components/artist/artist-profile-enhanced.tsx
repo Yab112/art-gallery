@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
 
 interface ArtistProfileEnhancedProps {
     user: UserProfile
@@ -44,10 +45,7 @@ export function ArtistProfileEnhanced({
     const { user: currentUser } = useAuth()
     const isGuest = !currentUser
     const [isLiked, setIsLiked] = useState(false)
-    const [imageError, setImageError] = useState(false)
     const [coverImageError, setCoverImageError] = useState(false)
-    // Track failed image URLs to prevent flickering from retry loops
-    const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(new Set())
     // Track if profile image has failed to prevent retry loops
     const [profileImageFailed, setProfileImageFailed] = useState(false)
     // Track if placeholder image has also failed
@@ -68,7 +66,6 @@ export function ArtistProfileEnhanced({
         return avatarUrl
     }, [profileImageFailed, user.image, user.name, avatarUrl])
 
-    const coverImageUrl = user.coverImage || "/default-cover.jpg"
 
     // Extract art specializations from artworks - memoized to prevent flickering
     const specializations = useMemo(() => {
@@ -137,15 +134,14 @@ export function ArtistProfileEnhanced({
     }, [artworksSignature])
 
     // Calculate heat score percentage for visual indicator (0-100%)
-    const heatScorePercentage = Math.min(100, (heatScore / 100) * 100)
 
     // Format member since date
     const memberSinceDate = user.createdAt ? new Date(user.createdAt) : null
     const memberSinceFormatted = memberSinceDate
         ? memberSinceDate.toLocaleDateString("en-US", {
-              month: "short",
-              year: "numeric"
-          })
+            month: "short",
+            year: "numeric"
+        })
         : null
 
     // Check if email is verified
@@ -155,11 +151,32 @@ export function ArtistProfileEnhanced({
     const { data: followingData } = useFollowing(user.id, 1, 4)
     const followingUsers = followingData?.users || []
 
+    const handleShare = async () => {
+        const shareData = {
+            title: `${user.name} | Art Gallery`,
+            text: `Check out ${user.name}'s artworks on Art Gallery`,
+            url: window.location.href
+        }
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData)
+            } else {
+                await navigator.clipboard.writeText(window.location.href)
+                toast.success("Profile link copied to clipboard")
+            }
+        } catch (error) {
+            if ((error as Error).name !== "AbortError") {
+                console.error("Error sharing:", error)
+            }
+        }
+    }
+
     return (
         <div className="mb-12 space-y-6">
             {/* Cover Image - Full Width Black Banner */}
             <div className="px-4">
-                <div className="relative h-48 w-full bg-black">
+                <div className="relative h-32 w-full overflow-hidden bg-black sm:h-48">
                     {!coverImageError && user.coverImage ? (
                         <img
                             src={user.coverImage}
@@ -182,15 +199,15 @@ export function ArtistProfileEnhanced({
             {/* Profile Header */}
             <div className="container mx-auto max-w-6xl px-4">
                 <div className="mb-6">
-                    <div className="flex items-center justify-between">
-                        <div className="-mt-20 flex flex-1 items-center space-x-4">
+                    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                        <div className="-mt-16 flex w-full flex-col items-center space-y-4 sm:-mt-20 sm:flex-row sm:items-end sm:space-x-6 sm:space-y-0">
                             {/* Profile Picture */}
-                            <div className="relative flex-shrink-0">
+                            <div className="relative flex w-full flex-shrink-0 justify-center sm:w-auto">
                                 {user.image && !profileImageFailed ? (
                                     <img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
-                                        className="h-40 w-40 rounded-full border-[8px] object-cover"
+                                        className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-40 sm:w-40 sm:border-[8px]"
                                         style={{ borderColor: "#F9FAFB" }}
                                         onError={() => {
                                             setProfileImageFailed(true) // Mark as failed, prevent retry
@@ -200,7 +217,7 @@ export function ArtistProfileEnhanced({
                                     <img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
-                                        className="h-40 w-40 rounded-full border-[8px] object-cover"
+                                        className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-40 sm:w-40 sm:border-[8px]"
                                         style={{ borderColor: "#F9FAFB" }}
                                         onError={() => {
                                             setPlaceholderImageFailed(true) // Mark placeholder as failed
@@ -208,10 +225,10 @@ export function ArtistProfileEnhanced({
                                     />
                                 ) : (
                                     <div
-                                        className="flex h-40 w-40 items-center justify-center rounded-full border-[8px] bg-blue-600"
+                                        className="flex h-32 w-32 items-center justify-center rounded-full border-[6px] bg-blue-600 sm:h-40 sm:w-40 sm:border-[8px]"
                                         style={{ borderColor: "#F9FAFB" }}
                                     >
-                                        <span className="font-bold text-4xl text-white">
+                                        <span className="font-bold text-3xl text-white sm:text-4xl">
                                             {(user.name || "A")[0].toUpperCase()}
                                         </span>
                                     </div>
@@ -219,10 +236,10 @@ export function ArtistProfileEnhanced({
                             </div>
 
                             {/* Name and Details */}
-                            <div className="mt-12 flex-1">
+                            <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
                                 {/* Name with Status Badges */}
-                                <div className="mt-4 mb-2 flex flex-wrap items-center gap-2">
-                                    <h1 className="font-bold text-3xl text-gray-900">
+                                <div className="mb-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                                    <h1 className="font-bold text-2xl text-gray-900 sm:text-3xl">
                                         {user.name || "Artist"}
                                     </h1>
                                     {isOnline && (
@@ -240,7 +257,7 @@ export function ArtistProfileEnhanced({
                                 </div>
 
                                 {/* Heat Score and Views */}
-                                <div className="mt-2 flex items-center gap-4 text-sm">
+                                <div className="flex items-center justify-center gap-4 text-sm sm:justify-start">
                                     <div className="flex items-center gap-2">
                                         <Flame className="h-4 w-4 text-orange-500" />
                                         <span className="text-gray-500">Heat Score:</span>
@@ -258,7 +275,7 @@ export function ArtistProfileEnhanced({
                                 </div>
 
                                 {/* Followers/Following Stats */}
-                                <div className="mt-3 flex items-center gap-4">
+                                <div className="mt-3 flex items-center justify-center gap-4 sm:justify-start">
                                     <Link
                                         to={`/profile/${user.id}/followers`}
                                         className="text-gray-900 transition-colors hover:text-red-600"
@@ -304,7 +321,7 @@ export function ArtistProfileEnhanced({
                                                                     target.src = getAvatarUrl(
                                                                         null,
                                                                         followingUser.name ||
-                                                                            "User",
+                                                                        "User",
                                                                         40
                                                                     )
                                                                 }}
@@ -322,42 +339,42 @@ export function ArtistProfileEnhanced({
                                     user.website ||
                                     isEmailVerified ||
                                     memberSinceFormatted) && (
-                                    <div className="mt-3 flex flex-wrap items-center gap-3 text-gray-500 text-xs">
-                                        {user.location && (
-                                            <div className="flex items-center gap-1">
-                                                <MapPin className="h-3 w-3" />
-                                                <span>{user.location}</span>
-                                            </div>
-                                        )}
-                                        {user.website && (
-                                            <a
-                                                href={user.website}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-1 transition-colors hover:text-red-600"
-                                            >
-                                                <Globe className="h-3 w-3" />
-                                                <span>Website</span>
-                                            </a>
-                                        )}
-                                        {isEmailVerified && (
-                                            <div className="flex items-center gap-1 text-green-600">
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                <span>Verified</span>
-                                            </div>
-                                        )}
-                                        {memberSinceFormatted && (
-                                            <div className="flex items-center gap-1">
-                                                <Calendar className="h-3 w-3" />
-                                                <span>Joined {memberSinceFormatted}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-gray-500 text-xs sm:justify-start">
+                                            {user.location && (
+                                                <div className="flex items-center gap-1">
+                                                    <MapPin className="h-3 w-3" />
+                                                    <span>{user.location}</span>
+                                                </div>
+                                            )}
+                                            {user.website && (
+                                                <a
+                                                    href={user.website}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-1 transition-colors hover:text-red-600"
+                                                >
+                                                    <Globe className="h-3 w-3" />
+                                                    <span>Website</span>
+                                                </a>
+                                            )}
+                                            {isEmailVerified && (
+                                                <div className="flex items-center gap-1 text-green-600">
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                    <span>Verified</span>
+                                                </div>
+                                            )}
+                                            {memberSinceFormatted && (
+                                                <div className="flex items-center gap-1">
+                                                    <Calendar className="h-3 w-3" />
+                                                    <span>Joined {memberSinceFormatted}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                             </div>
                         </div>
                         {!isOwnProfile && (
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
                                 {isGuest ? (
                                     <Link
                                         to={`/login?redirect=${encodeURIComponent(`/artist/${user.id}`)}`}
@@ -382,9 +399,8 @@ export function ArtistProfileEnhanced({
                                         title="Like"
                                     >
                                         <Heart
-                                            className={`h-4 w-4 ${
-                                                isLiked ? "fill-current text-red-500" : ""
-                                            }`}
+                                            className={`h-4 w-4 ${isLiked ? "fill-current text-red-500" : ""
+                                                }`}
                                         />
                                     </Button>
                                 )}
@@ -393,6 +409,7 @@ export function ArtistProfileEnhanced({
                                     size="icon"
                                     className="border-gray-300 hover:bg-gray-50"
                                     title="Share"
+                                    onClick={handleShare}
                                 >
                                     <Share2 className="h-4 w-4" />
                                 </Button>
@@ -409,43 +426,43 @@ export function ArtistProfileEnhanced({
                 totalArtworks >= 20 ||
                 profileViews > 500 ||
                 (memberSince && new Date().getFullYear() - memberSince >= 3)) && (
-                <div className="container mx-auto max-w-6xl px-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {primaryTalentType && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-600 text-xs">
-                                {primaryTalentType.icon && (
-                                    <span className="text-xs">{primaryTalentType.icon}</span>
-                                )}
-                                {primaryTalentType.name}
-                            </span>
-                        )}
-                        {heatScore > 75 && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1 font-medium text-orange-600 text-xs">
-                                <Flame className="h-3 w-3" />
-                                Hot
-                            </span>
-                        )}
-                        {totalArtworks >= 20 && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-600 text-xs">
-                                <Palette className="h-3 w-3" />
-                                Prolific
-                            </span>
-                        )}
-                        {profileViews > 500 && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-purple-200 bg-purple-50 px-2.5 py-1 font-medium text-purple-600 text-xs">
-                                <Eye className="h-3 w-3" />
-                                Popular
-                            </span>
-                        )}
-                        {memberSince && new Date().getFullYear() - memberSince >= 3 && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-600 text-xs">
-                                <Award className="h-3 w-3" />
-                                Veteran
-                            </span>
-                        )}
+                    <div className="container mx-auto max-w-6xl px-4">
+                        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                            {primaryTalentType && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-600 text-xs">
+                                    {primaryTalentType.icon && (
+                                        <span className="text-xs">{primaryTalentType.icon}</span>
+                                    )}
+                                    {primaryTalentType.name}
+                                </span>
+                            )}
+                            {heatScore > 75 && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1 font-medium text-orange-600 text-xs">
+                                    <Flame className="h-3 w-3" />
+                                    Hot
+                                </span>
+                            )}
+                            {totalArtworks >= 20 && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-600 text-xs">
+                                    <Palette className="h-3 w-3" />
+                                    Prolific
+                                </span>
+                            )}
+                            {profileViews > 500 && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-purple-200 bg-purple-50 px-2.5 py-1 font-medium text-purple-600 text-xs">
+                                    <Eye className="h-3 w-3" />
+                                    Popular
+                                </span>
+                            )}
+                            {memberSince && new Date().getFullYear() - memberSince >= 3 && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-600 text-xs">
+                                    <Award className="h-3 w-3" />
+                                    Veteran
+                                </span>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
             {/* Engagement Metrics Row */}
             {isOnline && (

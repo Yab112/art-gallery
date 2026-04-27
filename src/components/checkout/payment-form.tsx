@@ -137,16 +137,16 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                                 onChange={(e) =>
                                     setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")
                                 }
-                                className="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500"
+                                className="h-4 w-4 flex-shrink-0 border-gray-300 text-red-600 focus:ring-red-500"
                             />
                             <Label
                                 htmlFor="chapa"
-                                className="flex cursor-pointer items-center gap-2"
+                                className="flex cursor-pointer items-start gap-2 leading-tight"
                             >
-                                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#00A86B">
+                                <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="#00A86B">
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
                                 </svg>
-                                Chapa (Mobile Money, Bank Transfer)
+                                <span>Chapa (Mobile Money, Bank Transfer)</span>
                             </Label>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -175,14 +175,14 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                                 onChange={(e) =>
                                     setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")
                                 }
-                                className="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500"
+                                className="h-4 w-4 flex-shrink-0 border-gray-300 text-red-600 focus:ring-red-500"
                             />
                             <Label
                                 htmlFor="card"
-                                className="flex cursor-pointer items-center gap-2"
+                                className="flex cursor-pointer items-start gap-2 leading-tight"
                             >
-                                <CreditCard className="h-4 w-4" />
-                                Credit or Debit Card
+                                <CreditCard className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                <span>Credit or Debit Card</span>
                             </Label>
                         </div>
                     </div>
@@ -190,7 +190,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
 
                 {paymentMethod === "chapa" && (
                     <div className="space-y-4">
-                        <div className="rounded-lg border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
+                        <div className="rounded-lg border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6">
                             <div className="flex items-start gap-3">
                                 <div className="rounded-full bg-green-100 p-2">
                                     <svg
@@ -438,7 +438,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
 
                 {paymentMethod === "paypal" && (
                     <div className="space-y-4">
-                        <div className="rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6">
+                        <div className="rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6">
                             <div className="flex items-start gap-4">
                                 <div className="rounded-full bg-white p-2 shadow-sm">
                                     <svg

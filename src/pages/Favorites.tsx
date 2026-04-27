@@ -65,7 +65,7 @@ export default function FavoritesPage() {
                     {/* Header */}
                     <div className="mb-6 rounded-lg border border-gray-200 bg-white shadow-sm">
                         <div className="p-6">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
                                 <div className="flex items-center space-x-4">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
                                         <Heart className="h-6 w-6 fill-current text-red-700" />
@@ -82,7 +82,7 @@ export default function FavoritesPage() {
                                 </div>
                                 <Button
                                     variant="outline"
-                                    className="flex items-center gap-2"
+                                    className="flex w-full items-center gap-2 sm:w-auto"
                                     asChild
                                 >
                                     <Link to="/buyart">
@@ -166,7 +166,7 @@ export default function FavoritesPage() {
                                                         {artwork.dimensions && (
                                                             <span>
                                                                 {typeof artwork.dimensions ===
-                                                                "object"
+                                                                    "object"
                                                                     ? `${artwork.dimensions.height} × ${artwork.dimensions.width}`
                                                                     : artwork.dimensions}
                                                             </span>

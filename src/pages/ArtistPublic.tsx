@@ -554,7 +554,7 @@ export default function ArtistDetailPage() {
                                     {collections.map((collection) => (
                                         <Link
                                             key={collection.id}
-                                            to={`/collection/${collection.id}`}
+                                            to={`/collections/${collection.id}`}
                                             className="block"
                                         >
                                             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-lg">

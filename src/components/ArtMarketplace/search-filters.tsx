@@ -7,8 +7,19 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
-import { Grid, List, Search, SlidersHorizontal } from "lucide-react"
-import { useEffect } from "react"
+import { Grid, List, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
+
+
 
 interface SearchFiltersProps {
     searchQuery: string
@@ -20,10 +31,16 @@ interface SearchFiltersProps {
     onSortChange?: (value: string) => void
     priceRange?: string
     onPriceRangeChange?: (value: string) => void
-    medium?: string
-    onMediumChange?: (value: string) => void
-    rarity?: string
-    onRarityChange?: (value: string) => void
+    medium?: string[]
+    onMediumChange?: (values: string[]) => void
+    origin?: string[]
+    onOriginChange?: (values: string[]) => void
+    condition?: string[]
+    onConditionChange?: (values: string[]) => void
+    categoryIds?: string[]
+    onCategoryIdsChange?: (ids: string[]) => void
+    categoriesData?: any
+    onClearAll?: () => void
 }
 
 export function SearchFilters({
@@ -35,11 +52,19 @@ export function SearchFilters({
     onSortChange,
     priceRange = "price",
     onPriceRangeChange,
-    medium = "medium",
+    medium = [],
     onMediumChange,
-    rarity = "rarity",
-    onRarityChange
+    origin = [],
+    onOriginChange,
+    condition = [],
+    onConditionChange,
+    categoryIds = [],
+    onCategoryIdsChange,
+    categoriesData,
+    onClearAll
 }: SearchFiltersProps) {
+    const [isExpanded, setIsExpanded] = useState(false)
+
     // Inject a style tag to override any margin/padding
     useEffect(() => {
         const styleId = "prevent-select-margin"
@@ -79,131 +104,227 @@ export function SearchFilters({
         }
     }, [])
 
+    const toggleSelection = (
+        currentValues: string[],
+        value: string,
+        onChange?: (values: string[]) => void
+    ) => {
+        if (!onChange) return
+        const newValues = currentValues.includes(value)
+            ? currentValues.filter((v) => v !== value)
+            : [...currentValues, value]
+        onChange(newValues)
+    }
+
+    const hasAnyFilter =
+        searchQuery ||
+        priceRange !== "price" ||
+        medium.length > 0 ||
+        origin.length > 0 ||
+        condition.length > 0 ||
+        categoryIds.length > 0
+
+    const getCategoryName = (id: string) => {
+        if (!categoriesData?.data) return id
+        const category = categoriesData.data.find((c: any) => c.id === id)
+        return category ? category.name : id
+    }
+
     return (
-        <section className="border-gray-200 border-t px-4 py-8">
-            <div className="mx-auto max-w-7xl">
-                <div className="mb-8 flex flex-col items-center justify-between gap-4 lg:flex-row">
-                    <div className="flex flex-1 items-center gap-4">
-                        <div className="relative max-w-md flex-1">
-                            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-gray-400" />
-                            <Input
-                                placeholder="Search artworks, artists, or galleries..."
-                                value={searchQuery}
-                                onChange={(e) => onSearchChange(e.target.value)}
-                                className="rounded-full border-gray-300 pl-10"
-                            />
+        <aside className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-24 space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 custom-scrollbar pb-10">
+                {/* ACTIVE FILTER CHIPS IN SIDEBAR */}
+                {hasAnyFilter && (
+                    <div className="space-y-3 pb-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-900 uppercase tracking-wider">Active Filters</span>
+                            <Button
+                                variant="link"
+                                size="sm"
+                                onClick={onClearAll}
+                                className="text-[11px] text-red-600 hover:text-red-700 p-0 h-auto"
+                            >
+                                Clear all
+                            </Button>
                         </div>
-                        <Button variant="outline" size="sm" className="rounded-full bg-transparent">
-                            <SlidersHorizontal className="mr-2 h-4 w-4" />
-                            All Filters
-                        </Button>
+                        <div className="flex flex-wrap gap-2">
+                            {searchQuery && (
+                                <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100 border-none px-2 py-0.5 text-[10px] gap-1">
+                                    Search: {searchQuery}
+                                    <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => onSearchChange("")} />
+                                </Badge>
+                            )}
+                            
+                            {priceRange !== "price" && (
+                                <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100 border-none px-2 py-0.5 text-[10px] gap-1">
+                                    Price: {priceRange}
+                                    <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => onPriceRangeChange?.("price")} />
+                                </Badge>
+                            )}
+
+                            {medium.map((m) => (
+                                <Badge key={m} variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100 border-none px-2 py-0.5 text-[10px] gap-1">
+                                    {m}
+                                    <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => toggleSelection(medium, m, onMediumChange)} />
+                                </Badge>
+                            ))}
+
+                            {origin.map((o) => (
+                                <Badge key={o} variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100 border-none px-2 py-0.5 text-[10px] gap-1">
+                                    {o}
+                                    <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => toggleSelection(origin, o, onOriginChange)} />
+                                </Badge>
+                            ))}
+
+                            {condition.map((c) => (
+                                <Badge key={c} variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100 border-none px-2 py-0.5 text-[10px] gap-1">
+                                    {c}
+                                    <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => toggleSelection(condition, c, onConditionChange)} />
+                                </Badge>
+                            ))}
+
+                            {categoryIds.map((id) => (
+                                <Badge key={id} variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100 border-none px-2 py-0.5 text-[10px] gap-1">
+                                    {getCategoryName(id)}
+                                    <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => toggleSelection(categoryIds, id, onCategoryIdsChange)} />
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
+                )}
 
-                    <div className="flex items-center gap-4">
-                        <Select
-                            value={rarity}
-                            onValueChange={onRarityChange}
-                            {...({ modal: false } as any)}
-                        >
-                            <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
-                                <SelectValue placeholder="Rarity" />
-                            </SelectTrigger>
-                            <SelectContent
-                                position="popper"
-                                sideOffset={4}
-                                className="z-[100]"
-                                align="start"
-                            >
-                                <SelectItem value="rarity">Rarity</SelectItem>
-                                <SelectItem value="common">Common</SelectItem>
-                                <SelectItem value="rare">Rare</SelectItem>
-                                <SelectItem value="unique">Unique</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-                            value={medium}
-                            onValueChange={onMediumChange}
-                            {...({ modal: false } as any)}
-                        >
-                            <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
-                                <SelectValue placeholder="Medium" />
-                            </SelectTrigger>
-                            <SelectContent
-                                position="popper"
-                                sideOffset={4}
-                                className="z-[100]"
-                                align="start"
-                            >
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="painting">Painting</SelectItem>
-                                <SelectItem value="photography">Photography</SelectItem>
-                                <SelectItem value="sculpture">Sculpture</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-                            value={priceRange}
-                            onValueChange={onPriceRangeChange}
-                            {...({ modal: false } as any)}
-                        >
-                            <SelectTrigger className="h-10 w-32 rounded-full bg-transparent focus:ring-0 active:ring-0">
-                                <SelectValue placeholder="Price Range" />
-                            </SelectTrigger>
-                            <SelectContent
-                                position="popper"
-                                sideOffset={4}
-                                className="z-[100]"
-                                align="start"
-                            >
-                                <SelectItem value="price">Price Range</SelectItem>
-                                <SelectItem value="under-1k">Under $1,000</SelectItem>
-                                <SelectItem value="1k-10k">$1,000 - $10,000</SelectItem>
-                                <SelectItem value="10k-50k">$10,000 - $50,000</SelectItem>
-                                <SelectItem value="over-50k">Over $50,000</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <div className="flex items-center gap-2 border-l pl-4">
-                            <Button
-                                variant={viewMode === "grid" ? "default" : "ghost"}
-                                size="sm"
-                                onClick={() => onViewModeChange("grid")}
-                                className="bg-transparent hover:bg-transparent focus:bg-transparent"
-                            >
-                                <Grid className="h-4 w-4 text-neutral-600" />
-                            </Button>
-                            <Button
-                                variant={viewMode === "list" ? "default" : "ghost"}
-                                size="sm"
-                                onClick={() => onViewModeChange("list")}
-                                className="bg-transparent hover:bg-transparent focus:bg-transparent"
-                            >
-                                <List className="h-4 w-4" />
-                            </Button>
-                        </div>
-
-                        <Select
-                            value={sortBy}
-                            onValueChange={onSortChange}
-                            {...({ modal: false } as any)}
-                        >
-                            <SelectTrigger className="h-10 w-48 rounded-full bg-transparent focus:ring-0 active:ring-0">
-                                <SelectValue placeholder="Sort" />
-                            </SelectTrigger>
-                            <SelectContent position="popper" sideOffset={4} className="z-[100]">
-                                <SelectItem value="recommended">Sort: Recommended</SelectItem>
-                                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                                <SelectItem value="newest">Newest First</SelectItem>
-                                <SelectItem value="oldest">Oldest First</SelectItem>
-                            </SelectContent>
-                        </Select>
+                {/* SEARCH BAR IN SIDEBAR */}
+                <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Search</h3>
+                    <div className="relative w-full">
+                        <Search className="-translate-y-1/2 absolute top-1/2 left-3.5 h-3.5 w-3.5 transform text-gray-400" />
+                        <Input
+                            placeholder="Artist, title..."
+                            value={searchQuery}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            className="h-10 w-full rounded-xl border-gray-200 bg-gray-50/50 pl-10 text-sm transition-all focus:bg-white focus:ring-2 focus:ring-red-100 placeholder:text-gray-400"
+                        />
                     </div>
                 </div>
 
-                <div className="mb-8 flex items-center justify-between" />
+                <Accordion type="multiple" defaultValue={["price", "medium", "origin", "condition"]} className="w-full space-y-4">
+                        {/* Price Filter */}
+                        <AccordionItem value="price" className="border-none">
+                            <AccordionTrigger className="text-xs font-bold text-gray-900 uppercase tracking-wider py-2 hover:no-underline hover:text-red-700">Price Range</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="flex flex-col gap-2 pt-2">
+                                    {[
+                                        { value: "price", label: "All Prices" },
+                                        { value: "under-1k", label: "Under $1,000" },
+                                        { value: "1k-10k", label: "$1,000 - $10,000" },
+                                        { value: "10k-50k", label: "$10,000 - $50,000" },
+                                        { value: "over-50k", label: "Over $50,000" }
+                                    ].map((option) => (
+                                        <div key={option.value} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`price-${option.value}`}
+                                                checked={priceRange === option.value}
+                                                onCheckedChange={() => onPriceRangeChange?.(option.value)}
+                                            />
+                                            <Label htmlFor={`price-${option.value}`} className="text-sm font-normal cursor-pointer text-gray-600">
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        {/* Support / Medium Filter */}
+                        <AccordionItem value="medium" className="border-none">
+                            <AccordionTrigger className="text-xs font-bold text-gray-900 uppercase tracking-wider py-2 hover:no-underline hover:text-red-700">Support (Medium)</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="flex flex-col gap-2 pt-2">
+                                    {[
+                                        { value: "Canvas", label: "Canvas" },
+                                        { value: "Paper", label: "Paper" },
+                                        { value: "Wood", label: "Wood" },
+                                        { value: "Metal", label: "Metal" },
+                                        { value: "Fabric", label: "Fabric" },
+                                        { value: "Stone", label: "Stone" }
+                                    ].map((option) => (
+                                        <div key={option.value} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`medium-${option.value}`}
+                                                checked={medium.includes(option.value)}
+                                                onCheckedChange={() => toggleSelection(medium, option.value, onMediumChange)}
+                                            />
+                                            <Label htmlFor={`medium-${option.value}`} className="text-sm font-normal cursor-pointer text-gray-600">
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        {/* Origin Filter */}
+                        <AccordionItem value="origin" className="border-none">
+                            <AccordionTrigger className="text-xs font-bold text-gray-900 uppercase tracking-wider py-2 hover:no-underline hover:text-red-700">Origin</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="flex flex-col gap-2 pt-2">
+                                    {[
+                                        { value: "artist", label: "From Artist" },
+                                        { value: "gallery", label: "Gallery" },
+                                        { value: "private", label: "Private Collection" },
+                                        { value: "USA", label: "USA" },
+                                        { value: "UK", label: "UK" },
+                                        { value: "France", label: "France" },
+                                        { value: "Germany", label: "Germany" },
+                                        { value: "Italy", label: "Italy" },
+                                        { value: "Spain", label: "Spain" },
+                                        { value: "Japan", label: "Japan" },
+                                        { value: "Ethiopia", label: "Ethiopia" }
+                                    ].map((option) => (
+                                        <div key={option.value} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`origin-${option.value}`}
+                                                checked={origin.includes(option.value)}
+                                                onCheckedChange={() => toggleSelection(origin, option.value, onOriginChange)}
+                                            />
+                                            <Label htmlFor={`origin-${option.value}`} className="text-sm font-normal cursor-pointer text-gray-600">
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        {/* Condition Filter */}
+                        <AccordionItem value="condition" className="border-none">
+                            <AccordionTrigger className="text-xs font-bold text-gray-900 uppercase tracking-wider py-2 hover:no-underline hover:text-red-700">Condition</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="flex flex-col gap-2 pt-2">
+                                    {[
+                                        { value: "Excellent", label: "Excellent" },
+                                        { value: "Very Good", label: "Very Good" },
+                                        { value: "Good", label: "Good" },
+                                        { value: "Mint", label: "Mint" },
+                                        { value: "Fine", label: "Fine" },
+                                        { value: "fair", label: "Fair" }
+                                    ].map((option) => (
+                                        <div key={option.value} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`condition-${option.value}`}
+                                                checked={condition.includes(option.value)}
+                                                onCheckedChange={() => toggleSelection(condition, option.value, onConditionChange)}
+                                            />
+                                            <Label htmlFor={`condition-${option.value}`} className="text-sm font-normal cursor-pointer text-gray-600">
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                </Accordion>
             </div>
-        </section>
+        </aside>
     )
 }

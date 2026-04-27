@@ -7,10 +7,10 @@ export function HeroSection() {
         <div className="bg-gradient-to-br from-gray-50 to-white py-16 lg:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="text-center">
-                    <h1 className="mb-6 font-bold text-4xl text-gray-900 lg:text-6xl">
+                    <h1 className="mb-6 font-bold text-3xl text-gray-900 lg:text-6xl">
                         How <span className="text-red-700">Artopia</span> Works
                     </h1>
-                    <p className="mx-auto mb-8 max-w-3xl text-gray-600 text-xl">
+                    <p className="mx-auto mb-8 max-w-3xl text-base text-gray-500 leading-relaxed lg:text-lg">
                         Your trusted marketplace for discovering, buying, and selling modern and
                         contemporary art. Whether you're a collector, artist, or gallery, we make
                         art accessible to everyone.

@@ -1,4 +1,6 @@
 import { ArtworkCard } from "@/components/artwork-card"
+import { FilterControls } from "@/components/artist/filter-controls"
+import { NavigationTabs } from "@/components/artist/navigation-tabs"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton"
 import { ProfileSectionSkeleton } from "@/components/skeletons/profile-section-skeleton"
@@ -44,10 +46,7 @@ import { getAvatarUrl } from "@/utils/avatar"
 import { useQueryClient } from "@tanstack/react-query"
 import {
     Award,
-    BarChart3,
     Calendar,
-    Circle,
-    Clock,
     Edit,
     Eye,
     EyeOff,
@@ -55,9 +54,7 @@ import {
     FolderOpen,
     FolderPlus,
     Globe,
-    Image as ImageIcon,
-    Languages,
-    Mail,
+    Images,
     MapPin,
     Mountain,
     Plus,
@@ -91,12 +88,31 @@ export default function ProfilePage() {
         error: myProfileError
     } = useMyProfile()
 
+    // Navigation and Filter states
+    const [activeTab, setActiveTab] = useState("artworks")
+    const [openMenu, setOpenMenu] = useState<string | null>(null)
+    const [sortBy, setSortBy] = useState("newest")
+    const [priceRange, setPriceRange] = useState("")
+    const [medium, setMedium] = useState("")
+    const [artworkStatus, setArtworkStatus] = useState("APPROVED")
+    const [page, setPage] = useState(1)
+
     // Use the appropriate data based on whether we're viewing another user's profile
     const profileData = isViewingOtherProfile ? otherUserData : myProfileData
     const isLoading = isViewingOtherProfile ? isLoadingOtherUser : isLoadingMyProfile
     const error = isViewingOtherProfile ? otherUserError : myProfileError
+
     const { data: collectionsData, isLoading: isLoadingCollections } = useMyCollections(1, 10)
-    const { data: artworksData, isLoading: isLoadingArtworks } = useMyArtworks(1, 3)
+
+    // Fetch artworks with filters
+    const { data: artworksData, isLoading: isLoadingArtworks, isFetching: isFetchingArtworks } = useMyArtworks({
+        page,
+        limit: 12,
+        status: artworkStatus || undefined,
+        technique: medium || undefined,
+        sortBy: sortBy === "price-low" || sortBy === "price-high" ? "desiredPrice" : "createdAt",
+        orderBy: sortBy === "price-low" || sortBy === "oldest" ? "asc" : "desc"
+    })
 
     // Get profile ID for following query - use userId param or session user id
     const profileIdForFollowing = userId || sessionUser?.id
@@ -199,9 +215,8 @@ export default function ProfilePage() {
                 {/* Cover Image - Full Width Black Banner */}
                 <div className="px-4">
                     <div
-                        className={`relative h-48 w-full bg-black ${
-                            !isViewingOtherProfile ? "group cursor-pointer" : ""
-                        }`}
+                        className={`relative h-48 w-full bg-black ${!isViewingOtherProfile ? "group cursor-pointer" : ""
+                            }`}
                         onClick={() => {
                             if (!isViewingOtherProfile) {
                                 profileCoverImageInputRef.current?.click()
@@ -318,11 +333,11 @@ export default function ProfilePage() {
 
                 <div className="container mx-auto max-w-6xl px-4 py-8">
                     {/* Profile Header */}
-                    <div className="mb-6">
-                        <div className="flex items-start justify-between">
-                            <div className="-mt-20 flex flex-1 items-center space-x-4">
+                    <div className="mb-8">
+                        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end">
                                 <div
-                                    className={`relative ${!isViewingOtherProfile ? "group cursor-pointer" : ""}`}
+                                    className={`relative -mt-20 ${!isViewingOtherProfile ? "group cursor-pointer" : ""}`}
                                     onClick={() => {
                                         if (!isViewingOtherProfile) {
                                             avatarInputRef.current?.click()
@@ -345,7 +360,7 @@ export default function ProfilePage() {
                                         />
                                     ) : (
                                         <div
-                                            className="flex h-40 w-40 items-center justify-center rounded-full border-[8px] bg-blue-600"
+                                            className="flex h-40 w-40 items-center justify-center rounded-full border-[8px] bg-red-600"
                                             style={{ borderColor: "#F9FAFB" }}
                                         >
                                             <span className="font-bold text-4xl text-white">
@@ -356,7 +371,7 @@ export default function ProfilePage() {
                                     {!isViewingOtherProfile && (
                                         <>
                                             {/* Red edit icon at bottom-right - cutting into avatar */}
-                                            <div className="absolute right-1 bottom-1 z-10 flex h-12 w-12 items-center justify-center rounded-full border-[6px] border-white bg-red-700">
+                                            <div className="absolute right-1 bottom-1 z-10 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-red-700">
                                                 <Edit className="h-4 w-4 text-white" />
                                             </div>
                                             {/* Hidden file input */}
@@ -452,12 +467,13 @@ export default function ProfilePage() {
                                         </>
                                     )}
                                 </div>
-                                <div className="mt-12 flex-1">
-                                    <h1 className="mt-2 font-bold text-3xl text-gray-900">
+                                <div className="flex-1 text-center sm:text-left">
+                                    <h1 className="font-bold text-3xl text-gray-900 sm:text-4xl">
                                         {profile.name || "User"}
                                     </h1>
+
                                     {/* Heat Score and Views */}
-                                    <div className="mt-2 flex items-center gap-4 text-sm">
+                                    <div className="mt-2 flex flex-wrap justify-center gap-4 text-sm sm:justify-start">
                                         {/* Heat Score */}
                                         <div className="flex items-center gap-2">
                                             <Flame className="h-4 w-4 text-orange-500" />
@@ -478,8 +494,9 @@ export default function ProfilePage() {
                                             </span>
                                         </div>
                                     </div>
+
                                     {/* Inline Stats with Following Avatars */}
-                                    <div className="mt-3 flex items-center gap-4">
+                                    <div className="mt-4 flex flex-wrap justify-center gap-4 sm:justify-start">
                                         <Link
                                             to={`/profile/${profile.id}/followers`}
                                             className="text-gray-900 transition-colors hover:text-red-600"
@@ -489,7 +506,7 @@ export default function ProfilePage() {
                                             </span>
                                             <span className="ml-1 text-gray-600">Followers</span>
                                         </Link>
-                                        <div className="h-4 w-px bg-gray-300" />
+                                        <div className="hidden h-4 w-px bg-gray-300 sm:block" />
                                         <div className="flex items-center gap-2">
                                             <Link
                                                 to={`/profile/${profile.id}/following`}
@@ -540,148 +557,137 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                     {"role" in profile && profile.role && (
-                                        <span className="mt-2 inline-block rounded-full bg-red-100 px-3 py-1 font-medium text-red-700 text-xs">
-                                            {profile.role}
+                                        <span className="mt-3 inline-block rounded-full bg-red-100 px-3 py-1 font-medium text-red-700 text-xs">
+                                            {profile.role.toUpperCase()}
                                         </span>
                                     )}
                                 </div>
                             </div>
-                            {!isViewingOtherProfile && (
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center gap-2"
-                                    asChild
-                                >
-                                    <Link to="/profile/edit">
-                                        <Edit className="h-4 w-4" />
-                                        Edit Profile
-                                    </Link>
-                                </Button>
-                            )}
+                            <div className="flex w-full items-center justify-center gap-2 sm:w-auto">
+                                {!isViewingOtherProfile ? (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            className="flex-1 items-center gap-2 sm:flex-none"
+                                            asChild
+                                        >
+                                            <Link to="/profile/edit">
+                                                <Edit className="h-4 w-4" />
+                                                Edit Profile
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-10 w-10 text-gray-600"
+                                            onClick={async () => {
+                                                const shareData = {
+                                                    title: `${profile.name}'s Profile`,
+                                                    text: `Check out ${profile.name}'s profile on our platform!`,
+                                                    url: window.location.href
+                                                }
+
+                                                try {
+                                                    if (navigator.share) {
+                                                        await navigator.share(shareData)
+                                                    } else {
+                                                        await navigator.clipboard.writeText(
+                                                            window.location.href
+                                                        )
+                                                        toast.success("Profile link copied to clipboard!")
+                                                    }
+                                                } catch (err) {
+                                                    console.error("Error sharing:", err)
+                                                }
+                                            }}
+                                        >
+                                            <Globe className="h-4 w-4" />
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 items-center gap-2 sm:flex-none"
+                                        onClick={async () => {
+                                            try {
+                                                await navigator.clipboard.writeText(window.location.href)
+                                                toast.success("Profile link copied to clipboard!")
+                                            } catch (err) {
+                                                console.error("Error copying link:", err)
+                                            }
+                                        }}
+                                    >
+                                        <Globe className="h-4 w-4" />
+                                        Share Profile
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
+                    {/* Navigation Tabs */}
+                    <NavigationTabs
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        tabs={
+                            !isViewingOtherProfile
+                                ? [
+                                    { id: "artworks", label: "Artworks" },
+                                    { id: "collections", label: "Collections" },
+                                    { id: "about", label: "About" },
+                                    { id: "settings", label: "Settings" }
+                                ]
+                                : [
+                                    { id: "artworks", label: "Artworks" },
+                                    { id: "collections", label: "Collections" },
+                                    { id: "about", label: "About" }
+                                ]
+                        }
+                    />
+
                     {/* Profile Information */}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                        {/* Main Content */}
-                        <div className="space-y-6 md:col-span-2">
-                            {/* Bio Section */}
-                            {((profile as any)?.bio ||
-                                (profile as any)?.location ||
-                                (profile as any)?.website) && (
-                                <div className="space-y-4">
-                                    {(profile as any)?.bio && (
-                                        <div className="rounded-lg border border-red-100/50 bg-red-50/30 p-5">
-                                            <h3 className="mb-2 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                                                About
-                                            </h3>
-                                            <p className="text-gray-600 text-sm leading-relaxed">
-                                                {(profile as any).bio}
-                                            </p>
-                                        </div>
-                                    )}
-                                    {((profile as any)?.location || (profile as any)?.website) && (
-                                        <div className="flex flex-wrap items-center gap-5 text-sm">
-                                            {(profile as any)?.location && (
-                                                <div className="flex items-center gap-2 text-gray-700">
-                                                    <MapPin className="h-4 w-4 text-gray-500" />
-                                                    <span className="font-medium">
-                                                        {(profile as any).location}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {(profile as any)?.website && (
-                                                <div className="flex items-center gap-2">
-                                                    <Globe className="h-4 w-4 text-gray-500" />
-                                                    <a
-                                                        href={(profile as any).website}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="font-medium text-red-600 transition-colors hover:text-red-700 hover:underline"
-                                                    >
-                                                        {(profile as any).website}
-                                                    </a>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* Main Content Area */}
 
-                            {/* Engagement Metrics - Minimal inline design */}
-                            {(profile as any)?.lastActiveAt &&
-                                (() => {
-                                    try {
-                                        const lastActive = new Date((profile as any).lastActiveAt)
-                                        const now = new Date()
-                                        const diffMinutes =
-                                            (now.getTime() - lastActive.getTime()) / (1000 * 60)
-                                        const isOnline = diffMinutes < 5
-                                        return isOnline ? (
-                                            <div className="border-gray-100 border-b py-6">
-                                                <div className="flex flex-wrap items-center gap-6 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <Circle className="h-3 w-3 fill-green-500 text-green-500" />
-                                                        <span className="text-gray-500">
-                                                            Online
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : null
-                                    } catch (e) {
-                                        return null
-                                    }
-                                })()}
+                        {/* ARTWORKS TAB */}
+                        {activeTab === "artworks" && (
+                            <div className="space-y-6">
+                                {/* Filter Bar */}
+                                <FilterControls
+                                    sortBy={sortBy}
+                                    onSortChange={(value) => {
+                                        setSortBy(value)
+                                        setPage(1)
+                                    }}
+                                    priceRange={priceRange}
+                                    onPriceRangeChange={(value) => {
+                                        setPriceRange(value)
+                                        setPage(1)
+                                    }}
+                                    medium={medium}
+                                    onMediumChange={(value) => {
+                                        setMedium(value)
+                                        setPage(1)
+                                    }}
+                                    status={artworkStatus}
+                                    onStatusChange={(value) => {
+                                        setArtworkStatus(value)
+                                        setPage(1)
+                                    }}
+                                    openMenu={openMenu}
+                                    onOpenChange={setOpenMenu}
+                                />
 
-                            {/* Talent Types */}
-                            {(profile as any)?.talentTypes &&
-                                Array.isArray((profile as any).talentTypes) &&
-                                (profile as any).talentTypes.length > 0 && (
-                                    <div className="rounded-md border border-gray-100 bg-white p-6">
-                                        <div className="mb-3 flex items-center gap-2">
-                                            <Award className="h-4 w-4 text-gray-400" />
-                                            <h2 className="font-medium text-gray-900 text-lg">
-                                                Talent Types
-                                            </h2>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {(profile as any).talentTypes.map((tt: any) => (
-                                                <span
-                                                    key={tt.id}
-                                                    className="rounded-md border border-gray-200 px-2.5 py-1 text-gray-600 text-sm transition-colors hover:border-gray-300"
-                                                >
-                                                    {tt.icon && (
-                                                        <span className="mr-1">{tt.icon}</span>
-                                                    )}
-                                                    {tt.name}
-                                                </span>
-                                            ))}
-                                        </div>
+                                {isLoadingArtworks ? (
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                        {[...Array(8)].map((_, i) => (
+                                            <ProfileSectionSkeleton key={i} />
+                                        ))}
                                     </div>
-                                )}
-
-                            {/* My Artworks */}
-                            {isLoadingArtworks ? (
-                                <ProfileSectionSkeleton />
-                            ) : artworksData?.artworks && artworksData.artworks.length > 0 ? (
-                                <>
-                                    <div className="rounded-md border border-gray-100 bg-white p-6">
-                                        <div className="mb-4 flex items-center justify-between">
-                                            <h2 className="font-medium text-gray-900 text-lg">
-                                                My Artworks
-                                            </h2>
-                                            <MinimalButton
-                                                icon={Plus}
-                                                onClick={() => navigate("/sellart")}
-                                                variant="default"
-                                            >
-                                                Add New Artwork
-                                            </MinimalButton>
-                                        </div>
-                                        {/* Artworks Preview Grid */}
-                                        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                                            {artworksData.artworks.slice(0, 3).map((artwork) => (
+                                ) : artworksData?.artworks && artworksData.artworks.length > 0 ? (
+                                    <div className="space-y-8">
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                            {artworksData.artworks.map((artwork) => (
                                                 <div key={artwork.id} className="group relative">
                                                     <Link
                                                         to={`/artwork/${artwork.id}`}
@@ -695,861 +701,611 @@ export default function ProfilePage() {
                                                             }
                                                             title={artwork.title || "Untitled"}
                                                             artist={artwork.artist || "Unknown"}
-                                                            price={`$${
-                                                                artwork.desiredPrice?.toLocaleString() ||
-                                                                "0"
-                                                            }`}
+                                                            price={`$${artwork.desiredPrice?.toLocaleString() || "0"}`}
                                                             year={artwork.yearOfArtwork || "N/A"}
                                                             medium={artwork.support || "N/A"}
                                                             dimensions={
                                                                 artwork.dimensions &&
-                                                                typeof artwork.dimensions ===
-                                                                    "object"
-                                                                    ? `${artwork.dimensions.height || 0}x${
-                                                                          artwork.dimensions
-                                                                              .width || 0
-                                                                      } cm`
+                                                                    typeof artwork.dimensions === "object"
+                                                                    ? `${artwork.dimensions.height || 0}x${artwork.dimensions.width || 0} cm`
                                                                     : "N/A"
                                                             }
                                                             seller={artwork.user?.name || "Unknown"}
                                                             status={artwork.status}
                                                         />
                                                     </Link>
-                                                    {/* Edit and Delete Buttons */}
-                                                    <div
-                                                        className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="icon"
-                                                            className="h-7 w-7 bg-white hover:bg-gray-100"
-                                                            asChild
+                                                    {!isViewingOtherProfile && (
+                                                        <div
+                                                            className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100"
+                                                            onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            <Link
-                                                                to={`/artwork/${artwork.id}/edit`}
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="icon"
+                                                                className="h-7 w-7 bg-white hover:bg-gray-100"
+                                                                asChild
                                                             >
-                                                                <Edit className="h-3.5 w-3.5 text-gray-700" />
-                                                            </Link>
-                                                        </Button>
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="icon"
-                                                            className="h-7 w-7"
-                                                            onClick={(e) => {
-                                                                e.preventDefault()
-                                                                e.stopPropagation()
-                                                                handleDeleteArtwork(artwork.id)
-                                                            }}
-                                                            disabled={isDeletingArtwork}
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                    </div>
+                                                                <Link
+                                                                    to={`/artwork/${artwork.id}/edit`}
+                                                                >
+                                                                    <Edit className="h-3.5 w-3.5 text-gray-700" />
+                                                                </Link>
+                                                            </Button>
+                                                            <Button
+                                                                variant="destructive"
+                                                                size="icon"
+                                                                className="h-7 w-7"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault()
+                                                                    e.stopPropagation()
+                                                                    handleDeleteArtwork(artwork.id)
+                                                                }}
+                                                                disabled={isDeletingArtwork}
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
-                                        {/* View All Button */}
-                                        {(artworksData.total || artworksData.artworks.length) >
-                                            3 && (
-                                            <div className="mt-4 flex justify-center">
-                                                <Button variant="outline" asChild>
-                                                    <Link to="/profile/my-artworks">
-                                                        View All My Artworks (
-                                                        {artworksData.total ||
-                                                            artworksData.artworks.length}
-                                                        )
-                                                    </Link>
+
+                                        {/* Pagination */}
+                                        {artworksData.pages > 1 && (
+                                            <div className="flex items-center justify-center gap-4 py-8">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                                    disabled={page === 1}
+                                                >
+                                                    Previous
+                                                </Button>
+                                                <span className="text-gray-600">
+                                                    Page {page} of {artworksData.pages}
+                                                </span>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setPage((p) => Math.min(artworksData.pages, p + 1))}
+                                                    disabled={page >= artworksData.pages}
+                                                >
+                                                    Next
                                                 </Button>
                                             </div>
                                         )}
-                                        {artworksData.artworks.length <= 3 && (
-                                            <div className="mt-4 flex justify-center">
-                                                <Button variant="link" asChild>
-                                                    <Link to="/profile/my-artworks">
-                                                        View All My Artworks
-                                                    </Link>
-                                                </Button>
-                                            </div>
-                                        )}
                                     </div>
-                                </>
-                            ) : "artworkCount" in profile &&
-                              profile.artworkCount !== undefined &&
-                              profile.artworkCount > 0 ? (
-                                <div className="rounded-md border border-gray-100 bg-white p-6">
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <h2 className="font-medium text-gray-900 text-lg">
-                                            My Artworks
-                                        </h2>
-                                        <MinimalButton
-                                            icon={Plus}
-                                            onClick={() => navigate("/sellart")}
-                                            variant="default"
-                                        >
-                                            Add New Artwork
-                                        </MinimalButton>
-                                    </div>
-                                    <Button variant="link" className="mt-4" asChild>
-                                        <Link to="/profile/my-artworks">View All My Artworks</Link>
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="rounded-md border border-gray-100 bg-white p-6">
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <h2 className="font-medium text-gray-900 text-lg">
-                                            My Artworks
-                                        </h2>
-                                        <MinimalButton
-                                            icon={Plus}
-                                            onClick={() => navigate("/sellart")}
-                                            variant="default"
-                                        >
-                                            Create Artwork
-                                        </MinimalButton>
-                                    </div>
-                                    <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 text-center">
                                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
                                             <Palette className="h-10 w-10 text-gray-400" />
                                         </div>
-                                        <h3 className="mb-2 font-semibold text-gray-500 text-xl">
-                                            No Artworks Yet
+                                        <h3 className="mb-2 font-semibold text-gray-900 text-xl">
+                                            No Artworks Found
                                         </h3>
+                                        <p className="mb-8 text-gray-500">
+                                            {!isViewingOtherProfile
+                                                ? "You haven't uploaded any artworks yet."
+                                                : "This user hasn't uploaded any artworks yet."}
+                                        </p>
+                                        {!isViewingOtherProfile && (
+                                            <Button
+                                                onClick={() => navigate("/sellart")}
+                                                className="bg-red-600 hover:bg-red-700 text-white"
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Your First Artwork
+                                            </Button>
+                                        )}
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
+                        )}
 
-                            {/* My Collections */}
-                            <div className="rounded-md border border-gray-100 bg-white p-6">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <FolderOpen className="h-4 w-4 text-gray-400" />
-                                        <h2 className="font-medium text-gray-900 text-lg">
-                                            My Collections
-                                        </h2>
-                                    </div>
-                                    {showCreateCollection ? (
-                                        <button
-                                            onClick={() => setShowCreateCollection(false)}
-                                            className="text-gray-600 text-sm transition-colors hover:text-gray-900 hover:underline"
-                                        >
-                                            Cancel
-                                        </button>
-                                    ) : (
-                                        <MinimalButton
-                                            icon={FolderPlus}
-                                            onClick={() => setShowCreateCollection(true)}
-                                            variant="default"
-                                        >
-                                            New Collection
-                                        </MinimalButton>
-                                    )}
-                                </div>
+                        {/* ABOUT TAB */}
+                        {activeTab === "about" && (
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                <div className="space-y-6 md:col-span-2">
+                                    {/* Bio Section */}
+                                    {((profile as any)?.bio ||
+                                        (profile as any)?.location ||
+                                        (profile as any)?.website) && (
+                                            <div className="space-y-4">
+                                                {(profile as any)?.bio && (
+                                                    <div className="rounded-lg border border-red-100/50 bg-red-50/30 p-5">
+                                                        <h3 className="mb-2 font-medium text-gray-500 text-xs uppercase tracking-wide">
+                                                            About
+                                                        </h3>
+                                                        <p className="text-gray-600 text-sm leading-relaxed">
+                                                            {(profile as any).bio}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {((profile as any)?.location || (profile as any)?.website) && (
+                                                    <div className="flex flex-wrap items-center gap-5 text-sm">
+                                                        {(profile as any)?.location && (
+                                                            <div className="flex items-center gap-2 text-gray-700">
+                                                                <MapPin className="h-4 w-4 text-gray-500" />
+                                                                <span className="font-medium">
+                                                                    {(profile as any).location}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {(profile as any)?.website && (
+                                                            <div className="flex items-center gap-2">
+                                                                <Globe className="h-4 w-4 text-gray-500" />
+                                                                <a
+                                                                    href={(profile as any).website}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="font-medium text-red-600 transition-colors hover:text-red-700 hover:underline"
+                                                                >
+                                                                    {(profile as any).website}
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
-                                {/* Create Collection Form */}
-                                {showCreateCollection && (
-                                    <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                        <h3 className="mb-4 font-semibold text-gray-900 text-lg">
-                                            Create New Collection
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="collectionName">
-                                                    Collection Name *
-                                                </Label>
-                                                <Input
-                                                    id="collectionName"
-                                                    value={newCollection.name}
-                                                    onChange={(e) =>
-                                                        setNewCollection({
-                                                            ...newCollection,
-                                                            name: e.target.value
-                                                        })
-                                                    }
-                                                    placeholder="Enter collection name"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="collectionDescription">
-                                                    Description
-                                                </Label>
-                                                <Textarea
-                                                    id="collectionDescription"
-                                                    value={newCollection.description}
-                                                    onChange={(e) =>
-                                                        setNewCollection({
-                                                            ...newCollection,
-                                                            description: e.target.value
-                                                        })
-                                                    }
-                                                    placeholder="Enter collection description (optional)"
-                                                    rows={3}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="collectionCoverImage">
-                                                    Cover Image (Optional)
-                                                </Label>
-                                                <div className="space-y-2">
-                                                    {coverImagePreview ? (
-                                                        <div className="relative">
-                                                            <img
-                                                                src={coverImagePreview}
-                                                                alt="Cover preview"
-                                                                className="h-48 w-full rounded-lg border border-gray-200 object-cover"
-                                                            />
-                                                            <Button
-                                                                type="button"
-                                                                variant="destructive"
-                                                                size="icon"
-                                                                className="absolute top-2 right-2"
-                                                                onClick={() => {
-                                                                    setCoverImageFile(null)
-                                                                    setCoverImagePreview("")
-                                                                    setNewCollection({
-                                                                        ...newCollection,
-                                                                        coverImage: ""
-                                                                    })
-                                                                }}
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    ) : (
-                                                        <div
-                                                            className="cursor-pointer rounded-lg border-2 border-gray-300 border-dashed p-6 text-center transition-colors hover:border-gray-400"
-                                                            onClick={() =>
-                                                                coverImageInputRef.current?.click()
-                                                            }
+                                    {/* Talent Types */}
+                                    {(profile as any)?.talentTypes &&
+                                        Array.isArray((profile as any).talentTypes) &&
+                                        (profile as any).talentTypes.length > 0 && (
+                                            <div className="rounded-md border border-gray-100 bg-white p-6">
+                                                <div className="mb-3 flex items-center gap-2">
+                                                    <Award className="h-4 w-4 text-gray-400" />
+                                                    <h2 className="font-medium text-gray-900 text-lg">
+                                                        Talent Types
+                                                    </h2>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(profile as any).talentTypes.map((tt: any) => (
+                                                        <span
+                                                            key={tt.id}
+                                                            className="rounded-md border border-gray-200 px-2.5 py-1 text-gray-600 text-sm transition-colors hover:border-gray-300"
                                                         >
-                                                            <Upload className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-                                                            <Label
-                                                                htmlFor="coverImageInput"
-                                                                className="cursor-pointer text-gray-600 text-sm hover:text-gray-900"
-                                                            >
-                                                                Click to upload cover image
-                                                            </Label>
-                                                            <Input
-                                                                ref={coverImageInputRef}
-                                                                id="coverImageInput"
-                                                                type="file"
-                                                                accept="image/*"
-                                                                className="hidden"
-                                                                onChange={async (e) => {
-                                                                    const file = e.target.files?.[0]
-                                                                    if (!file) return
-
-                                                                    // Validate file size (max 5MB)
-                                                                    if (
-                                                                        file.size >
-                                                                        5 * 1024 * 1024
-                                                                    ) {
-                                                                        toast.error(
-                                                                            "Image size must be less than 5MB"
-                                                                        )
-                                                                        return
-                                                                    }
-
-                                                                    // Validate file type
-                                                                    if (
-                                                                        !file.type.startsWith(
-                                                                            "image/"
-                                                                        )
-                                                                    ) {
-                                                                        toast.error(
-                                                                            "Please select an image file"
-                                                                        )
-                                                                        return
-                                                                    }
-
-                                                                    setCoverImageFile(file)
-                                                                    setCoverImagePreview(
-                                                                        URL.createObjectURL(file)
-                                                                    )
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="collectionVisibility">
-                                                    Visibility
-                                                </Label>
-                                                <Select
-                                                    value={newCollection.visibility}
-                                                    onValueChange={(
-                                                        value: "private" | "unlisted"
-                                                    ) =>
-                                                        setNewCollection({
-                                                            ...newCollection,
-                                                            visibility: value
-                                                        })
-                                                    }
-                                                >
-                                                    <SelectTrigger id="collectionVisibility">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="private">
-                                                            Private
-                                                        </SelectItem>
-                                                        <SelectItem value="unlisted">
-                                                            Unlisted
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <p className="text-muted-foreground text-xs">
-                                                    Collections need at least 3 artworks to be
-                                                    published. Publish from the collection page once
-                                                    you’ve added enough.
-                                                </p>
-                                            </div>
-                                            <MinimalButton
-                                                onClick={async () => {
-                                                    if (!newCollection.name.trim()) {
-                                                        toast.error("Collection name is required")
-                                                        return
-                                                    }
-                                                    try {
-                                                        let coverImageUrl = newCollection.coverImage
-
-                                                        // Upload cover image if selected
-                                                        if (coverImageFile) {
-                                                            setIsUploadingCover(true)
-                                                            try {
-                                                                const presignedResponse =
-                                                                    await getPresignedUrl({
-                                                                        fileName:
-                                                                            coverImageFile.name,
-                                                                        contentType:
-                                                                            coverImageFile.type
-                                                                    })
-
-                                                                if (
-                                                                    !presignedResponse.success ||
-                                                                    !presignedResponse.presignedUrl
-                                                                ) {
-                                                                    throw new Error(
-                                                                        "Failed to get upload URL"
-                                                                    )
-                                                                }
-
-                                                                await uploadFileToS3(
-                                                                    presignedResponse.presignedUrl,
-                                                                    coverImageFile
-                                                                )
-
-                                                                coverImageUrl =
-                                                                    presignedResponse.publicUrl
-                                                                toast.success(
-                                                                    "Cover image uploaded successfully"
-                                                                )
-                                                            } catch (error: any) {
-                                                                toast.error(
-                                                                    `Failed to upload cover image: ${error?.message || "An error occurred"}`
-                                                                )
-                                                                setIsUploadingCover(false)
-                                                                return
-                                                            } finally {
-                                                                setIsUploadingCover(false)
-                                                            }
-                                                        }
-
-                                                        // Create collection with cover image URL
-                                                        const response = await createCollection({
-                                                            ...newCollection,
-                                                            coverImage: coverImageUrl || undefined
-                                                        })
-
-                                                        // Reset form
-                                                        setNewCollection({
-                                                            name: "",
-                                                            description: "",
-                                                            visibility: "private",
-                                                            coverImage: ""
-                                                        })
-                                                        setCoverImageFile(null)
-                                                        setCoverImagePreview("")
-                                                        setShowCreateCollection(false)
-
-                                                        // Invalidate queries
-                                                        queryClient.invalidateQueries({
-                                                            queryKey: collectionKeys.lists()
-                                                        })
-
-                                                        // Navigate to collection detail page
-                                                        if (response?.collection?.id) {
-                                                            navigate(
-                                                                `/collections/${response.collection.id}`
-                                                            )
-                                                        }
-                                                    } catch (error) {
-                                                        // Error handled by hook
-                                                    }
-                                                }}
-                                                disabled={isCreating || isUploadingCover}
-                                                isLoading={isCreating || isUploadingCover}
-                                                variant="default"
-                                            >
-                                                {isUploadingCover
-                                                    ? "Uploading cover..."
-                                                    : isCreating
-                                                      ? "Creating..."
-                                                      : "Create Collection"}
-                                            </MinimalButton>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Collections List */}
-                                {isLoadingCollections ? (
-                                    <ProfileSectionSkeleton />
-                                ) : collectionsData?.collections &&
-                                  collectionsData.collections.length > 0 ? (
-                                    <>
-                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                                            {collectionsData.collections
-                                                .slice(0, 3)
-                                                .map((collection) => (
-                                                    <Link
-                                                        key={collection.id}
-                                                        to={`/collections/${collection.id}`}
-                                                        className="block"
-                                                    >
-                                                        <div className="group relative">
-                                                            {/* Cover Image - Same aspect ratio as artwork cards */}
-                                                            <div className="relative mb-4 aspect-[4/5] overflow-hidden bg-gray-100">
-                                                                {collection.coverImage ? (
-                                                                    <img
-                                                                        src={collection.coverImage}
-                                                                        alt={collection.name}
-                                                                        className="h-full w-full object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="flex h-full w-full items-center justify-center bg-gray-200">
-                                                                        <FolderOpen className="h-12 w-12 text-gray-400" />
-                                                                    </div>
-                                                                )}
-                                                                {/* Visibility Badge Overlay */}
-                                                                <div className="absolute top-3 right-3 z-10">
-                                                                    <span
-                                                                        className={`rounded-full px-2 py-1 font-medium text-xs backdrop-blur-sm ${
-                                                                            collection.visibility ===
-                                                                            "public"
-                                                                                ? "bg-green-500/90 text-white"
-                                                                                : collection.visibility ===
-                                                                                    "unlisted"
-                                                                                  ? "bg-yellow-500/90 text-white"
-                                                                                  : "bg-gray-500/90 text-white"
-                                                                        }`}
-                                                                    >
-                                                                        {collection.visibility}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Collection Details - Same style as artwork card */}
-                                                            <div className="space-y-1">
-                                                                <h3 className="line-clamp-1 font-semibold text-black text-sm uppercase tracking-wide">
-                                                                    {collection.name}
-                                                                </h3>
-                                                                <div className="flex items-center gap-2 text-gray-500 text-xs">
-                                                                    <ImageIcon className="h-3 w-3" />
-                                                                    <span>
-                                                                        {"artworkCount" in
-                                                                            collection &&
-                                                                        collection.artworkCount !==
-                                                                            undefined
-                                                                            ? collection.artworkCount
-                                                                            : 0}{" "}
-                                                                        {("artworkCount" in
-                                                                            collection &&
-                                                                        collection.artworkCount !==
-                                                                            undefined
-                                                                            ? collection.artworkCount
-                                                                            : 0) === 1
-                                                                            ? "artwork"
-                                                                            : "artworks"}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Action Buttons */}
-                                                            <div className="mt-3 flex items-center gap-2 border-gray-100 border-t pt-3">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    title={
-                                                                        collection.visibility !==
-                                                                            "public" &&
-                                                                        (collection.artworkCount ??
-                                                                            0) < 3
-                                                                            ? "Add at least 3 artworks to publish"
-                                                                            : undefined
-                                                                    }
-                                                                    disabled={
-                                                                        collection.visibility !==
-                                                                            "public" &&
-                                                                        (collection.artworkCount ??
-                                                                            0) < 3
-                                                                    }
-                                                                    onClick={async (e) => {
-                                                                        e.preventDefault()
-                                                                        e.stopPropagation()
-                                                                        try {
-                                                                            if (
-                                                                                collection.visibility ===
-                                                                                "public"
-                                                                            ) {
-                                                                                await unpublishCollection(
-                                                                                    collection.id
-                                                                                )
-                                                                            } else {
-                                                                                const count =
-                                                                                    collection.artworkCount ??
-                                                                                    0
-                                                                                if (count < 3) {
-                                                                                    toast.error(
-                                                                                        `Collection must have at least 3 artworks to be published. Currently has ${count}.`
-                                                                                    )
-                                                                                    return
-                                                                                }
-                                                                                await publishCollection(
-                                                                                    collection.id
-                                                                                )
-                                                                            }
-                                                                            queryClient.invalidateQueries(
-                                                                                {
-                                                                                    queryKey:
-                                                                                        collectionKeys.lists()
-                                                                                }
-                                                                            )
-                                                                        } catch (error) {
-                                                                            // Error handled by hook
-                                                                        }
-                                                                    }}
-                                                                    className="flex-1"
-                                                                >
-                                                                    {collection.visibility ===
-                                                                    "public" ? (
-                                                                        <>
-                                                                            <EyeOff className="mr-1 h-3 w-3" />
-                                                                            Unpublish
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <Eye className="mr-1 h-3 w-3" />
-                                                                            Publish
-                                                                        </>
-                                                                    )}
-                                                                </Button>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault()
-                                                                        e.stopPropagation()
-                                                                        setCollectionToDelete(
-                                                                            collection.id
-                                                                        )
-                                                                        setDeleteDialogOpen(true)
-                                                                    }}
-                                                                    disabled={isDeleting}
-                                                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                                >
-                                                                    <Trash2 className="h-3 w-3" />
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    </Link>
-                                                ))}
-                                        </div>
-                                        {/* See All Collections Button */}
-                                        {collectionsData.collections.length > 3 && (
-                                            <div className="mt-6 flex justify-center">
-                                                <Button variant="outline" asChild>
-                                                    <Link to="/profile/collections">
-                                                        View All Collections (
-                                                        {collectionsData.collections.length})
-                                                    </Link>
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-                                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-                                            <FolderOpen className="h-10 w-10 text-gray-400" />
-                                        </div>
-                                        <h3 className="mb-2 font-semibold text-gray-500 text-xl">
-                                            No Collections Yet
-                                        </h3>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Sidebar */}
-                        <div className="space-y-6">
-                            {/* Quick Actions */}
-                            <div className="rounded-md border border-gray-100 bg-white p-6">
-                                <div className="space-y-3">
-                                    <Link
-                                        to="/sellart"
-                                        className="group flex items-center gap-3 text-gray-600 text-sm transition-colors hover:text-gray-900 hover:underline"
-                                    >
-                                        <ImageIcon className="h-4 w-4 text-gray-400 transition-colors group-hover:text-red-600" />
-                                        <span>Sell Artwork</span>
-                                    </Link>
-                                    <Link
-                                        to="/profile/my-artworks"
-                                        className="group flex items-center gap-3 text-gray-600 text-sm transition-colors hover:text-gray-900 hover:underline"
-                                    >
-                                        <Palette className="h-4 w-4 text-gray-400 transition-colors group-hover:text-red-600" />
-                                        <span>My Artworks</span>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {/* Account Information */}
-                            <div className="rounded-md border border-gray-100 bg-white p-6">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h2 className="font-medium text-gray-900 text-lg">
-                                        Information and Contacts
-                                    </h2>
-                                    {!isViewingOtherProfile && (
-                                        <button
-                                            onClick={() => navigate("/profile/edit")}
-                                            className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
-                                        >
-                                            <Edit className="h-4 w-4 text-gray-500" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="space-y-3">
-                                    {/* Email */}
-                                    <div className="flex items-center gap-2">
-                                        <Mail className="h-4 w-4 text-gray-400" />
-                                        <div>
-                                            <p className="text-gray-500 text-xs">Email</p>
-                                            <p className="font-medium text-gray-900 text-sm">
-                                                {profile.email}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Location */}
-                                    {(profile as any)?.location && (
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 text-gray-400" />
-                                            <div>
-                                                <p className="text-gray-500 text-xs">Location</p>
-                                                <p className="font-medium text-gray-900 text-sm">
-                                                    {(profile as any).location}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Website */}
-                                    {(profile as any)?.website && (
-                                        <div className="flex items-center gap-2">
-                                            <Globe className="h-4 w-4 text-gray-400" />
-                                            <div>
-                                                <p className="text-gray-500 text-xs">Website</p>
-                                                <a
-                                                    href={(profile as any).website}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="font-medium text-gray-900 text-sm transition-colors hover:text-red-600"
-                                                >
-                                                    {(profile as any).website}
-                                                </a>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Member Since */}
-                                    {profile.createdAt && (
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-gray-400" />
-                                            <div>
-                                                <p className="text-gray-500 text-xs">
-                                                    Member Since
-                                                </p>
-                                                <p className="font-medium text-gray-900 text-sm">
-                                                    {new Date(profile.createdAt).toLocaleDateString(
-                                                        "en-GB",
-                                                        {
-                                                            day: "2-digit",
-                                                            month: "short",
-                                                            year: "numeric"
-                                                        }
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Artworks */}
-                                    {"artworkCount" in profile &&
-                                        profile.artworkCount !== undefined && (
-                                            <div className="flex items-center gap-2">
-                                                <Palette className="h-4 w-4 text-gray-400" />
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">
-                                                        Artworks
-                                                    </p>
-                                                    <p className="font-medium text-gray-900 text-sm">
-                                                        {profile.artworkCount}{" "}
-                                                        {profile.artworkCount === 1
-                                                            ? "artwork"
-                                                            : "artworks"}
-                                                    </p>
+                                                            {tt.icon && (
+                                                                <span className="mr-1">{tt.icon}</span>
+                                                            )}
+                                                            {tt.name}
+                                                        </span>
+                                                    ))}
                                                 </div>
                                             </div>
                                         )}
                                 </div>
-                            </div>
 
-                            {/* Account Stats */}
-                            <div className="rounded-md border border-gray-100 bg-white p-6">
-                                <div className="flex flex-wrap gap-3">
-                                    {"artworkCount" in profile &&
-                                        profile.artworkCount !== undefined && (
-                                            <div className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2">
-                                                <Palette className="h-3.5 w-3.5 text-gray-500" />
-                                                <span className="text-gray-500 text-xs">
-                                                    Artworks
-                                                </span>
-                                                <span className="font-semibold text-gray-900 text-sm">
-                                                    {profile.artworkCount}
-                                                </span>
-                                            </div>
-                                        )}
-                                    {"collectionCount" in profile &&
-                                        (profile as any).collectionCount !== undefined && (
-                                            <div className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2">
-                                                <FolderOpen className="h-3.5 w-3.5 text-gray-500" />
-                                                <span className="text-gray-500 text-xs">
-                                                    Collections
-                                                </span>
-                                                <span className="font-semibold text-gray-900 text-sm">
-                                                    {(profile as any).collectionCount}
+                                {/* Engagement Stats (Right Side on Desktop) */}
+                                <div className="space-y-6">
+                                    <div className="rounded-md border border-gray-100 bg-white p-6">
+                                        <h3 className="mb-4 font-semibold text-gray-900">Engagement</h3>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                    <Flame className="h-4 w-4" />
+                                                    <span>Heat Score</span>
+                                                </div>
+                                                <span className="font-bold">
+                                                    {((profile as any)?.heatScore ?? 0).toFixed(1)}
                                                 </span>
                                             </div>
-                                        )}
-                                    {((profile as any).followerCount !== undefined ||
-                                        (profile as any).followingCount !== undefined) && (
-                                        <>
-                                            <Link
-                                                to={`/profile/${profile.id}/followers`}
-                                                className="group flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2 transition-colors hover:bg-gray-100"
-                                            >
-                                                <Users className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-red-600" />
-                                                <span className="text-gray-500 text-xs">
-                                                    Followers
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                    <Eye className="h-4 w-4" />
+                                                    <span>Total Views</span>
+                                                </div>
+                                                <span className="font-bold">
+                                                    {((profile as any)?.profileViews ?? 0).toLocaleString()}
                                                 </span>
-                                                <span className="font-semibold text-gray-900 text-sm transition-colors group-hover:text-red-600">
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                    <Users className="h-4 w-4" />
+                                                    <span>Followers</span>
+                                                </div>
+                                                <span className="font-bold">
                                                     {(profile as any).followerCount || 0}
                                                 </span>
-                                            </Link>
-                                            <Link
-                                                to={`/profile/${profile.id}/following`}
-                                                className="group flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2 transition-colors hover:bg-gray-100"
-                                            >
-                                                <Users className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-red-600" />
-                                                <span className="text-gray-500 text-xs">
-                                                    Following
-                                                </span>
-                                                <span className="font-semibold text-gray-900 text-sm transition-colors group-hover:text-red-600">
-                                                    {(profile as any).followingCount || 0}
-                                                </span>
-                                            </Link>
-                                        </>
-                                    )}
-                                    {"reviewCount" in profile &&
-                                        (profile as any).reviewCount !== undefined && (
-                                            <div className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2">
-                                                <Award className="h-3.5 w-3.5 text-gray-500" />
-                                                <span className="text-gray-500 text-xs">
-                                                    Reviews
-                                                </span>
-                                                <span className="font-semibold text-gray-900 text-sm">
-                                                    {(profile as any).reviewCount}
-                                                </span>
                                             </div>
-                                        )}
-                                    {"score" in profile && profile.score !== undefined && (
-                                        <div className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2">
-                                            <BarChart3 className="h-3.5 w-3.5 text-gray-500" />
-                                            <span className="text-gray-500 text-xs">Score</span>
-                                            <span className="font-semibold text-gray-900 text-sm">
-                                                {profile.score || 0}
-                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {(profile as any)?.createdAt && (
+                                        <div className="rounded-md border border-gray-100 bg-white p-6">
+                                            <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                <Calendar className="h-4 w-4" />
+                                                <span>Member since {new Date((profile as any).createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
                             </div>
+                        )}
 
-                            {/* Preferences Info */}
-                            {((profile as any)?.timezone ||
-                                (profile as any)?.languagePreference ||
-                                (profile as any)?.emailSubscription !== undefined) && (
+                        {/* COLLECTIONS TAB */}
+                        {activeTab === "collections" && (
+                            <div className="space-y-6">
+                                {/* My Collections */}
                                 <div className="rounded-md border border-gray-100 bg-white p-6">
-                                    <h2 className="mb-4 font-medium text-gray-900 text-lg">
-                                        Preferences
-                                    </h2>
-                                    <div className="space-y-3">
-                                        {(profile as any)?.timezone && (
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-gray-400" />
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">
-                                                        Timezone
-                                                    </p>
-                                                    <p className="font-medium text-gray-900 text-sm">
-                                                        {(profile as any).timezone}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {(profile as any)?.languagePreference && (
-                                            <div className="flex items-center gap-2">
-                                                <Languages className="h-4 w-4 text-gray-400" />
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">
-                                                        Language
-                                                    </p>
-                                                    <p className="font-medium text-gray-900 text-sm">
-                                                        {(
-                                                            (profile as any).languagePreference ||
-                                                            "en"
-                                                        ).toUpperCase()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {(profile as any)?.emailSubscription !== undefined && (
-                                            <div className="flex items-center gap-2">
-                                                <Mail className="h-4 w-4 text-gray-400" />
-                                                <div>
-                                                    <p className="text-gray-500 text-xs">
-                                                        Email Subscriptions
-                                                    </p>
-                                                    <p className="font-medium text-gray-900 text-sm">
-                                                        {(profile as any).emailSubscription
-                                                            ? "Enabled"
-                                                            : "Disabled"}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                    <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                                        <div className="flex items-center space-x-2">
+                                            <FolderOpen className="h-4 w-4 text-gray-400" />
+                                            <h2 className="font-medium text-gray-900 text-lg">
+                                                My Collections
+                                            </h2>
+                                        </div>
+                                        {showCreateCollection ? (
+                                            <button
+                                                onClick={() => setShowCreateCollection(false)}
+                                                className="text-gray-600 text-sm transition-colors hover:text-gray-900 hover:underline"
+                                            >
+                                                Cancel
+                                            </button>
+                                        ) : (
+                                            !isViewingOtherProfile && (
+                                                <MinimalButton
+                                                    icon={FolderPlus}
+                                                    onClick={() => setShowCreateCollection(true)}
+                                                    variant="default"
+                                                >
+                                                    New Collection
+                                                </MinimalButton>
+                                            )
                                         )}
                                     </div>
+
+                                    {/* Create Collection Form */}
+                                    {showCreateCollection && (
+                                        <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                            <h3 className="mb-4 font-semibold text-gray-900 text-lg">
+                                                Create New Collection
+                                            </h3>
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="collectionName">
+                                                        Collection Name *
+                                                    </Label>
+                                                    <Input
+                                                        id="collectionName"
+                                                        value={newCollection.name}
+                                                        onChange={(e) =>
+                                                            setNewCollection({
+                                                                ...newCollection,
+                                                                name: e.target.value
+                                                            })
+                                                        }
+                                                        placeholder="Enter collection name"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="collectionDescription">
+                                                        Description
+                                                    </Label>
+                                                    <Textarea
+                                                        id="collectionDescription"
+                                                        value={newCollection.description}
+                                                        onChange={(e) =>
+                                                            setNewCollection({
+                                                                ...newCollection,
+                                                                description: e.target.value
+                                                            })
+                                                        }
+                                                        placeholder="Enter collection description (optional)"
+                                                        rows={3}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="collectionCoverImage">
+                                                        Cover Image (Optional)
+                                                    </Label>
+                                                    <div className="space-y-2">
+                                                        {coverImagePreview ? (
+                                                            <div className="relative">
+                                                                <img
+                                                                    src={coverImagePreview}
+                                                                    alt="Cover preview"
+                                                                    className="h-48 w-full rounded-lg border border-gray-200 object-cover"
+                                                                />
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="destructive"
+                                                                    size="icon"
+                                                                    className="absolute top-2 right-2 h-8 w-8"
+                                                                    onClick={() => {
+                                                                        setCoverImageFile(null)
+                                                                        setCoverImagePreview("")
+                                                                    }}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <div
+                                                                className="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-gray-300 border-dashed bg-white hover:border-gray-400 hover:bg-gray-50"
+                                                                onClick={() => coverImageInputRef.current?.click()}
+                                                            >
+                                                                <Upload className="mb-2 h-8 w-8 text-gray-400" />
+                                                                <p className="text-gray-500 text-sm">
+                                                                    Click to upload cover image
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        <Input
+                                                            ref={coverImageInputRef}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0]
+                                                                if (!file) return
+                                                                if (file.size > 5 * 1024 * 1024) {
+                                                                    toast.error("Image size must be less than 5MB")
+                                                                    return
+                                                                }
+                                                                if (!file.type.startsWith("image/")) {
+                                                                    toast.error("Please select an image file")
+                                                                    return
+                                                                }
+                                                                setCoverImageFile(file)
+                                                                setCoverImagePreview(URL.createObjectURL(file))
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="collectionVisibility">
+                                                        Visibility
+                                                    </Label>
+                                                    <Select
+                                                        value={newCollection.visibility}
+                                                        onValueChange={(value: "private" | "unlisted") =>
+                                                            setNewCollection({
+                                                                ...newCollection,
+                                                                visibility: value
+                                                            })
+                                                        }
+                                                    >
+                                                        <SelectTrigger id="collectionVisibility">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="private">Private</SelectItem>
+                                                            <SelectItem value="unlisted">Unlisted</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <p className="text-muted-foreground text-xs">
+                                                        Collections need at least 3 artworks to be published.
+                                                    </p>
+                                                </div>
+                                                <MinimalButton
+                                                    onClick={async () => {
+                                                        if (!newCollection.name.trim()) {
+                                                            toast.error("Collection name is required")
+                                                            return
+                                                        }
+                                                        try {
+                                                            let coverImageUrl = newCollection.coverImage
+                                                            if (coverImageFile) {
+                                                                setIsUploadingCover(true)
+                                                                try {
+                                                                    const presignedResponse = await getPresignedUrl({
+                                                                        fileName: coverImageFile.name,
+                                                                        contentType: coverImageFile.type
+                                                                    })
+                                                                    if (!presignedResponse.success || !presignedResponse.presignedUrl) {
+                                                                        throw new Error("Failed to get upload URL")
+                                                                    }
+                                                                    await uploadFileToS3(presignedResponse.presignedUrl, coverImageFile)
+                                                                    coverImageUrl = presignedResponse.publicUrl
+                                                                } finally {
+                                                                    setIsUploadingCover(false)
+                                                                }
+                                                            }
+                                                            await createCollection({
+                                                                ...newCollection,
+                                                                coverImage: coverImageUrl
+                                                            } as any)
+                                                            setShowCreateCollection(false)
+                                                            setNewCollection({
+                                                                name: "",
+                                                                description: "",
+                                                                visibility: "private",
+                                                                coverImage: ""
+                                                            })
+                                                            setCoverImageFile(null)
+                                                            setCoverImagePreview("")
+                                                            queryClient.invalidateQueries({ queryKey: collectionKeys.lists() })
+                                                            toast.success("Collection created successfully")
+                                                        } catch (error) {
+                                                            // Handled by hook or catch block
+                                                        }
+                                                    }}
+                                                    disabled={isCreating || isUploadingCover}
+                                                    className="w-full bg-red-600 text-white hover:bg-red-700"
+                                                >
+                                                    {isCreating || isUploadingCover ? "Creating..." : "Create Collection"}
+                                                </MinimalButton>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {isLoadingCollections ? (
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                            {[...Array(3)].map((_, i) => (
+                                                <div key={i} className="aspect-[4/3] w-full animate-pulse rounded-lg bg-gray-100" />
+                                            ))}
+                                        </div>
+                                    ) : collectionsData?.collections && collectionsData.collections.length > 0 ? (
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                            {collectionsData.collections.map((collection) => (
+                                                <div
+                                                    key={collection.id}
+                                                    className="group relative overflow-hidden rounded-lg border border-gray-100 bg-white transition-all hover:shadow-md"
+                                                >
+                                                    <Link to={`/collections/${collection.id}`} className="block">
+                                                        <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                                                            {collection.coverImage ? (
+                                                                <img
+                                                                    src={collection.coverImage}
+                                                                    alt={collection.name}
+                                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                />
+                                                            ) : (
+                                                                <div className="flex h-full w-full items-center justify-center">
+                                                                    <FolderOpen className="h-12 w-12 text-gray-300" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-4">
+                                                            <div className="flex items-center justify-between">
+                                                                <h3 className="font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                                                                    {collection.name}
+                                                                </h3>
+                                                                <span className="text-gray-500 text-xs">
+                                                                    {collection.artworkCount || 0} Artworks
+                                                                </span>
+                                                            </div>
+                                                            {collection.description && (
+                                                                <p className="mt-1 line-clamp-1 text-gray-500 text-xs">
+                                                                    {collection.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </Link>
+
+                                                    {!isViewingOtherProfile && (
+                                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="icon"
+                                                                className="h-8 w-8 bg-white/90 shadow-sm backdrop-blur-sm hover:bg-white"
+                                                                onClick={async (e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    try {
+                                                                        if (collection.visibility === "public") {
+                                                                            await unpublishCollection(collection.id);
+                                                                            toast.success("Collection unpublished");
+                                                                        } else {
+                                                                            if ((collection.artworkCount || 0) < 3) {
+                                                                                toast.error("Add at least 3 artworks to publish");
+                                                                                return;
+                                                                            }
+                                                                            await publishCollection(collection.id);
+                                                                            toast.success("Collection published");
+                                                                        }
+                                                                        queryClient.invalidateQueries({ queryKey: collectionKeys.lists() });
+                                                                    } catch (error) { }
+                                                                }}
+                                                            >
+                                                                {collection.visibility === "public" ? (
+                                                                    <EyeOff className="h-4 w-4 text-gray-600" />
+                                                                ) : (
+                                                                    <Eye className="h-4 w-4 text-gray-600" />
+                                                                )}
+                                                            </Button>
+                                                            <Button
+                                                                variant="destructive"
+                                                                size="icon"
+                                                                className="h-8 w-8 bg-red-600/90 shadow-sm backdrop-blur-sm hover:bg-red-600"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    setCollectionToDelete(collection.id);
+                                                                    setDeleteDialogOpen(true);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-white" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                                            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50">
+                                                <FolderOpen className="h-10 w-10 text-gray-300" />
+                                            </div>
+                                            <h3 className="mb-1 font-medium text-gray-900">No collections yet</h3>
+                                            <p className="text-gray-500 text-sm">Create your first collection to organize your favorite artworks.</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+
+                        {/* SETTINGS TAB */}
+                        {activeTab === "settings" && !isViewingOtherProfile && (
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                <div className="space-y-6 md:col-span-2">
+                                    <div className="rounded-md border border-gray-100 bg-white p-6">
+                                        <h2 className="mb-6 font-medium text-gray-900 text-lg">Account Information</h2>
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                <div className="space-y-1">
+                                                    <p className="text-gray-500 text-xs">Full Name</p>
+                                                    <p className="font-medium">{profile.name}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-gray-500 text-xs">Email</p>
+                                                    <p className="font-medium">{profile.email || "N/A"}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-gray-500 text-xs">Role</p>
+                                                    <p className="font-medium capitalize">{(profile as any).role}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-gray-500 text-xs">Member Since</p>
+                                                    <p className="font-medium">
+                                                        {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "N/A"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Button variant="outline" asChild>
+                                                <Link to="/profile/edit">Edit Profile Credentials</Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Preferences */}
+                                    <div className="rounded-md border border-gray-100 bg-white p-6">
+                                        <h2 className="mb-6 font-medium text-gray-900 text-lg">Preferences</h2>
+                                        <div className="space-y-4">
+                                            <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                                                <div>
+                                                    <p className="font-medium">Email Notifications</p>
+                                                    <p className="text-gray-500 text-sm">Receive updates about your artworks and collections</p>
+                                                </div>
+                                                <span className={`rounded-full px-3 py-1 text-xs font-medium ${(profile as any).emailSubscription ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                                                    {(profile as any).emailSubscription ? "Enabled" : "Disabled"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="rounded-md border border-gray-100 bg-white p-6">
+                                        <h3 className="mb-4 font-semibold text-gray-900">Quick Actions</h3>
+                                        <div className="space-y-3">
+                                            <Button variant="outline" className="w-full justify-start" asChild>
+                                                <Link to="/sellart">
+                                                    <Palette className="mr-2 h-4 w-4" />
+                                                    Add New Artwork
+                                                </Link>
+                                            </Button>
+                                            <Button variant="outline" className="w-full justify-start" asChild>
+                                                <Link to="/profile/my-artworks">
+                                                    <Images className="mr-2 h-4 w-4" />
+                                                    Manage My Artworks
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1560,8 +1316,7 @@ export default function ProfilePage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Collection</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this collection? This action cannot be
-                            undone.
+                            Are you sure you want to delete this collection? This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

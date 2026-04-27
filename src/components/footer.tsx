@@ -124,7 +124,7 @@ export function Footer() {
     }
 
     return (
-        <footer className="bg-white text-gray-900">
+        <footer className="w-full bg-white text-gray-900">
             {/* Main Footer Content */}
             <div className="mx-auto max-w-7xl px-4 py-8">
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
@@ -205,31 +205,35 @@ export function Footer() {
             </div>
 
             {/* Newsletter Section */}
-            <div className="border-gray-200 border-t">
-                <div className="mx-auto max-w-7xl px-4 py-6">
-                    <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
-                        <div className="text-center lg:text-left">
-                            <h3 className="mb-1 font-semibold text-base text-gray-900">
+            <div className="border-gray-200 border-t bg-gray-50/50">
+                <div className="mx-auto max-w-7xl px-4 py-10">
+                    <div className="flex flex-col items-center justify-between gap-8 lg:flex-row">
+                        <div className="max-w-xl text-center lg:text-left">
+                            <h3 className="mb-2 font-bold text-xl text-gray-900 md:text-2xl">
                                 Stay Updated with Artopia
                             </h3>
-                            <p className="text-gray-600 text-sm">
-                                Get the latest art news, new artist features, and exclusive offers.
+                            <p className="text-gray-600 text-sm md:text-base">
+                                Get the latest art news, new artist features, and exclusive offers
+                                delivered straight to your inbox.
                             </p>
                         </div>
-                        <form onSubmit={handleSubscribe} className="flex w-full max-w-md gap-2">
+                        <form
+                            onSubmit={handleSubscribe}
+                            className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:items-center sm:gap-1"
+                        >
                             <input
                                 type="email"
                                 placeholder="Enter your email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={isSubscribing}
-                                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 text-sm placeholder-gray-500 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="w-full flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 text-sm placeholder-gray-500 transition-all focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                                 required
                             />
                             <button
                                 type="submit"
                                 disabled={isSubscribing}
-                                className="rounded-lg bg-red-600 px-5 py-2 font-medium text-sm text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="w-full rounded-xl bg-red-600 px-6 py-3 font-semibold text-sm text-white shadow-lg shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-red-600/30 active:scale-95 focus:outline-none focus:ring-4 focus:ring-red-500/10 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto whitespace-nowrap"
                             >
                                 {isSubscribing ? "Subscribing..." : "Subscribe"}
                             </button>

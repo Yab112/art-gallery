@@ -131,11 +131,9 @@ const DualBarChart = ({
 
 // Simple pie chart component - Compact
 const SimplePieChart = ({
-    data,
-    title
+    data
 }: {
     data: Record<string, { count: number; amount: number }>
-    title: string
 }) => {
     const entries = Object.entries(data).filter(([_, value]) => value.count > 0)
 
@@ -216,14 +214,14 @@ export function TransactionGraphs() {
     return (
         <div className="space-y-4">
             {/* Period Selector - Compact */}
-            <div className="flex items-center justify-between border-gray-200 border-b pb-2">
-                <h3 className="font-semibold text-base text-gray-900">Analytics</h3>
-                <div className="flex gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-gray-200 border-b pb-2">
+                <h3 className="whitespace-nowrap font-semibold text-base text-gray-900">Analytics</h3>
+                <div className="flex flex-wrap items-center gap-1.5">
                     <Button
                         variant={period === "week" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setPeriod("week")}
-                        className={`h-7 px-2 text-xs ${period === "week" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                        className={`h-7 rounded-full px-3 text-xs ${period === "week" ? "bg-red-700 hover:bg-red-800" : ""}`}
                     >
                         Week
                     </Button>
@@ -231,7 +229,7 @@ export function TransactionGraphs() {
                         variant={period === "month" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setPeriod("month")}
-                        className={`h-7 px-2 text-xs ${period === "month" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                        className={`h-7 rounded-full px-3 text-xs ${period === "month" ? "bg-red-700 hover:bg-red-800" : ""}`}
                     >
                         Month
                     </Button>
@@ -239,7 +237,7 @@ export function TransactionGraphs() {
                         variant={period === "year" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setPeriod("year")}
-                        className={`h-7 px-2 text-xs ${period === "year" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                        className={`h-7 rounded-full px-3 text-xs ${period === "year" ? "bg-red-700 hover:bg-red-800" : ""}`}
                     >
                         Year
                     </Button>
@@ -280,11 +278,10 @@ export function TransactionGraphs() {
                         <p className="text-gray-600 text-xs">Net</p>
                     </div>
                     <p
-                        className={`font-bold text-lg ${
-                            (stats.totalCredits || 0) - (stats.totalDebits || 0) >= 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                        }`}
+                        className={`font-bold text-lg ${(stats.totalCredits || 0) - (stats.totalDebits || 0) >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                            }`}
                     >
                         $
                         {((stats.totalCredits || 0) - (stats.totalDebits || 0)).toLocaleString(
@@ -371,13 +368,13 @@ export function TransactionGraphs() {
                 {/* Transactions by Status */}
                 <div className="rounded-md border border-gray-200 bg-white p-4">
                     <h3 className="mb-3 font-semibold text-gray-900 text-sm">By Status</h3>
-                    <SimplePieChart data={stats.byStatus} title="" />
+                    <SimplePieChart data={stats.byStatus} />
                 </div>
 
                 {/* Transactions by Provider */}
                 <div className="rounded-md border border-gray-200 bg-white p-4">
                     <h3 className="mb-3 font-semibold text-gray-900 text-sm">By Provider</h3>
-                    <SimplePieChart data={stats.byProvider} title="" />
+                    <SimplePieChart data={stats.byProvider} />
                 </div>
 
                 {/* Transaction Count Over Time */}

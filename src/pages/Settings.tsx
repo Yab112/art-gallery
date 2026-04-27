@@ -241,22 +241,20 @@ export default function SettingsPage() {
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("profile")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                                            activeTab === "profile"
+                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "profile"
                                                 ? "bg-red-50 font-medium text-red-700"
                                                 : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <User className="h-5 w-5" />
                                         Profile
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("security")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                                            activeTab === "security"
+                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "security"
                                                 ? "bg-red-50 font-medium text-red-700"
                                                 : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <Shield className="h-5 w-5" />
                                         Security
@@ -269,33 +267,30 @@ export default function SettingsPage() {
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("earnings")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                                            activeTab === "earnings"
+                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "earnings"
                                                 ? "bg-red-50 font-medium text-red-700"
                                                 : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <DollarSign className="h-5 w-5" />
                                         Earnings
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("withdrawals")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                                            activeTab === "withdrawals"
+                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "withdrawals"
                                                 ? "bg-red-50 font-medium text-red-700"
                                                 : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <Wallet className="h-5 w-5" />
                                         Withdrawals
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("billing-payments")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                                            activeTab === "billing-payments"
+                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "billing-payments"
                                                 ? "bg-red-50 font-medium text-red-700"
                                                 : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <CreditCard className="h-5 w-5" />
                                         Billing & Payments
@@ -308,11 +303,10 @@ export default function SettingsPage() {
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("transactions")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                                            activeTab === "transactions"
+                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "transactions"
                                                 ? "bg-red-50 font-medium text-red-700"
                                                 : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <Receipt className="h-5 w-5" />
                                         Transactions
@@ -600,7 +594,7 @@ export default function SettingsPage() {
 
                             {/* Earnings Dashboard */}
                             {activeTab === "earnings" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
                                     <h2 className="mb-6 font-semibold text-gray-900 text-xl">
                                         Earnings Dashboard
                                     </h2>

@@ -9,7 +9,7 @@ import { CheckoutProvider, useCheckout } from "@/contexts/CheckoutContext"
 import { useCartItems } from "@/queries/cartQueries"
 import { useCreateOrder } from "@/services/order/useCreateOrder"
 import { useInitializePayment } from "@/services/payment/useInitializePayment"
-import { ArrowLeft, CreditCard, Shield, Truck } from "lucide-react"
+import { ArrowLeft, ClipboardCheck, CreditCard, Truck } from "lucide-react"
 import { useState } from "react"
 // import { StripeProvider } from "@/components/checkout/stripe-provider";
 import { Link } from "react-router-dom"
@@ -31,7 +31,7 @@ function CheckoutContent() {
     const steps = [
         { id: 1, name: "Shipping", icon: Truck },
         { id: 2, name: "Payment", icon: CreditCard },
-        { id: 3, name: "Review", icon: Shield }
+        { id: 3, name: "Review", icon: ClipboardCheck }
     ]
 
     const handleNext = () => {
@@ -200,16 +200,15 @@ function CheckoutContent() {
                 {/* Header */}
                 <div className="border-b bg-white">
                     <div className="mx-auto max-w-7xl px-4 py-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center">
                             <Link
                                 to="/buyart"
-                                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
+                                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900 text-sm sm:text-base"
                             >
                                 <ArrowLeft className="h-4 w-4" />
                                 <span>Continue Shopping</span>
                             </Link>
-                            <div className="font-bold text-2xl text-red-700">artopia</div>
-                            <div className="w-24" /> {/* Spacer for centering */}
+
                         </div>
                     </div>
                 </div>
@@ -217,36 +216,34 @@ function CheckoutContent() {
                 {/* Progress Steps */}
                 <div className="border-b bg-white">
                     <div className="mx-auto max-w-7xl px-4 py-6">
-                        <div className="flex items-center justify-center">
-                            <div className="flex items-center space-x-8">
+                        <div className="mx-auto w-full max-w-2xl">
+                            <div className="flex w-full items-center justify-between">
                                 {steps.map((step, index) => {
                                     const Icon = step.icon
                                     const isActive = currentStep === step.id
                                     const isCompleted = currentStep > step.id
 
                                     return (
-                                        <div key={step.id} className="flex items-center">
+                                        <div key={step.id} className="flex flex-1 items-center last:flex-none">
                                             <div className="flex items-center">
                                                 <div
-                                                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                                                        isActive
-                                                            ? "border-red-500 bg-red-500 text-white"
-                                                            : isCompleted
-                                                              ? "border-green-500 bg-green-500 text-white"
-                                                              : "border-gray-300 bg-white text-gray-500"
-                                                    }`}
-                                                >
-                                                    <Icon className="h-5 w-5" />
-                                                </div>
-                                                <div className="ml-3">
-                                                    <p
-                                                        className={`font-medium text-sm ${
-                                                            isActive
-                                                                ? "text-red-600"
-                                                                : isCompleted
-                                                                  ? "text-green-600"
-                                                                  : "text-gray-500"
+                                                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 sm:h-10 sm:w-10 ${isActive
+                                                        ? "border-gray-500 bg-gray-500 text-white"
+                                                        : isCompleted
+                                                            ? "border-green-500 bg-green-500 text-white"
+                                                            : "border-gray-200 bg-white text-gray-300"
                                                         }`}
+                                                >
+                                                    <Icon className="h-4 w-4 sm:h-5 w-5" />
+                                                </div>
+                                                <div className="ml-2 hidden sm:block md:ml-3">
+                                                    <p
+                                                        className={`font-medium text-xs sm:text-sm ${isActive
+                                                            ? "text-gray-700"
+                                                            : isCompleted
+                                                                ? "text-green-600"
+                                                                : "text-gray-400"
+                                                            }`}
                                                     >
                                                         {step.name}
                                                     </p>
@@ -254,9 +251,8 @@ function CheckoutContent() {
                                             </div>
                                             {index < steps.length - 1 && (
                                                 <div
-                                                    className={`ml-8 h-0.5 w-16 ${
-                                                        isCompleted ? "bg-green-500" : "bg-gray-300"
-                                                    }`}
+                                                    className={`mx-2 h-0.5 flex-1 sm:mx-4 md:mx-8 ${isCompleted ? "bg-green-500" : "bg-gray-200"
+                                                        }`}
                                                 />
                                             )}
                                         </div>
@@ -270,9 +266,16 @@ function CheckoutContent() {
                 {/* Main Content */}
                 <div className="mx-auto max-w-7xl px-4 py-8">
                     <div className="grid gap-8 lg:grid-cols-3">
-                        {/* Left Column - Checkout Form */}
-                        <div className="lg:col-span-2">
-                            <div className="rounded-lg border bg-white p-6">
+                        {/* Order Summary - Top on Mobile, Right on Desktop */}
+                        <div className="lg:order-2 lg:col-span-1">
+                            <div className="lg:sticky lg:top-6">
+                                <OrderSummary />
+                            </div>
+                        </div>
+
+                        {/* Checkout Form - Bottom on Mobile, Left on Desktop */}
+                        <div className="lg:order-1 lg:col-span-2">
+                            <div className="rounded-lg border bg-white p-4 sm:p-6">
                                 {currentStep === 1 && <ShippingInfo onNext={handleNext} />}
 
                                 {currentStep === 2 && (
@@ -347,7 +350,7 @@ function CheckoutContent() {
                                                                     Transfer)
                                                                 </>
                                                             ) : paymentData.provider ===
-                                                              "paypal" ? (
+                                                                "paypal" ? (
                                                                 <>PayPal</>
                                                             ) : (
                                                                 <>Credit/Debit Card</>
@@ -419,11 +422,6 @@ function CheckoutContent() {
                                     </div>
                                 )}
                             </div>
-                        </div>
-
-                        {/* Right Column - Order Summary */}
-                        <div className="lg:col-span-1">
-                            <OrderSummary />
                         </div>
                     </div>
                 </div>

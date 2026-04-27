@@ -15,8 +15,8 @@ export const artworkKeys = {
     details: () => [...artworkKeys.all, "detail"] as const,
     detail: (id: string) => [...artworkKeys.details(), id] as const,
     myArtworks: () => [...artworkKeys.all, "my-artworks"] as const,
-    myArtworksList: (page?: number, limit?: number) =>
-        [...artworkKeys.myArtworks(), page, limit] as const
+    myArtworksList: (page?: number, limit?: number, params?: any) =>
+        [...artworkKeys.myArtworks(), page, limit, params] as const
 }
 
 export const favoriteKeys = {

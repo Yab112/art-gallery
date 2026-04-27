@@ -23,10 +23,10 @@ export function FeaturesSection() {
         <div className="bg-gray-50 py-16 lg:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="mb-16 text-center">
-                    <h2 className="mb-4 font-bold text-3xl text-gray-900 lg:text-4xl">
+                    <h2 className="mb-4 font-bold text-2xl text-gray-900 lg:text-4xl">
                         Why Choose Artopia?
                     </h2>
-                    <p className="text-gray-600 text-xl">
+                    <p className="text-base text-gray-500 lg:text-lg">
                         We're more than just a marketplace - we're your partner in building a
                         meaningful art collection
                     </p>
@@ -40,10 +40,10 @@ export function FeaturesSection() {
                                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                                     <Icon className="h-8 w-8 text-red-600" />
                                 </div>
-                                <h3 className="mb-2 font-semibold text-gray-900 text-xl">
+                                <h3 className="mb-2 font-semibold text-gray-900 text-lg lg:text-xl">
                                     {feature.title}
                                 </h3>
-                                <p className="text-gray-600">{feature.description}</p>
+                                <p className="text-gray-500 text-sm">{feature.description}</p>
                             </div>
                         )
                     })}

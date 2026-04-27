@@ -11,21 +11,21 @@ export const useArtworks = (
 ) => {
     const queryString = params
         ? (() => {
-              const searchParams = new URLSearchParams()
-              Object.entries(params).forEach(([key, value]) => {
-                  if (value !== undefined && value !== null) {
-                      if (Array.isArray(value)) {
-                          // For arrays, add each item as a separate query param (NestJS will parse as array)
-                          value.forEach((item) => {
-                              searchParams.append(key, String(item))
-                          })
-                      } else {
-                          searchParams.append(key, String(value))
-                      }
-                  }
-              })
-              return searchParams.toString()
-          })()
+            const searchParams = new URLSearchParams()
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    if (Array.isArray(value)) {
+                        // For arrays, add each item as a separate query param (NestJS will parse as array)
+                        value.forEach((item) => {
+                            searchParams.append(key, String(item))
+                        })
+                    } else {
+                        searchParams.append(key, String(value))
+                    }
+                }
+            })
+            return searchParams.toString()
+        })()
         : ""
 
     const axiosAuth = useAxiosAuth()
@@ -84,11 +84,66 @@ export const useArtwork = (id: string) => {
     )
 }
 
-export const useMyArtworks = (page = 1, limit = 10) => {
-    return useFetchData<ArtworkListResponse>(
-        artworkKeys.myArtworksList(page, limit),
-        `artworks/my-artworks?page=${page}&limit=${limit}`
-    )
+export const useMyArtworks = (params?: {
+    page?: number
+    limit?: number
+    status?: string
+    technique?: string
+    sortBy?: string
+    orderBy?: string
+}) => {
+    const axiosAuth = useAxiosAuth()
+
+    // Build query string from all params
+    const queryString = params
+        ? (() => {
+            const searchParams = new URLSearchParams()
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    searchParams.append(key, String(value))
+                }
+            })
+            return searchParams.toString()
+        })()
+        : `page=1&limit=10`
+
+    return useQuery<ArtworkListResponse>({
+        queryKey: artworkKeys.myArtworksList(params?.page || 1, params?.limit || 10, params),
+        queryFn: async () => {
+            const response = await axiosAuth.get<{
+                artworks: any[]
+                pagination?: {
+                    page: number
+                    limit: number
+                    total: number
+                    pages: number
+                }
+            }>(`artworks/my-artworks?${queryString}`)
+
+            const data = response.data
+            if (data.pagination) {
+                return {
+                    success: true,
+                    artworks: data.artworks || [],
+                    page: data.pagination.page,
+                    limit: data.pagination.limit,
+                    total: data.pagination.total,
+                    pages: data.pagination.pages
+                }
+            }
+
+            return {
+                success: true,
+                artworks: data.artworks || [],
+                page: params?.page || 1,
+                limit: params?.limit || 10,
+                total: data.artworks?.length || 0,
+                pages: 1
+            }
+        },
+        placeholderData: keepPreviousData,
+        staleTime: 5 * 60 * 1000
+    })
 }
 
 /**

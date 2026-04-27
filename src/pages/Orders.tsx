@@ -114,20 +114,21 @@ export default function OrdersPage() {
                                         className="rounded-lg border border-gray-200 transition-colors hover:border-gray-300"
                                     >
                                         {/* Order Header - Compact */}
-                                        <div className="flex items-center justify-between border-gray-100 border-b bg-gray-50/50 px-4 py-3">
-                                            <div className="flex items-center gap-3 text-sm">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-gray-100 border-b bg-gray-50/50 px-4 py-3 gap-3 sm:gap-0">
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                                                 <span className={`font-medium ${status.color}`}>
                                                     {status.label}
                                                 </span>
-                                                <span className="text-gray-400">•</span>
+                                                <span className="hidden sm:inline text-gray-400">•</span>
                                                 <span className="text-gray-500">{orderDate}</span>
-                                                <span className="text-gray-400">•</span>
-                                                <span className="font-mono text-gray-500 text-xs">
+                                                <span className="hidden sm:inline text-gray-400">•</span>
+                                                <span className="font-mono text-gray-400 text-[10px] sm:text-xs">
                                                     #{order.id.slice(0, 8).toUpperCase()}
                                                 </span>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="font-semibold text-base text-gray-900">
+                                            <div className="flex items-center justify-between sm:block">
+                                                <span className="sm:hidden text-gray-500 text-xs font-medium uppercase tracking-wider">Total</span>
+                                                <p className="font-bold text-lg sm:text-base text-gray-900">
                                                     $
                                                     {totalAmount.toLocaleString("en-US", {
                                                         minimumFractionDigits: 2,
@@ -190,11 +191,11 @@ export default function OrdersPage() {
                                                         </div>
 
                                                         {/* Quantity and Price - Compact */}
-                                                        <div className="flex items-center gap-4 text-gray-600 text-sm">
-                                                            <span className="text-xs">
+                                                        <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-6 text-gray-600">
+                                                            <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-tight">
                                                                 Qty: {item.quantity}
                                                             </span>
-                                                            <span className="font-medium text-gray-900">
+                                                            <span className="font-semibold text-gray-900 text-sm sm:text-base">
                                                                 $
                                                                 {itemTotal.toLocaleString("en-US", {
                                                                     minimumFractionDigits: 2,

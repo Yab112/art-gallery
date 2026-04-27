@@ -276,7 +276,7 @@ export function WithdrawalSection() {
         <div className="space-y-6">
             {/* Available Balance */}
             <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div>
                         <p className="mb-1 font-medium text-red-700 text-sm">Available Balance</p>
                         <p className="font-bold text-3xl text-red-900">
@@ -287,7 +287,7 @@ export function WithdrawalSection() {
                             })}
                         </p>
                     </div>
-                    <div className="group relative inline-block">
+                    <div className="group relative inline-block w-full sm:w-auto">
                         <Dialog
                             open={isDialogOpen}
                             onOpenChange={(open) => {
@@ -301,7 +301,7 @@ export function WithdrawalSection() {
                         >
                             <DialogTrigger asChild>
                                 <Button
-                                    className="bg-red-700 text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:opacity-70 disabled:hover:bg-gray-400"
+                                    className="w-full bg-red-700 text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:opacity-70 disabled:hover:bg-gray-400 sm:w-auto"
                                     disabled={hasPendingWithdrawals}
                                 >
                                     <Plus className="mr-2 h-4 w-4" />
@@ -388,7 +388,7 @@ export function WithdrawalSection() {
                                                 : "Enter your PayPal email address or IBAN where you want to receive the payment"}
                                         </p>
                                     </div>
-                                    <div className="flex justify-end gap-2">
+                                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -398,13 +398,14 @@ export function WithdrawalSection() {
                                                 setIban("")
                                                 setUseManualIban(false)
                                             }}
+                                            className="w-full sm:w-auto"
                                         >
                                             Cancel
                                         </Button>
                                         <Button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="bg-red-700 hover:bg-red-800"
+                                            className="w-full bg-red-700 hover:bg-red-800 sm:w-auto"
                                         >
                                             {isSubmitting ? "Submitting..." : "Submit Request"}
                                         </Button>
@@ -431,14 +432,14 @@ export function WithdrawalSection() {
 
             {/* Withdrawal History */}
             <div>
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
                     <h3 className="font-semibold text-gray-900 text-lg">Withdrawal History</h3>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => refetchWithdrawals()}
                         disabled={isLoadingWithdrawals}
-                        className="flex items-center gap-2"
+                        className="flex w-full items-center justify-center gap-2 sm:w-auto"
                     >
                         <RefreshCw
                             className={`h-4 w-4 ${isLoadingWithdrawals ? "animate-spin" : ""}`}
@@ -466,7 +467,7 @@ export function WithdrawalSection() {
                                         key={withdrawal.id}
                                         className="rounded-lg border border-gray-200 bg-white p-4"
                                     >
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                                             <div className="flex flex-1 items-center gap-3">
                                                 {getStatusIcon(
                                                     withdrawal.paypalStatus || withdrawal.status
@@ -506,20 +507,19 @@ export function WithdrawalSection() {
                                                 {/* Display PayPal status if available, otherwise show system status */}
                                                 {withdrawal.paypalStatus ? (
                                                     <span
-                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${
-                                                            withdrawal.paypalStatus === "SUCCESS" ||
+                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${withdrawal.paypalStatus === "SUCCESS" ||
                                                             withdrawal.paypalStatus === "COMPLETED"
-                                                                ? "bg-green-50 text-green-600"
+                                                            ? "bg-green-50 text-green-600"
+                                                            : withdrawal.paypalStatus ===
+                                                                "UNCLAIMED"
+                                                                ? "bg-yellow-50 text-yellow-600"
                                                                 : withdrawal.paypalStatus ===
-                                                                    "UNCLAIMED"
-                                                                  ? "bg-yellow-50 text-yellow-600"
-                                                                  : withdrawal.paypalStatus ===
-                                                                          "FAILED" ||
-                                                                      withdrawal.paypalStatus ===
-                                                                          "DENIED"
+                                                                    "FAILED" ||
+                                                                    withdrawal.paypalStatus ===
+                                                                    "DENIED"
                                                                     ? "bg-red-50 text-red-600"
                                                                     : "bg-blue-50 text-blue-600"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {withdrawal.paypalStatus}
                                                     </span>
@@ -592,9 +592,9 @@ export function WithdrawalSection() {
                                     currentPage={pagination.page || page}
                                     totalPages={Math.max(
                                         pagination.pages ||
-                                            Math.ceil(
-                                                (pagination.total || withdrawals.length) / limit
-                                            ),
+                                        Math.ceil(
+                                            (pagination.total || withdrawals.length) / limit
+                                        ),
                                         1
                                     )}
                                     onPageChange={handlePageChange}

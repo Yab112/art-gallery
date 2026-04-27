@@ -16,7 +16,7 @@ interface ArtworkCardProps {
     artist: string
     price: string
     year?: string
-    medium: string
+    medium?: string
     dimensions: string
     seller: string
     status?: string
@@ -184,7 +184,7 @@ export function ArtworkCard({
                         src={image}
                         alt={`${title} by ${artist}`}
                         className={cn(
-                            "h-full w-full object-cover transition-transform duration-300 ease-in-out",
+                            "block h-full w-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
                             isSold && "grayscale"
                         )}
                         style={{
@@ -197,19 +197,17 @@ export function ArtworkCard({
                 {/* Overlay background on hover (only when favorite button shown) */}
                 {showFavorite && (
                     <div
-                        className={`pointer-events-none absolute inset-0 cursor-pointer transition-all duration-500 ease-in-out ${
-                            isHovered ? "bg-black/60 opacity-100" : "bg-black/0 opacity-0"
-                        }`}
+                        className={`pointer-events-none absolute inset-0 cursor-pointer transition-all duration-500 ease-in-out ${isHovered ? "bg-black/60 opacity-100" : "bg-black/0 opacity-0"
+                            }`}
                     />
                 )}
                 {/* Hover Buttons - slide down from top (hidden for guests) */}
                 {showFavorite && (
                     <div
-                        className={`absolute top-24 right-0 left-0 z-10 flex cursor-pointer justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${
-                            isHovered
-                                ? "pointer-events-auto translate-y-10 opacity-100"
-                                : "-translate-y-full pointer-events-none opacity-0"
-                        }`}
+                        className={`absolute top-24 right-0 left-0 z-10 flex cursor-pointer justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${isHovered
+                            ? "pointer-events-auto translate-y-10 opacity-100"
+                            : "-translate-y-full pointer-events-none opacity-0"
+                            }`}
                     >
                         <Button
                             size="sm"
@@ -233,7 +231,7 @@ export function ArtworkCard({
                 </p>
                 <p className="font-bold text-lg">{price}</p>
                 <p className="text-gray-600 text-sm">
-                    {medium} ({dimensions})
+                    {medium && `${medium} `}({dimensions})
                 </p>
                 <p className="text-gray-500 text-sm">Seller: {seller}</p>
             </div>

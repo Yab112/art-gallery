@@ -10,6 +10,7 @@ export default function VerifyEmailPage() {
     const [isResending, setIsResending] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
+    const [isVerified, setIsVerified] = useState(false)
     const [resendTimer, setResendTimer] = useState(0)
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
@@ -27,6 +28,45 @@ export default function VerifyEmailPage() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, email])
+
+    // Detect if user has been verified in another tab
+    useEffect(() => {
+        if (token) return // Only poll if we are waiting for verification
+
+        const interval = setInterval(async () => {
+            try {
+                // Use cache busting and explicit no-cache to ensure we detect the session from the other tab
+                const response = await fetch(`/api/auth/get-session?t=${Date.now()}`, {
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: {
+                        Accept: "application/json",
+                        "Cache-Control": "no-cache",
+                        Pragma: "no-cache"
+                    }
+                })
+
+                if (response.ok) {
+                    const data = await response.json()
+                    // Better-auth returns { user, session } or null
+                    const user = data?.user || data?.session?.user
+
+                    if (user?.emailVerified) {
+                        clearInterval(interval)
+                        setIsVerified(true)
+                        // Wait a bit to show success message then redirect
+                        setTimeout(() => {
+                            navigate("/", { replace: true })
+                        }, 2000)
+                    }
+                }
+            } catch (err) {
+                // Silently ignore session check errors
+            }
+        }, 3000)
+
+        return () => clearInterval(interval)
+    }, [token, email, navigate])
 
     const handleVerifyWithToken = async (verificationToken: string) => {
         setIsLoading(true)
@@ -130,7 +170,7 @@ export default function VerifyEmailPage() {
         }
     }
 
-    if (success && token) {
+    if ((success && token) || isVerified) {
         return (
             <AuthLayout>
                 <div className="w-full space-y-6 text-center">
@@ -142,11 +182,11 @@ export default function VerifyEmailPage() {
                     <div className="space-y-2">
                         <h1 className="font-bold text-3xl text-gray-900">Email Verified!</h1>
                         <p className="text-gray-500">
-                            Your email has been verified successfully. You can now log in to your
-                            account.
+                            Your email has been verified successfully. You are now being
+                            automatically signed in.
                         </p>
                     </div>
-                    <div className="text-gray-600 text-sm">Redirecting to login...</div>
+                    <div className="text-gray-600 text-sm">Redirecting to home...</div>
                 </div>
             </AuthLayout>
         )

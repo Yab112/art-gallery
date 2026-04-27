@@ -11,7 +11,14 @@ import { useGetCategories } from "@/services/category/useGetCategories"
 import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkToCollection"
 import { useAddFavorite } from "@/services/favorites/useAddFavorite"
 import { useQueryClient } from "@tanstack/react-query"
-import { CheckSquare, Loader2, Palette, Plus, Square } from "lucide-react"
+import { CheckSquare, Loader2, Palette, Plus, Square, Grid, List } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -39,8 +46,12 @@ export default function ArtMarketplace() {
     const page = Number.parseInt(searchParams.get("page") || "1", 10)
     const sortBy = searchParams.get("sort") || "recommended"
     const priceRange = searchParams.get("priceRange") || "price"
-    const medium = searchParams.get("medium") || "medium"
-    const rarity = searchParams.get("rarity") || "rarity"
+    const mediumParam = searchParams.get("medium") || ""
+    const medium = mediumParam ? mediumParam.split(",") : []
+    const originParam = searchParams.get("origin") || ""
+    const origin = originParam ? originParam.split(",") : []
+    const conditionParam = searchParams.get("condition") || ""
+    const condition = conditionParam ? conditionParam.split(",") : []
 
     // Get category from URL - can be slug (from mega menu) or IDs (from filters)
     const categorySlug = searchParams.get("category") || ""
@@ -48,6 +59,14 @@ export default function ArtMarketplace() {
     const selectedCategoryIds = categoryParam
         ? categoryParam.split(",").filter((id) => id.trim() !== "")
         : []
+
+    const hasActiveFilters =
+        searchQuery !== "" ||
+        priceRange !== "price" ||
+        medium.length > 0 ||
+        origin.length > 0 ||
+        condition.length > 0 ||
+        selectedCategoryIds.length > 0
 
     // Update URL query params
     const updateSearchParams = (updates: Record<string, string | number | string[] | null>) => {
@@ -58,8 +77,7 @@ export default function ArtMarketplace() {
                 value === "" ||
                 (Array.isArray(value) && value.length === 0) ||
                 value === "price" ||
-                value === "medium" ||
-                value === "rarity"
+                (typeof value === "string" && (value === "medium" || value === "origin" || value === "condition"))
             ) {
                 newParams.delete(key)
             } else if (Array.isArray(value)) {
@@ -92,12 +110,24 @@ export default function ArtMarketplace() {
         })
     }
 
-    const setMedium = (value: string) => {
-        updateSearchParams({ medium: value === "medium" ? null : value, page: 1 })
+    const setMedium = (values: string[]) => {
+        updateSearchParams({ medium: values.length > 0 ? values : null, page: 1 })
     }
 
-    const setRarity = (value: string) => {
-        updateSearchParams({ rarity: value === "rarity" ? null : value, page: 1 })
+    const setOrigin = (values: string[]) => {
+        updateSearchParams({ origin: values.length > 0 ? values : null, page: 1 })
+    }
+
+    const setCondition = (values: string[]) => {
+        updateSearchParams({ condition: values.length > 0 ? values : null, page: 1 })
+    }
+
+    const setCategoryIds = (ids: string[]) => {
+        updateSearchParams({ categories: ids.length > 0 ? ids : null, page: 1 })
+    }
+
+    const clearAllFilters = () => {
+        setSearchParams(new URLSearchParams(), { replace: true })
     }
 
     // Fetch categories from backend
@@ -197,9 +227,17 @@ export default function ArtMarketplace() {
                 break
         }
 
-        // Map medium filter to support (removed technique, using support instead)
-        if (medium !== "medium" && medium) {
+        // Map multi-select filters
+        if (medium.length > 0) {
             params.support = medium
+        }
+
+        if (origin.length > 0) {
+            params.origin = origin
+        }
+
+        if (condition.length > 0) {
+            params.state = condition
         }
 
         return params
@@ -209,11 +247,12 @@ export default function ArtMarketplace() {
     const {
         data: filteredArtworksData,
         isLoading: isLoadingFilteredArtworks,
+        isFetching: isFetchingFilteredArtworks,
         error: filteredArtworksError
     } = useArtworks(buildQueryParams())
 
     const artworksData = filteredArtworksData
-    const isLoading = isLoadingFilteredArtworks
+    const isLoading = isLoadingFilteredArtworks || isFetchingFilteredArtworks
     const error = filteredArtworksError
 
     const { addFavorite } = useAddFavorite()
@@ -356,162 +395,183 @@ export default function ArtMarketplace() {
                     selectedCategoryIds={selectedCategoryIds}
                 />
             ) : null}
-
-            {/* Artworks Header Section */}
-            <div className="px-4 py-6">
-                <div className="mx-auto max-w-7xl">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
-                                <Palette className="h-4 w-4 text-red-700" />
-                            </div>
-                            <div>
-                                <h1 className="font-bold text-3xl text-gray-900">Artworks</h1>
-                                <p className="mt-0.5 text-gray-500 text-xs">
-                                    {artworksData?.total || 0}{" "}
-                                    {artworksData?.total === 1 ? "artwork" : "artworks"}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {user && (
-                                <Button
-                                    variant="outline"
-                                    onClick={() => navigate("/profile/my-artworks")}
-                                    className="flex items-center gap-2 rounded-full"
-                                >
-                                    <Palette className="h-4 w-4" />
-                                    My Artworks
-                                </Button>
-                            )}
-                            <Button
-                                onClick={() => navigate("/sellart")}
-                                className="flex items-center gap-2 rounded-full bg-red-700 text-white hover:bg-red-800"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Create Artwork
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <SearchFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                artworkCount={artworksData?.total || 0}
-                sortBy={sortBy}
-                onSortChange={setSortBy}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                medium={medium}
-                onMediumChange={setMedium}
-                rarity={rarity}
-                onRarityChange={setRarity}
-            />
-
-            {/* Selection Mode Banner */}
-            {isSelectionMode && (
-                <div className="sticky top-[73px] z-40 border-blue-200 border-b bg-blue-50 px-4 py-3">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                {selectedArtworkIds.size > 0 ? (
-                                    <CheckSquare className="h-5 w-5 text-blue-600" />
-                                ) : (
-                                    <Square className="h-5 w-5 text-blue-600" />
-                                )}
-                                <span className="font-medium text-blue-900 text-sm">
-                                    {selectedArtworkIds.size} artwork
-                                    {selectedArtworkIds.size !== 1 ? "s" : ""} selected
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    const newParams = new URLSearchParams(searchParams)
-                                    newParams.delete("addToCollection")
-                                    setSearchParams(newParams)
-                                    setSelectedArtworkIds(new Set())
-                                }}
-                                className="text-xs"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={handleAddToCollection}
-                                disabled={selectedArtworkIds.size === 0 || isAdding}
-                                className="text-xs"
-                            >
-                                {isAdding ? (
-                                    <>
-                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                        Adding...
-                                    </>
-                                ) : (
-                                    `Add to Collection (${selectedArtworkIds.size})`
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div ref={artworksSectionRef} className="min-h-[500px]">
-                {isLoading ? (
-                    <div className="px-4 py-8">
-                        <div className="mx-auto max-w-7xl">
-                            {/* Skeleton loader matching grid layout */}
-                            <div
-                                className={
-                                    viewMode === "grid"
-                                        ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                                        : "space-y-4"
-                                }
-                            >
-                                {[...Array(4)].map((_, i) => (
-                                    <div key={i} className="animate-pulse">
-                                        <div className="mb-3 aspect-[4/5] rounded-lg bg-gray-200" />
-                                        <div className="mb-2 h-4 w-3/4 rounded bg-gray-200" />
-                                        <div className="mb-1 h-3 w-1/2 rounded bg-gray-200" />
-                                        <div className="h-3 w-1/3 rounded bg-gray-200" />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                ) : error ? (
-                    <div className="flex min-h-[500px] items-center justify-center py-12">
-                        <p className="text-red-600">Failed to load artworks. Please try again.</p>
-                    </div>
-                ) : artworks.length > 0 ? (
-                    <ArtworkGrid
-                        artworks={artworks}
+            {/* Main Content Area */}
+            <div className="mx-auto max-w-7xl px-4 py-8">
+                <div className="flex flex-col gap-10 lg:flex-row">
+                    {/* LEFT SIDEBAR - FILTERS */}
+                    <SearchFilters
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
                         viewMode={viewMode}
-                        onFavorite={handleFavorite}
-                        currentPage={artworksData?.page ?? page ?? 1}
-                        totalPages={Math.max(artworksData?.pages ?? 1, 1)}
-                        onPageChange={handlePageChange}
-                        isSelectionMode={isSelectionMode}
-                        selectedArtworkIds={selectedArtworkIds}
-                        onToggleSelection={handleToggleSelection}
+                        onViewModeChange={setViewMode}
+                        artworkCount={artworksData?.total || 0}
+                        sortBy={sortBy}
+                        onSortChange={setSortBy}
+                        priceRange={priceRange}
+                        onPriceRangeChange={setPriceRange}
+                        medium={medium}
+                        onMediumChange={setMedium}
+                        origin={origin}
+                        onOriginChange={setOrigin}
+                        condition={condition}
+                        onConditionChange={setCondition}
+                        categoryIds={selectedCategoryIds}
+                        onCategoryIdsChange={setCategoryIds}
+                        categoriesData={categoriesData}
+                        onClearAll={clearAllFilters}
                     />
-                ) : (
-                    <div className="min-h-[500px]">
-                        <ArtworkGrid
-                            artworks={[]}
-                            viewMode={viewMode}
-                            onFavorite={handleFavorite}
-                            hideFavorite={!user}
-                        />
+
+                    {/* RIGHT SIDE - ARTWORKS */}
+                    <div className="flex-1 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar lg:pr-4">
+                        {/* HEADER & TOOLBAR */}
+                        <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 sm:h-8 sm:w-8">
+                                    <Palette className="h-5 w-5 text-red-700 sm:h-4 sm:w-4" />
+                                </div>
+                                <div>
+                                    <h1 className="font-bold text-2xl text-gray-900 sm:text-3xl uppercase tracking-tight">Artworks</h1>
+                                    <div className="flex items-center gap-2 text-gray-500 text-xs">
+                                        <span className="font-semibold text-gray-900">{artworksData?.total || 0}</span>
+                                        <span>{artworksData?.total === 1 ? "Result" : "Results"}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* Sort Dropdown */}
+                                <Select
+                                    value={sortBy}
+                                    onValueChange={setSortBy}
+                                    {...({ modal: false } as any)}
+                                >
+                                    <SelectTrigger className="h-10 w-44 rounded-full border-gray-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-red-100">
+                                        <SelectValue placeholder="Sort by" />
+                                    </SelectTrigger>
+                                    <SelectContent position="popper" sideOffset={4} className="z-[100]">
+                                        <SelectItem value="recommended">Recommended</SelectItem>
+                                        <SelectItem value="price-low">Price: Low to High</SelectItem>
+                                        <SelectItem value="price-high">Price: High to Low</SelectItem>
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="oldest">Oldest First</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                {/* View Mode Toggles */}
+                                <div className="flex h-10 items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-2">
+                                    <Button
+                                        variant={viewMode === "grid" ? "default" : "ghost"}
+                                        size="sm"
+                                        onClick={() => setViewMode("grid")}
+                                        className={`h-8 w-9 rounded-full ${
+                                            viewMode === "grid" ? "bg-red-50 text-red-700 hover:bg-red-100" : "text-gray-500"
+                                        }`}
+                                    >
+                                        <Grid className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant={viewMode === "list" ? "default" : "ghost"}
+                                        size="sm"
+                                        onClick={() => setViewMode("list")}
+                                        className={`h-8 w-9 rounded-full ${
+                                            viewMode === "list" ? "bg-red-50 text-red-700 hover:bg-red-100" : "text-gray-500"
+                                        }`}
+                                    >
+                                        <List className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SELECTION MODE BANNER */}
+                        {isSelectionMode && (
+                            <div className="mb-6 rounded-2xl border-blue-200 border bg-blue-50/50 p-4 backdrop-blur-sm">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <CheckSquare className="h-5 w-5 text-blue-600" />
+                                        <span className="font-semibold text-blue-900 text-sm">
+                                            {selectedArtworkIds.size} selected
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                const newParams = new URLSearchParams(searchParams)
+                                                newParams.delete("addToCollection")
+                                                setSearchParams(newParams)
+                                                setSelectedArtworkIds(new Set())
+                                            }}
+                                            className="text-blue-700 hover:bg-blue-100"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={handleAddToCollection}
+                                            disabled={selectedArtworkIds.size === 0 || isAdding}
+                                            className="bg-blue-600 text-white hover:bg-blue-700"
+                                        >
+                                            {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Add to Collection
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div ref={artworksSectionRef} className="min-h-[600px]">
+                            {isLoading ? (
+                                <div
+                                    className={
+                                        viewMode === "grid"
+                                            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                                            : "space-y-6"
+                                    }
+                                >
+                                    {[...Array(6)].map((_, i) => (
+                                        <div key={i} className="animate-pulse">
+                                            <div className="mb-4 aspect-[4/5] rounded-2xl bg-gray-100" />
+                                            <div className="mb-2 h-4 w-3/4 rounded-full bg-gray-100" />
+                                            <div className="h-3 w-1/2 rounded-full bg-gray-50" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : error ? (
+                                <div className="flex h-[400px] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50/30 text-center">
+                                    <p className="font-medium text-gray-900">Something went wrong</p>
+                                    <p className="mt-1 text-gray-500 text-sm">Failed to load artworks. Please refresh.</p>
+                                    <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+                                        Retry
+                                    </Button>
+                                </div>
+                            ) : artworks.length > 0 ? (
+                                <ArtworkGrid
+                                    artworks={artworks}
+                                    viewMode={viewMode}
+                                    onFavorite={handleFavorite}
+                                    currentPage={artworksData?.page ?? page ?? 1}
+                                    totalPages={Math.max(artworksData?.pages ?? 1, 1)}
+                                    onPageChange={handlePageChange}
+                                    isSelectionMode={isSelectionMode}
+                                    selectedArtworkIds={selectedArtworkIds}
+                                    onToggleSelection={handleToggleSelection}
+                                />
+                            ) : (
+                                <div className="flex h-[400px] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50/30 text-center">
+                                    <p className="font-medium text-gray-900">No artworks found</p>
+                                    <p className="mt-1 text-gray-500 text-sm">Try adjusting your filters or search terms.</p>
+                                    {hasActiveFilters && (
+                                        <Button variant="link" className="mt-2 text-red-600" onClick={clearAllFilters}>
+                                            Clear all filters
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
 
             <CallToAction

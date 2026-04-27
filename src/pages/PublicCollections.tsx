@@ -111,11 +111,11 @@ export default function PublicCollectionsPage() {
     const collections = data?.collections || []
     const pagination = data
         ? {
-              page: data.page || 1,
-              limit: data.limit || limit,
-              total: data.total || 0,
-              pages: data.pages || 1
-          }
+            page: data.page || 1,
+            limit: data.limit || limit,
+            total: data.total || 0,
+            pages: data.pages || 1
+        }
         : { page: 1, limit, total: 0, pages: 1 }
 
     const hotCollections = hotCollectionsData?.collections || []
@@ -253,14 +253,14 @@ export default function PublicCollectionsPage() {
                         "engagementScore" in a && typeof a.engagementScore === "number"
                             ? a.engagementScore
                             : "artworkCount" in a && a.artworkCount !== undefined
-                              ? a.artworkCount
-                              : 0
+                                ? a.artworkCount
+                                : 0
                     const bEngagement =
                         "engagementScore" in b && typeof b.engagementScore === "number"
                             ? b.engagementScore
                             : "artworkCount" in b && b.artworkCount !== undefined
-                              ? b.artworkCount
-                              : 0
+                                ? b.artworkCount
+                                : 0
                     return bEngagement - aEngagement
                 default:
                     return 0
@@ -371,13 +371,13 @@ export default function PublicCollectionsPage() {
                 {/* Header */}
                 <div className="mb-3 rounded-md border border-gray-200 bg-white">
                     <div className="p-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center space-x-3">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
-                                    <FolderOpen className="h-4 w-4 text-red-700" />
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 sm:h-8 sm:w-8">
+                                    <FolderOpen className="h-5 w-5 text-red-700 sm:h-4 sm:w-4" />
                                 </div>
                                 <div>
-                                    <h1 className="font-bold text-3xl text-gray-900">
+                                    <h1 className="font-bold text-2xl text-gray-900 sm:text-3xl">
                                         Collections
                                     </h1>
                                     <p className="mt-0.5 text-gray-500 text-xs">
@@ -388,20 +388,20 @@ export default function PublicCollectionsPage() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                 {user && (
                                     <>
                                         <Button
                                             variant="outline"
                                             onClick={() => navigate("/profile/collections")}
-                                            className="flex items-center gap-2 rounded-full"
+                                            className="flex h-10 items-center justify-center gap-2 rounded-full px-6 text-sm"
                                         >
                                             <FolderOpen className="h-4 w-4" />
                                             My Collections
                                         </Button>
                                         <Button
                                             onClick={handleCreateCollectionClick}
-                                            className="flex items-center gap-2 rounded-full bg-red-700 text-white hover:bg-red-800"
+                                            className="flex h-10 items-center justify-center gap-2 rounded-full bg-red-700 px-6 text-sm text-white hover:bg-red-800"
                                         >
                                             <Plus className="h-4 w-4" />
                                             Create Collection
@@ -416,7 +416,7 @@ export default function PublicCollectionsPage() {
                                                 `/login?redirect=${encodeURIComponent("/collections")}`
                                             )
                                         }
-                                        className="flex items-center gap-2 rounded-full"
+                                        className="flex h-10 items-center justify-center gap-2 rounded-full px-6 text-sm"
                                     >
                                         Sign in to create a collection
                                     </Button>
@@ -433,7 +433,7 @@ export default function PublicCollectionsPage() {
                             <Flame className="h-5 w-5 text-red-700" />
                             <h2 className="font-semibold text-gray-900 text-xl">Hot Collections</h2>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                             {hotCollections.map((collection) => (
                                 <Link
                                     key={collection.id}
@@ -619,7 +619,7 @@ export default function PublicCollectionsPage() {
                     ) : (
                         <>
                             {viewMode === "grid" ? (
-                                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                                     {filteredCollections.map((collection) => (
                                         <Link
                                             key={collection.id}

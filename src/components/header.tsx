@@ -32,14 +32,14 @@ function Logo() {
     const [imageError, setImageError] = useState(false)
 
     if (imageError) {
-        return <span className="block font-bold text-4xl text-red-500 ">artopia</span>
+        return <span className="block font-bold text-2xl text-red-500 md:text-4xl">artopia</span>
     }
 
     return (
         <img
             src="/mainlogo.png"
             alt="Logo"
-            className="h-8 w-auto"
+            className="h-6 w-auto md:h-8"
             onError={() => setImageError(true)}
         />
     )
@@ -303,7 +303,7 @@ export default function Header() {
                             onClick={handleMobileMenuToggle}
                             className="md:hidden"
                         >
-                            <Menu className="h-5 w-5 text-gray-600" />
+                            <Menu className="h-6.5 w-6.5 text-gray-600" />
                         </Button>
 
                         {/* How it works link - hidden on mobile */}

@@ -18,14 +18,13 @@ export function AddPhotoBox({ onFileSelect, disabled = false }: AddPhotoBoxProps
     return (
         <label
             htmlFor="add-more-photos"
-            className={`flex aspect-square cursor-pointer flex-col items-center justify-center rounded border border-border bg-muted/30 shadow-sm transition-all hover:bg-muted/50 hover:shadow-md ${
-                disabled ? "cursor-not-allowed opacity-50" : ""
-            }`}
+            className={`group flex aspect-square cursor-pointer flex-col items-center justify-center rounded border border-border bg-muted/30 shadow-sm transition-all hover:bg-red-50/50 hover:border-red-200 hover:shadow-md ${disabled ? "cursor-not-allowed opacity-50" : ""
+                }`}
         >
-            <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-background shadow-sm">
-                <Plus className="h-8 w-8 text-muted-foreground" />
+            <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full border border-red-100 bg-red-50 shadow-sm group-hover:bg-red-100 transition-colors">
+                <Plus className="h-8 w-8 text-red-600" />
             </div>
-            <span className="font-medium text-muted-foreground text-xs">Add more</span>
+            <span className="font-semibold text-red-600 text-xs">Add more</span>
             <input
                 id="add-more-photos"
                 type="file"
