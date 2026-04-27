@@ -6,6 +6,8 @@
  * requests from going to localhost in production.
  */
 
+const DEFAULT_BACKEND_BASE_URL = "https://art-store-backend-x1bi.onrender.com"
+
 /**
  * Detects if the application is running in production
  * Uses Vite's built-in environment mode for reliable detection
@@ -19,7 +21,7 @@ const isProduction = (): boolean => {
  * Gets the API base URL with intelligent fallbacks
  * Priority:
  * 1. Environment variable (VITE_BETTER_AUTH_URL or VITE_SERVER_BASE_URL)
- * 2. In production: Use window.location.origin
+ * 2. In production: Use deployed backend URL
  * 3. In development: Use localhost with default port
  */
 export const getApiBaseUrl = (): string => {
@@ -30,9 +32,9 @@ export const getApiBaseUrl = (): string => {
         return envUrl
     }
 
-    // In production, default to same origin (the server should be serving the API)
+    // In production, default to deployed backend if env vars are missing.
     if (isProduction()) {
-        return window.location.origin
+        return DEFAULT_BACKEND_BASE_URL
     }
 
     // In development, use localhost with default backend port
