@@ -6,8 +6,6 @@
  * requests from going to localhost in production.
  */
 
-const DEFAULT_BACKEND_BASE_URL = "https://art-store-backend-x1bi.onrender.com"
-
 /**
  * Detects if the application is running in production
  * Uses Vite's built-in environment mode for reliable detection
@@ -20,9 +18,8 @@ const isProduction = (): boolean => {
 /**
  * Gets the API base URL with intelligent fallbacks
  * Priority:
- * 1. Environment variable (VITE_BETTER_AUTH_URL or VITE_SERVER_BASE_URL)
- * 2. In production: Use deployed backend URL
- * 3. In development: Use localhost with default port
+ * 1. Environment variable (VITE_BETTER_AUTH_URL)
+ * 2. Fallback to current origin (for Better Auth)
  */
 export const getApiBaseUrl = (): string => {
     const envUrl = import.meta.env.VITE_BETTER_AUTH_URL
@@ -32,24 +29,30 @@ export const getApiBaseUrl = (): string => {
         return envUrl
     }
 
-    // In production, default to deployed backend if env vars are missing.
-    if (isProduction()) {
-        return DEFAULT_BACKEND_BASE_URL
+    // Default to current origin for auth if not specified
+    if (typeof window !== "undefined") {
+        return window.location.origin
     }
 
-    // In development, use localhost with default backend port
-    return "http://localhost:3099"
+    return "http://localhost:5173" // Final fallback for SSR if needed
 }
 
 /**
  * Gets the server API base URL (with /api suffix)
+ * Priority:
+ * 1. Environment variable (VITE_SERVER_BASE_URL)
+ * 2. VITE_BACKEND_URL + /api (if defined)
+ * 3. Fallback based on getApiBaseUrl() + /api
  */
 export const getServerBaseUrl = (): string => {
     const envUrl = import.meta.env.VITE_SERVER_BASE_URL
-
-    // If env variable is set and valid, use it
     if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
         return envUrl
+    }
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL
+    if (backendUrl && typeof backendUrl === "string" && backendUrl.trim() !== "") {
+        return `${backendUrl}/api`
     }
 
     // Otherwise, append /api to the API base URL
@@ -68,7 +71,18 @@ export const getFrontendUrl = (): string => {
     }
 
     // Default to current origin
-    return window.location.origin
+    if (typeof window !== "undefined") {
+        return window.location.origin
+    }
+
+    return "http://localhost:5173"
+}
+
+/**
+ * Gets the Admin Dashboard URL
+ */
+export const getAdminUrl = (): string => {
+    return import.meta.env.VITE_ADMIN_URL || "http://localhost:3001"
 }
 
 // Log the configuration on initialization (development only)
@@ -77,6 +91,7 @@ if (import.meta.env.DEV) {
         apiBaseUrl: getApiBaseUrl(),
         serverBaseUrl: getServerBaseUrl(),
         frontendUrl: getFrontendUrl(),
+        adminUrl: getAdminUrl(),
         isProduction: isProduction()
     })
 }

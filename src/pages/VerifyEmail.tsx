@@ -31,7 +31,7 @@ export default function VerifyEmailPage() {
 
     // Detect if user has been verified in another tab
     useEffect(() => {
-        if (token) return // Only poll if we are waiting for verification
+        if (token || isVerified) return // Only poll if we are waiting for verification
 
         const interval = setInterval(async () => {
             try {
@@ -52,7 +52,6 @@ export default function VerifyEmailPage() {
                     const user = data?.user || data?.session?.user
 
                     if (user?.emailVerified) {
-                        clearInterval(interval)
                         setIsVerified(true)
                         // Wait a bit to show success message then redirect
                         setTimeout(() => {
@@ -63,10 +62,10 @@ export default function VerifyEmailPage() {
             } catch (err) {
                 // Silently ignore session check errors
             }
-        }, 3000)
+        }, 10000) // 10 seconds
 
         return () => clearInterval(interval)
-    }, [token, email, navigate])
+    }, [token, isVerified, navigate])
 
     const handleVerifyWithToken = async (verificationToken: string) => {
         setIsLoading(true)
