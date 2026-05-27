@@ -17,6 +17,7 @@ export interface Transaction {
     createdAt: string
     updatedAt: string
     provider: string | null
+    currency: string | null
     metadata: any
     type: "CREDIT" | "DEBIT"
     typeLabel: string

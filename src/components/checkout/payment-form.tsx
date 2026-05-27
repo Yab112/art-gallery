@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useCheckout } from "@/contexts/CheckoutContext"
 import { useGetPaymentMethodPreference } from "@/services/settings/usePaymentMethodPreference"
-import { CreditCard, Lock } from "lucide-react"
+import { Lock } from "lucide-react"
 import { useEffect, useState } from "react"
 // import { StripePayment } from "./stripe-payment";
 
@@ -19,98 +17,29 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
 
     // Use user's preferred payment method as default, fallback to paymentData or 'paypal'
     const defaultMethod = preference?.paymentMethodPreference || paymentData?.provider || "paypal"
-    const [paymentMethod, setPaymentMethod] = useState<"chapa" | "paypal" | "card">(
-        defaultMethod as "chapa" | "paypal" | "card"
+    const [paymentMethod, setPaymentMethod] = useState<"chapa" | "paypal">(
+        defaultMethod as "chapa" | "paypal"
     )
 
     // Update payment method when preference loads
     useEffect(() => {
         if (preference?.paymentMethodPreference && !paymentData?.provider) {
-            setPaymentMethod(preference.paymentMethodPreference as "chapa" | "paypal" | "card")
+            setPaymentMethod(preference.paymentMethodPreference as "chapa" | "paypal")
         }
     }, [preference, paymentData])
-    const [formData, setFormData] = useState({
-        cardNumber: "",
-        expiryDate: "",
-        cvv: "",
-        cardholderName: "",
-        billingAddress: "",
-        billingCity: "",
-        billingState: "",
-        billingZip: "",
-        sameAsShipping: true,
-        saveCard: false,
-        phoneNumber: ""
-    })
 
-    const [errors, setErrors] = useState<Record<string, string>>({})
 
-    const handleInputChange = (field: string, value: string | boolean) => {
-        setFormData((prev) => ({ ...prev, [field]: value }))
-        // Clear error when user starts typing
-        if (errors[field]) {
-            setErrors((prev) => ({ ...prev, [field]: "" }))
-        }
-    }
 
-    const formatCardNumber = (value: string) => {
-        // Remove all non-digits
-        const digits = value.replace(/\D/g, "")
-        // Add spaces every 4 digits
-        return digits.replace(/(\d{4})(?=\d)/g, "$1 ")
-    }
 
-    const formatExpiryDate = (value: string) => {
-        // Remove all non-digits
-        const digits = value.replace(/\D/g, "")
-        // Add slash after 2 digits
-        if (digits.length >= 2) {
-            return `${digits.substring(0, 2)}/${digits.substring(2, 4)}`
-        }
-        return digits
-    }
 
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {}
-
-        if (paymentMethod === "card") {
-            if (!formData.cardNumber.trim()) newErrors.cardNumber = "Card number is required"
-            else if (formData.cardNumber.replace(/\s/g, "").length < 16)
-                newErrors.cardNumber = "Card number must be 16 digits"
-
-            if (!formData.expiryDate.trim()) newErrors.expiryDate = "Expiry date is required"
-            else if (!/^\d{2}\/\d{2}$/.test(formData.expiryDate))
-                newErrors.expiryDate = "Expiry date must be MM/YY format"
-
-            if (!formData.cvv.trim()) newErrors.cvv = "CVV is required"
-            else if (formData.cvv.length < 3) newErrors.cvv = "CVV must be at least 3 digits"
-
-            if (!formData.cardholderName.trim())
-                newErrors.cardholderName = "Cardholder name is required"
-        }
-
-        if (!formData.sameAsShipping) {
-            if (!formData.billingAddress.trim())
-                newErrors.billingAddress = "Billing address is required"
-            if (!formData.billingCity.trim()) newErrors.billingCity = "Billing city is required"
-            if (!formData.billingState.trim()) newErrors.billingState = "Billing state is required"
-            if (!formData.billingZip.trim()) newErrors.billingZip = "Billing ZIP code is required"
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
-    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        if (validateForm()) {
-            // Save payment data to context
-            setPaymentData({
-                provider: paymentMethod as "chapa" | "paypal" | "card",
-                phoneNumber: formData.phoneNumber
-            })
-            onNext()
-        }
+        // Save payment data to context
+        setPaymentData({
+            provider: paymentMethod as "chapa" | "paypal",
+        })
+        onNext()
     }
 
     return (
@@ -135,7 +64,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                                 value="chapa"
                                 checked={paymentMethod === "chapa"}
                                 onChange={(e) =>
-                                    setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")
+                                    setPaymentMethod(e.target.value as "chapa" | "paypal")
                                 }
                                 className="h-4 w-4 flex-shrink-0 border-gray-300 text-red-600 focus:ring-red-500"
                             />
@@ -157,7 +86,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                                 value="paypal"
                                 checked={paymentMethod === "paypal"}
                                 onChange={(e) =>
-                                    setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")
+                                    setPaymentMethod(e.target.value as "chapa" | "paypal")
                                 }
                                 className="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500"
                             />
@@ -165,26 +94,7 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                                 PayPal (International)
                             </Label>
                         </div>
-                        <div className="flex items-center space-x-3">
-                            <input
-                                type="radio"
-                                id="card"
-                                name="paymentMethod"
-                                value="card"
-                                checked={paymentMethod === "card"}
-                                onChange={(e) =>
-                                    setPaymentMethod(e.target.value as "chapa" | "paypal" | "card")
-                                }
-                                className="h-4 w-4 flex-shrink-0 border-gray-300 text-red-600 focus:ring-red-500"
-                            />
-                            <Label
-                                htmlFor="card"
-                                className="flex cursor-pointer items-start gap-2 leading-tight"
-                            >
-                                <CreditCard className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                                <span>Credit or Debit Card</span>
-                            </Label>
-                        </div>
+
                     </div>
                 </div>
 
@@ -219,222 +129,10 @@ export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
                             </div>
                         </div>
 
-                        <div>
-                            <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
-                            <Input
-                                id="phoneNumber"
-                                type="tel"
-                                value={formData.phoneNumber}
-                                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                                placeholder="09XXXXXXXX or 07XXXXXXXX"
-                                className="bg-white"
-                            />
-                            <p className="mt-1 text-gray-500 text-xs">
-                                Providing your phone number helps speed up the payment process
-                            </p>
-                        </div>
                     </div>
                 )}
 
-                {paymentMethod === "card" && (
-                    <>
-                        {/* Card Information */}
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="cardNumber">Card Number *</Label>
-                                <Input
-                                    id="cardNumber"
-                                    value={formData.cardNumber}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            "cardNumber",
-                                            formatCardNumber(e.target.value)
-                                        )
-                                    }
-                                    placeholder="1234 5678 9012 3456"
-                                    maxLength={19}
-                                    className={errors.cardNumber ? "border-red-500" : ""}
-                                />
-                                {errors.cardNumber && (
-                                    <p className="mt-1 text-red-500 text-sm">{errors.cardNumber}</p>
-                                )}
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="expiryDate">Expiry Date *</Label>
-                                    <Input
-                                        id="expiryDate"
-                                        value={formData.expiryDate}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "expiryDate",
-                                                formatExpiryDate(e.target.value)
-                                            )
-                                        }
-                                        placeholder="MM/YY"
-                                        maxLength={5}
-                                        className={errors.expiryDate ? "border-red-500" : ""}
-                                    />
-                                    {errors.expiryDate && (
-                                        <p className="mt-1 text-red-500 text-sm">
-                                            {errors.expiryDate}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <Label htmlFor="cvv">CVV *</Label>
-                                    <Input
-                                        id="cvv"
-                                        value={formData.cvv}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "cvv",
-                                                e.target.value.replace(/\D/g, "")
-                                            )
-                                        }
-                                        placeholder="123"
-                                        maxLength={4}
-                                        className={errors.cvv ? "border-red-500" : ""}
-                                    />
-                                    {errors.cvv && (
-                                        <p className="mt-1 text-red-500 text-sm">{errors.cvv}</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label htmlFor="cardholderName">Cardholder Name *</Label>
-                                <Input
-                                    id="cardholderName"
-                                    value={formData.cardholderName}
-                                    onChange={(e) =>
-                                        handleInputChange("cardholderName", e.target.value)
-                                    }
-                                    placeholder="John Doe"
-                                    className={errors.cardholderName ? "border-red-500" : ""}
-                                />
-                                {errors.cardholderName && (
-                                    <p className="mt-1 text-red-500 text-sm">
-                                        {errors.cardholderName}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Billing Address */}
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="sameAsShipping"
-                                    checked={formData.sameAsShipping}
-                                    onCheckedChange={(checked) =>
-                                        handleInputChange("sameAsShipping", checked as boolean)
-                                    }
-                                />
-                                <Label htmlFor="sameAsShipping" className="text-sm">
-                                    Billing address same as shipping address
-                                </Label>
-                            </div>
-
-                            {!formData.sameAsShipping && (
-                                <div className="space-y-4 border-gray-200 border-l-2 pl-6">
-                                    <div>
-                                        <Label htmlFor="billingAddress">Billing Address *</Label>
-                                        <Input
-                                            id="billingAddress"
-                                            value={formData.billingAddress}
-                                            onChange={(e) =>
-                                                handleInputChange("billingAddress", e.target.value)
-                                            }
-                                            className={
-                                                errors.billingAddress ? "border-red-500" : ""
-                                            }
-                                        />
-                                        {errors.billingAddress && (
-                                            <p className="mt-1 text-red-500 text-sm">
-                                                {errors.billingAddress}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="billingCity">City *</Label>
-                                            <Input
-                                                id="billingCity"
-                                                value={formData.billingCity}
-                                                onChange={(e) =>
-                                                    handleInputChange("billingCity", e.target.value)
-                                                }
-                                                className={
-                                                    errors.billingCity ? "border-red-500" : ""
-                                                }
-                                            />
-                                            {errors.billingCity && (
-                                                <p className="mt-1 text-red-500 text-sm">
-                                                    {errors.billingCity}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="billingState">State *</Label>
-                                            <Input
-                                                id="billingState"
-                                                value={formData.billingState}
-                                                onChange={(e) =>
-                                                    handleInputChange(
-                                                        "billingState",
-                                                        e.target.value
-                                                    )
-                                                }
-                                                className={
-                                                    errors.billingState ? "border-red-500" : ""
-                                                }
-                                            />
-                                            {errors.billingState && (
-                                                <p className="mt-1 text-red-500 text-sm">
-                                                    {errors.billingState}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="billingZip">ZIP Code *</Label>
-                                        <Input
-                                            id="billingZip"
-                                            value={formData.billingZip}
-                                            onChange={(e) =>
-                                                handleInputChange("billingZip", e.target.value)
-                                            }
-                                            className={errors.billingZip ? "border-red-500" : ""}
-                                        />
-                                        {errors.billingZip && (
-                                            <p className="mt-1 text-red-500 text-sm">
-                                                {errors.billingZip}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Save Card Checkbox */}
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="saveCard"
-                                checked={formData.saveCard}
-                                onCheckedChange={(checked) =>
-                                    handleInputChange("saveCard", checked as boolean)
-                                }
-                            />
-                            <Label htmlFor="saveCard" className="text-gray-600 text-sm">
-                                Save this card for future purchases
-                            </Label>
-                        </div>
-                    </>
-                )}
 
                 {paymentMethod === "paypal" && (
                     <div className="space-y-4">

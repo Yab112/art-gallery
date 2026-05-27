@@ -9,7 +9,6 @@ export interface InitializePaymentParams {
     email: string
     firstName?: string
     lastName?: string
-    phoneNumber?: string
     orderId?: string
     txRef: string
 }

@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/use-auth"
 import { Heart, LogIn, LogOut, Settings, ShoppingBag, User, UserPlus } from "lucide-react"
+import { usePlatformSettings } from "@/queries/settingsQueries"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthLayout } from "./auth/auth-layout"
@@ -15,6 +16,7 @@ interface UserDropdownProps {
 export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
     // Use custom auth hook for easier access
     const { user, isAuthenticated, isLoading, logout } = useAuth()
+    const { data: platformSettings } = usePlatformSettings()
     const navigate = useNavigate()
     const isLoggedIn = isAuthenticated
     const [isOpen, setIsOpen] = useState(false)
@@ -204,7 +206,7 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                             <>
                                 {/* Not Logged In */}
                                 <div className="border-gray-100 border-b px-4 py-3">
-                                    <p className="text-gray-600 text-sm">Welcome to Artopia</p>
+                                    <p className="text-gray-600 text-sm">Welcome to {platformSettings?.settings?.siteName}</p>
                                 </div>
 
                                 <div className="py-1">

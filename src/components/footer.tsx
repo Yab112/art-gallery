@@ -13,12 +13,15 @@ import {
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
+import { usePlatformSettings } from "@/queries/settingsQueries"
 
 function Logo() {
     const [imageError, setImageError] = useState(false)
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
 
     if (imageError) {
-        return <span className="font-bold text-2xl text-red-500">artopia</span>
+        return <span className="font-bold text-2xl text-red-500">{siteName?.toLowerCase()}</span>
     }
 
     return (
@@ -31,38 +34,6 @@ function Logo() {
     )
 }
 
-const footerSections = [
-    {
-        title: "Discover Art",
-        icon: Palette,
-        links: [
-            { label: "Art Marketplace", href: "/buyart" },
-            { label: "Browse Collections", href: "/buyart" },
-            { label: "Featured Artists", href: "/artists" },
-            { label: "New Arrivals", href: "/buyart?sort=newest" },
-            { label: "Blogs", href: "/blog" }
-        ]
-    },
-    {
-        title: "For Artists",
-        icon: Brush,
-        links: [
-            { label: "Sell Your Art", href: "/sellart" },
-            { label: "Artist Feed", href: "/feed" },
-            { label: "My Artworks", href: "/profile/my-artworks" },
-            { label: "My Blogs", href: "/blog/my-blogs" },
-            { label: "My Collections", href: "/profile/collections" }
-        ]
-    },
-    {
-        title: "Learn & Explore",
-        icon: Camera,
-        links: [
-            { label: "Art Blog", href: "/blog" },
-            { label: "About Artopia", href: "/how-it-works" }
-        ]
-    }
-]
 
 const socialLinks = [
     {
@@ -81,6 +52,42 @@ const contactInfo = [
 ]
 
 export function Footer() {
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
+
+    const footerSections = [
+        {
+            title: "Discover Art",
+            icon: Palette,
+            links: [
+                { label: "Art Marketplace", href: "/buyart" },
+                { label: "Browse Collections", href: "/buyart" },
+                { label: "Featured Artists", href: "/artists" },
+                { label: "New Arrivals", href: "/buyart?sort=newest" },
+                { label: "Blogs", href: "/blog" }
+            ]
+        },
+        {
+            title: "For Artists",
+            icon: Brush,
+            links: [
+                { label: "Sell Your Art", href: "/sellart" },
+                { label: "Artist Feed", href: "/feed" },
+                { label: "My Artworks", href: "/profile/my-artworks" },
+                { label: "My Blogs", href: "/blog/my-blogs" },
+                { label: "My Collections", href: "/profile/collections" }
+            ]
+        },
+        {
+            title: "Learn & Explore",
+            icon: Camera,
+            links: [
+                { label: "Art Blog", href: "/blog" },
+                { label: `About ${siteName}`, href: "/how-it-works" }
+            ]
+        }
+    ]
+
     const [email, setEmail] = useState("")
     const [isSubscribing, setIsSubscribing] = useState(false)
     const axiosAuth = useAxiosAuth()
@@ -210,7 +217,7 @@ export function Footer() {
                     <div className="flex flex-col items-center justify-between gap-8 lg:flex-row">
                         <div className="max-w-xl text-center lg:text-left">
                             <h3 className="mb-2 font-bold text-xl text-gray-900 md:text-2xl">
-                                Stay Updated with Artopia
+                                Stay Updated with {siteName}
                             </h3>
                             <p className="text-gray-600 text-sm md:text-base">
                                 Get the latest art news, new artist features, and exclusive offers
@@ -248,7 +255,7 @@ export function Footer() {
                     <div className="flex flex-col items-center justify-between gap-3 lg:flex-row">
                         <div className="text-center lg:text-left">
                             <p className="text-gray-600 text-sm">
-                                © {new Date().getFullYear()} Artopia. All rights reserved. Making
+                                © {new Date().getFullYear()} {siteName}. All rights reserved. Making
                                 art accessible to everyone.
                             </p>
                         </div>

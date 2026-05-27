@@ -1,3 +1,4 @@
+import { usePlatformSettings } from "@/queries/settingsQueries"
 import { Heart, Star, Users } from "lucide-react"
 
 const features = [
@@ -19,12 +20,15 @@ const features = [
 ]
 
 export function FeaturesSection() {
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
+
     return (
         <div className="bg-gray-50 py-16 lg:py-24">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="mb-16 text-center">
                     <h2 className="mb-4 font-bold text-2xl text-gray-900 lg:text-4xl">
-                        Why Choose Artopia?
+                        Why Choose {siteName}?
                     </h2>
                     <p className="text-base text-gray-500 lg:text-lg">
                         We're more than just a marketplace - we're your partner in building a

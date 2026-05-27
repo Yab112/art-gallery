@@ -1,6 +1,6 @@
 import useMutationFunc from "@/hooks/use-mutation"
 import { collectionKeys } from "@/queries/queryKeys"
-import type { CreateCollectionDto } from "@/types/collection.types"
+import type { UpdateCollectionDto } from "@/types/collection.types"
 import { toast } from "sonner"
 
 interface UpdateCollectionResponse {
@@ -11,7 +11,7 @@ interface UpdateCollectionResponse {
 export const useUpdateCollection = () => {
     const { mutateAsync, isPending } = useMutationFunc<
         UpdateCollectionResponse,
-        CreateCollectionDto
+        UpdateCollectionDto
     >({
         onSuccess: () => {
             toast.success("Collection updated successfully")
@@ -24,7 +24,7 @@ export const useUpdateCollection = () => {
         queryKey: collectionKeys.lists()
     })
 
-    const updateCollection = async (id: string, data: CreateCollectionDto) => {
+    const updateCollection = async (id: string, data: UpdateCollectionDto) => {
         return mutateAsync({
             url: `/collections/${id}`,
             method: "PUT",

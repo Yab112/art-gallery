@@ -17,19 +17,28 @@ interface FilterControlsProps {
     onMediumChange?: (value: string) => void
     status?: string
     onStatusChange?: (value: string) => void
+    openMenu?: string | null
+    onOpenChange?: (value: string | null) => void
 }
 
 export function FilterControls({
     sortBy = "recommended",
     onSortChange,
-    priceRange = "",
-    onPriceRangeChange,
-    medium = "",
     onMediumChange,
-    status = "APPROVED",
-    onStatusChange
+    onStatusChange,
+    openMenu: externalOpenMenu,
+    onOpenChange: externalOnOpenChange
 }: FilterControlsProps) {
-    const [openMenu, setOpenMenu] = useState<string | null>(null)
+    const [internalOpenMenu, setInternalOpenMenu] = useState<string | null>(null)
+
+    const openMenu = externalOpenMenu !== undefined ? externalOpenMenu : internalOpenMenu
+    const setOpenMenu = (value: string | null) => {
+        if (externalOnOpenChange) {
+            externalOnOpenChange(value)
+        } else {
+            setInternalOpenMenu(value)
+        }
+    }
 
     const getSortLabel = (value: string) => {
         switch (value) {

@@ -5,7 +5,7 @@ import { MAX_PHOTOS } from "@/lib/constants/srtsell.constant"
 import { type ArtworkFormData, artworkFormSchema } from "@/lib/schemas/artwork.schema"
 import {
     useGetPresignedDocumentUploadUrl,
-    useGetPresignedImageUploadUrl
+    useGetPresignedMultipleImageUploadUrls
 } from "@/queries/uploadQueries"
 import { useCreateArtwork } from "@/services/artwork/useCreateArtwork"
 import { uploadFileToS3 } from "@/services/upload"
@@ -86,7 +86,7 @@ export function SellArtForm() {
     const formData = watch()
 
     const { createArtwork, isCreating } = useCreateArtwork()
-    const { mutateAsync: getPresignedImageUrl } = useGetPresignedImageUploadUrl()
+    const { mutateAsync: getPresignedMultipleImageUrls } = useGetPresignedMultipleImageUploadUrls()
     const { mutateAsync: getPresignedDocumentUrl } = useGetPresignedDocumentUploadUrl()
     const navigate = useNavigate()
 
@@ -94,18 +94,21 @@ export function SellArtForm() {
      * Upload files to S3 and return their public URLs
      */
     const uploadFilesToS3 = async (files: File[]): Promise<string[]> => {
-        const uploadPromises = files.map(async (file) => {
-            // Get presigned URL for image
-            const presignedData = await getPresignedImageUrl({
-                fileName: file.name,
-                contentType: file.type,
-                expirySeconds: 3600
-            })
+        // Step 1: Get all presigned URLs in a single API request
+        const fileData = files.map((file) => ({
+            fileName: file.name,
+            contentType: file.type
+        }))
 
-            // Upload file to S3
+        const presignedResponse = await getPresignedMultipleImageUrls({
+            files: fileData,
+            expirySeconds: 3600
+        })
+
+        // Step 2: Upload all files to S3 in parallel using the presigned URLs
+        const uploadPromises = files.map(async (file, index) => {
+            const presignedData = presignedResponse.urls[index]
             await uploadFileToS3(presignedData.presignedUrl, file)
-
-            // Return public URL
             return presignedData.publicUrl
         })
 
@@ -160,11 +163,9 @@ export function SellArtForm() {
                 state: data.state,
                 yearOfArtwork: data.yearOfArtwork,
                 dimensions: {
-                    height: Number.parseFloat(data.dimensions.height),
-                    width: Number.parseFloat(data.dimensions.width),
-                    depth: data.dimensions.depth
-                        ? Number.parseFloat(data.dimensions.depth)
-                        : undefined
+                    height: data.dimensions.height,
+                    width: data.dimensions.width,
+                    depth: data.dimensions.depth || undefined
                 },
                 isFramed: data.isFramed === "yes",
                 weight: data.weight,

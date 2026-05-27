@@ -29,9 +29,10 @@ interface Artist {
 interface ArtistCardProps {
     artist: Artist
     showSales?: boolean
+    showViews?: boolean
 }
 
-export function ArtistCard({ artist, showSales }: ArtistCardProps) {
+export function ArtistCard({ artist, showSales, showViews }: ArtistCardProps) {
     const [imageError, setImageError] = useState(false)
     const [placeholderError, setPlaceholderError] = useState(false)
     const navigate = useNavigate()
@@ -42,7 +43,9 @@ export function ArtistCard({ artist, showSales }: ArtistCardProps) {
             id: artist.id,
             name: artist.name,
             email: artist.email,
-            talentTypes: artist.talentTypes
+            talentTypes: artist.talentTypes,
+            views: artist.views,
+            sales: artist.sales
         })
     }
 
@@ -127,6 +130,22 @@ export function ArtistCard({ artist, showSales }: ArtistCardProps) {
                     </p>
                 ) : (
                     <p className="text-transparent text-xs sm:text-sm">-</p>
+                )}
+            </div>
+
+            {/* Stats: Sales & Views */}
+            <div className="mb-3 flex justify-center gap-4 text-gray-500 text-xs">
+                {showViews && artist.views !== undefined && (
+                    <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-700">{artist.views}</span>
+                        <span>Views</span>
+                    </div>
+                )}
+                {showSales && artist.sales !== undefined && (
+                    <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-700">${artist.sales.toLocaleString()}</span>
+                        <span>Sales</span>
+                    </div>
                 )}
             </div>
 

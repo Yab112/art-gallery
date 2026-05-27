@@ -107,14 +107,15 @@ export default function PublicCollectionsPage() {
     const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
     const [coverImagePreview, setCoverImagePreview] = useState<string>("")
     const [isUploadingCover, setIsUploadingCover] = useState(false)
+    const [collectionImageErrors, setCollectionImageErrors] = useState<Record<string, boolean>>({})
 
     const collections = data?.collections || []
     const pagination = data
         ? {
-            page: data.page || 1,
-            limit: data.limit || limit,
-            total: data.total || 0,
-            pages: data.pages || 1
+            page: data.page || (data as any).pagination?.page || 1,
+            limit: data.limit || (data as any).pagination?.limit || limit,
+            total: data.total ?? (data as any).pagination?.total ?? 0,
+            pages: data.pages || (data as any).pagination?.pages || 1
         }
         : { page: 1, limit, total: 0, pages: 1 }
 
@@ -442,11 +443,12 @@ export default function PublicCollectionsPage() {
                                 >
                                     <div className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
                                         <div className="relative h-20 w-full overflow-hidden bg-gray-100">
-                                            {collection.coverImage ? (
+                                            {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                 <img
                                                     src={collection.coverImage}
                                                     alt={collection.name}
                                                     className="h-full w-full object-cover"
+                                                    onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                 />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center bg-gray-50">
@@ -565,7 +567,7 @@ export default function PublicCollectionsPage() {
                                     <label className="block font-medium text-gray-700 text-xs">
                                         Sort By
                                     </label>
-                                    <Select value={sortBy} onValueChange={setSortBy}>
+                                    <Select modal={false} value={sortBy} onValueChange={setSortBy}>
                                         <SelectTrigger className="h-8 text-sm">
                                             <SelectValue placeholder="Sort by..." />
                                         </SelectTrigger>
@@ -591,6 +593,7 @@ export default function PublicCollectionsPage() {
                                         Artwork Count
                                     </label>
                                     <Select
+                                        modal={false}
                                         value={artworkCountRange}
                                         onValueChange={setArtworkCountRange}
                                     >
@@ -629,11 +632,12 @@ export default function PublicCollectionsPage() {
                                             <div className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
                                                 {/* Cover Image */}
                                                 <div className="relative h-24 w-full overflow-hidden bg-gray-100">
-                                                    {collection.coverImage ? (
+                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                         <img
                                                             src={collection.coverImage}
                                                             alt={collection.name}
                                                             className="h-full w-full object-cover"
+                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                         />
                                                     ) : (
                                                         <div className="flex h-full w-full items-center justify-center bg-gray-50">
@@ -677,11 +681,12 @@ export default function PublicCollectionsPage() {
                                             <div className="flex h-16 items-center overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
                                                 {/* Cover Image - Horizontal */}
                                                 <div className="relative h-full w-16 flex-shrink-0 overflow-hidden bg-gray-100">
-                                                    {collection.coverImage ? (
+                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                         <img
                                                             src={collection.coverImage}
                                                             alt={collection.name}
                                                             className="h-full w-full object-cover"
+                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                         />
                                                     ) : (
                                                         <div className="flex h-full w-full items-center justify-center bg-gray-50">

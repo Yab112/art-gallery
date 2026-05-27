@@ -1,6 +1,12 @@
 import { ArtworkCard } from "@/components/artwork-card"
 import { CollectionDetailSkeleton } from "@/components/skeletons/collection-detail-skeleton"
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -33,6 +39,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { mapArtworkToCardProps } from "@/lib/utils/artwork-mapper"
 import { useCollection } from "@/queries/collectionQueries"
 import { collectionKeys } from "@/queries/queryKeys"
+import { useCollectionSettings } from "@/queries/settingsQueries"
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries"
 import { useDeleteCollection } from "@/services/collections/useDeleteCollection"
 import { usePublishCollection } from "@/services/collections/usePublishCollection"
@@ -48,10 +55,15 @@ import {
     Image as ImageIcon,
     Loader2,
     Plus,
+    Share2,
     Trash2,
-    X
+    X,
+    Upload,
+    ChevronDown,
+    Globe,
+    Lock,
+    EyeOff
 } from "lucide-react"
-import { Upload } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -62,10 +74,12 @@ export default function CollectionDetailPage() {
     const { user } = useAuth()
     const { data, isLoading, error } = useCollection(id || "")
     const { removeArtwork: removeArtworkFromCollection } = useRemoveArtworkFromCollection()
-    const { publishCollection } = usePublishCollection()
-    const { unpublishCollection } = useUnpublishCollection()
+    const { publishCollection, isPublishing } = usePublishCollection()
+    const { unpublishCollection, isUnpublishing } = useUnpublishCollection()
     const { updateCollection, isUpdating } = useUpdateCollection()
     const { deleteCollection } = useDeleteCollection()
+    const { data: collectionSettings } = useCollectionSettings()
+    const minArtworksForPublish = collectionSettings?.settings?.minArtworksForPublish || 3
     const { mutateAsync: getPresignedUrl } = useGetPresignedImageUploadUrl()
     const queryClient = useQueryClient()
 
@@ -90,6 +104,7 @@ export default function CollectionDetailPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [removeArtworkDialogOpen, setRemoveArtworkDialogOpen] = useState(false)
     const [artworkToRemove, setArtworkToRemove] = useState<string | null>(null)
+    const [imageError, setImageError] = useState(false)
 
     // Add artwork - navigate to artworks page with collection ID
     const handleAddArtwork = () => {
@@ -108,6 +123,7 @@ export default function CollectionDetailPage() {
                     (collection.visibility as "public" | "private" | "unlisted") || "private",
                 coverImage: collection.coverImage || ""
             })
+            setImageError(false)
         }
     }, [collection])
 
@@ -130,28 +146,49 @@ export default function CollectionDetailPage() {
         }
     }
 
-    const handlePublishToggle = async () => {
+    const handleVisibilityChange = async (newVisibility: "public" | "private" | "unlisted") => {
         if (!id || !collection) return
+
         try {
-            if (collection.visibility === "public") {
-                await unpublishCollection(id)
-            } else {
+            if (newVisibility === "public") {
                 const artworks = Array.isArray(collection?.artworks) ? collection.artworks : []
-                const artworkCount = artworks.length
-                if (artworkCount < 3) {
-                    toast.error(
-                        `Collection must have at least 3 artworks to be published. Currently has ${artworkCount}.`
-                    )
+                if (minArtworksForPublish !== undefined && artworks.length < minArtworksForPublish) {
+                    toast.error(`Collection must have at least ${minArtworksForPublish} artworks to be public.`)
                     return
                 }
                 await publishCollection(id)
+            } else if (newVisibility === "private") {
+                await unpublishCollection(id)
+            } else {
+                await updateCollection(id, { visibility: "unlisted" })
             }
+
             queryClient.invalidateQueries({ queryKey: collectionKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: collectionKeys.lists() })
+            toast.success(`Visibility updated to ${newVisibility}`)
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || error?.message
-            if (errorMessage && !errorMessage.includes("Collection must have at least")) {
-                toast.error(`Failed to update collection: ${errorMessage}`)
+            toast.error(`Failed to update visibility: ${error?.message || "An error occurred"}`)
+        }
+    }
+
+    const handleShare = async () => {
+        if (!collection) return
+        const shareData = {
+            title: collection.name,
+            text: collection.description || `Check out this collection: ${collection.name}`,
+            url: window.location.href
+        }
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData)
+            } else {
+                await navigator.clipboard.writeText(window.location.href)
+                toast.success("Link copied to clipboard")
+            }
+        } catch (error) {
+            if ((error as Error).name !== "AbortError") {
+                console.error("Error sharing:", error)
             }
         }
     }
@@ -285,11 +322,12 @@ export default function CollectionDetailPage() {
                 {/* Cover Image Section */}
                 <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
                     <div className="relative h-48 w-full overflow-hidden bg-gray-100 md:h-64">
-                        {collection.coverImage ? (
+                        {collection.coverImage && !imageError ? (
                             <img
                                 src={collection.coverImage}
                                 alt={collection.name}
                                 className="h-full w-full object-cover"
+                                onError={() => setImageError(true)}
                             />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -330,29 +368,65 @@ export default function CollectionDetailPage() {
                             </h1>
                             {isOwner && (
                                 <div className="flex items-center gap-2">
-                                    <div
-                                        title={
-                                            collection.visibility !== "public" &&
-                                                artworks.length < 3
-                                                ? "At least 3 artworks are required to publish this collection"
-                                                : undefined
-                                        }
-                                        className="inline-block"
-                                    >
+                                    {/* Visibility Dropdown */}
+                                    <DropdownMenu modal={false}>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 gap-2 border-gray-200 text-xs shadow-sm hover:bg-gray-50"
+                                                disabled={isUpdating || isPublishing || isUnpublishing}
+                                            >
+                                                {isUpdating || isPublishing || isUnpublishing ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : collection.visibility === "public" ? (
+                                                    <Globe className="h-3.5 w-3.5 text-green-600" />
+                                                ) : collection.visibility === "unlisted" ? (
+                                                    <EyeOff className="h-3.5 w-3.5 text-yellow-600" />
+                                                ) : (
+                                                    <Lock className="h-3.5 w-3.5 text-gray-500" />
+                                                )}
+                                                <span className="capitalize">{collection.visibility}</span>
+                                                <ChevronDown className="h-3 w-3 opacity-50" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-40">
+                                            <DropdownMenuItem
+                                                onClick={() => handleVisibilityChange("private")}
+                                                className="gap-2"
+                                            >
+                                                <Lock className="h-4 w-4 text-gray-500" />
+                                                <span>Private</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => handleVisibilityChange("unlisted")}
+                                                className="gap-2"
+                                            >
+                                                <EyeOff className="h-4 w-4 text-yellow-600" />
+                                                <span>Unlisted</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => handleVisibilityChange("public")}
+                                                className="gap-2"
+                                            >
+                                                <Globe className="h-4 w-4 text-green-600" />
+                                                <span>Public</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+
+                                    {/* Share Button (Only if not private) */}
+                                    {collection.visibility !== "private" && (
                                         <Button
-                                            variant="default"
-                                            onClick={handlePublishToggle}
-                                            className="h-7 bg-red-700 px-3 text-[10px] text-white shadow-sm transition-all hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-red-700 disabled:opacity-30 md:text-xs"
-                                            disabled={
-                                                collection.visibility !== "public" &&
-                                                artworks.length < 3
-                                            }
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleShare}
+                                            className="h-8 w-8 p-0 border-gray-200 shadow-sm hover:bg-gray-50"
+                                            title="Share Collection"
                                         >
-                                            {collection.visibility === "public"
-                                                ? "Unpublish"
-                                                : "Publish"}
+                                            <Share2 className="h-3.5 w-3.5 text-gray-600" />
                                         </Button>
-                                    </div>
+                                    )}
                                     <Button
                                         variant="outline"
                                         size="sm"

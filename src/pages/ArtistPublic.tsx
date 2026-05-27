@@ -23,6 +23,7 @@ export default function ArtistDetailPage() {
     const { id } = useParams<{ id: string }>()
     const [searchParams, setSearchParams] = useSearchParams()
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
+    const [collectionImageErrors, setCollectionImageErrors] = useState<Record<string, boolean>>({})
 
     // Get active tab from URL query params, default to "artworks"
     const activeTab = searchParams.get("tab") || "artworks"
@@ -558,11 +559,12 @@ export default function ArtistDetailPage() {
                                             className="block"
                                         >
                                             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-lg">
-                                                {collection.coverImage ? (
+                                                {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                     <img
                                                         src={collection.coverImage}
                                                         alt={collection.name}
                                                         className="h-48 w-full object-cover"
+                                                        onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                     />
                                                 ) : (
                                                     <div className="flex h-48 w-full items-center justify-center bg-gray-100">

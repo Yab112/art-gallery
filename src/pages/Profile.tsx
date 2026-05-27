@@ -121,8 +121,8 @@ export default function ProfilePage() {
     const followingUsers = followingData?.users || []
     const { createCollection, isCreating } = useCreateCollection()
     const { deleteCollection, isDeleting } = useDeleteCollection()
-    const { publishCollection } = usePublishCollection()
-    const { unpublishCollection } = useUnpublishCollection()
+    const { publishCollection, isPublishing } = usePublishCollection()
+    const { unpublishCollection, isUnpublishing } = useUnpublishCollection()
     const { deleteArtwork, isDeleting: isDeletingArtwork } = useDeleteArtwork()
     const { mutateAsync: getPresignedUrl } = useGetPresignedImageUploadUrl()
     const { updateProfile, isUpdating: isUpdatingProfile } = useUpdateProfile()
@@ -141,6 +141,7 @@ export default function ProfilePage() {
     const [avatarPreview, setAvatarPreview] = useState<string>("")
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
     const avatarInputRef = useRef<HTMLInputElement>(null)
+    const [collectionImageErrors, setCollectionImageErrors] = useState<Record<string, boolean>>({})
 
     const handleDeleteArtwork = async (artworkId: string) => {
         if (window.confirm("Are you sure you want to delete this artwork?")) {
@@ -211,11 +212,11 @@ export default function ProfilePage() {
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen pb-12">
                 {/* Cover Image - Full Width Black Banner */}
                 <div className="px-4">
                     <div
-                        className={`relative h-48 w-full bg-black ${!isViewingOtherProfile ? "group cursor-pointer" : ""
+                        className={`relative h-32 w-full bg-black sm:h-48 ${!isViewingOtherProfile ? "group cursor-pointer" : ""
                             }`}
                         onClick={() => {
                             if (!isViewingOtherProfile) {
@@ -331,13 +332,13 @@ export default function ProfilePage() {
                     />
                 )}
 
-                <div className="container mx-auto max-w-6xl px-4 py-8">
+                <div className="container mx-auto mt-2 max-w-6xl px-4">
                     {/* Profile Header */}
                     <div className="mb-8">
                         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                             <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end">
                                 <div
-                                    className={`relative -mt-20 ${!isViewingOtherProfile ? "group cursor-pointer" : ""}`}
+                                    className={`relative -mt-16 sm:-mt-20 ${!isViewingOtherProfile ? "group cursor-pointer" : ""}`}
                                     onClick={() => {
                                         if (!isViewingOtherProfile) {
                                             avatarInputRef.current?.click()
@@ -348,22 +349,22 @@ export default function ProfilePage() {
                                         <img
                                             src={avatarPreview}
                                             alt={profile.name || "User"}
-                                            className="h-40 w-40 rounded-full border-[8px] object-cover"
-                                            style={{ borderColor: "#F9FAFB" }}
+                                            className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
+                                            style={{ borderColor: "#FFFFFF" }}
                                         />
                                     ) : profile.image ? (
                                         <img
                                             src={profile.image}
                                             alt={profile.name || "User"}
-                                            className="h-40 w-40 rounded-full border-[8px] object-cover"
-                                            style={{ borderColor: "#F9FAFB" }}
+                                            className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
+                                            style={{ borderColor: "#FFFFFF" }}
                                         />
                                     ) : (
                                         <div
-                                            className="flex h-40 w-40 items-center justify-center rounded-full border-[8px] bg-red-600"
-                                            style={{ borderColor: "#F9FAFB" }}
+                                            className="flex h-32 w-32 items-center justify-center rounded-full border-[6px] bg-red-600 sm:h-48 sm:w-48 sm:border-[8px]"
+                                            style={{ borderColor: "#FFFFFF" }}
                                         >
-                                            <span className="font-bold text-4xl text-white">
+                                            <span className="font-bold text-3xl text-white sm:text-4xl">
                                                 {(profile.name || "U")[0].toUpperCase()}
                                             </span>
                                         </div>
@@ -1144,11 +1145,12 @@ export default function ProfilePage() {
                                                 >
                                                     <Link to={`/collections/${collection.id}`} className="block">
                                                         <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
-                                                            {collection.coverImage ? (
+                                                            {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                                 <img
                                                                     src={collection.coverImage}
                                                                     alt={collection.name}
                                                                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                    onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                                 />
                                                             ) : (
                                                                 <div className="flex h-full w-full items-center justify-center">
@@ -1178,6 +1180,7 @@ export default function ProfilePage() {
                                                             <Button
                                                                 variant="secondary"
                                                                 size="icon"
+                                                                disabled={isPublishing || isUnpublishing}
                                                                 className="h-8 w-8 bg-white/90 shadow-sm backdrop-blur-sm hover:bg-white"
                                                                 onClick={async (e) => {
                                                                     e.preventDefault();
@@ -1198,7 +1201,9 @@ export default function ProfilePage() {
                                                                     } catch (error) { }
                                                                 }}
                                                             >
-                                                                {collection.visibility === "public" ? (
+                                                                {isPublishing || isUnpublishing ? (
+                                                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                                                                ) : collection.visibility === "public" ? (
                                                                     <EyeOff className="h-4 w-4 text-gray-600" />
                                                                 ) : (
                                                                     <Eye className="h-4 w-4 text-gray-600" />

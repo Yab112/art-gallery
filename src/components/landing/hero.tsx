@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { usePlatformSettings } from "@/queries/settingsQueries"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -24,6 +25,8 @@ const slides = [
 ]
 
 export function HeroCarousel() {
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
     const [currentSlide, setCurrentSlide] = useState(0)
 
     useEffect(() => {
@@ -93,11 +96,11 @@ export function HeroCarousel() {
                     <h2 className=" text-balance font-bold text-2xl text-black">
                         Buying and selling pieces of art online
                     </h2>
-                    <h3 className="mb-6 font-semibold text-lg">Artopia: the art marketplace</h3>
+                    <h3 className="mb-6 font-semibold text-lg">{siteName}: the art marketplace</h3>
                     <p className="mx-auto text-pretty text-gray-600 leading-relaxed">
                         You are an amateur, collector, professional or artist and you wish to sell
-                        or purchase Modern and Contemporary Art Artopia will help you and give you
-                        expert advise.
+                        or purchase Modern and Contemporary Art. {siteName} will help you and give you
+                        expert advice.
                     </p>
                 </div>
             </div>
