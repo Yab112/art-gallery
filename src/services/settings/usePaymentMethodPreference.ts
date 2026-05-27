@@ -5,7 +5,11 @@ import { toast } from "sonner"
 export type PaymentMethod = "paypal" | "chapa"
 
 export interface PaymentMethodPreference {
-    paymentMethodPreference: PaymentMethod
+    method: PaymentMethod
+    paypalEmail?: string
+    chapaAccountName?: string
+    chapaAccountNumber?: string
+    chapaBankCode?: string
 }
 
 const fetchPaymentMethodPreference = async (): Promise<PaymentMethodPreference> => {
@@ -14,10 +18,14 @@ const fetchPaymentMethodPreference = async (): Promise<PaymentMethodPreference> 
 }
 
 const updatePaymentMethodPreference = async (
-    paymentMethodPreference: PaymentMethod
+    data: PaymentMethodPreference
 ): Promise<PaymentMethodPreference> => {
     const response = await api.put("/profile/payment-method-preference", {
-        paymentMethodPreference
+        paymentMethodPreference: data.method,
+        paypalEmail: data.paypalEmail,
+        chapaAccountName: data.chapaAccountName,
+        chapaAccountNumber: data.chapaAccountNumber,
+        chapaBankCode: data.chapaBankCode
     })
     return response.data.data
 }
@@ -44,5 +52,22 @@ export const useUpdatePaymentMethodPreference = () => {
             // Revert on error by invalidating
             queryClient.invalidateQueries({ queryKey: ["payment-method-preference"] })
         }
+    })
+}
+
+export interface ChapaBank {
+    id: string;
+    name: string;
+    code: string;
+}
+
+export const useGetChapaBanks = () => {
+    return useQuery({
+        queryKey: ["chapa-banks"],
+        queryFn: async (): Promise<ChapaBank[]> => {
+            const response = await api.get("/payment/chapa/banks")
+            return response.data.data || []
+        },
+        staleTime: 24 * 60 * 60 * 1000 // 24 hours
     })
 }

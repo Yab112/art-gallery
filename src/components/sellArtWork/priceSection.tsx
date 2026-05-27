@@ -71,7 +71,8 @@ export function PriceSection({ control, errors, formData }: PriceSectionProps) {
             <h3 className="font-semibold text-xl">4/ Price*</h3>
             <p className="text-muted-foreground text-sm">
                 What price would you like to sell your piece for? Find out how much money you will
-                receive after Artopia's commission is deducted.
+                receive after {platformSettings?.settings?.siteName}'s commission is
+                deducted.
             </p>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

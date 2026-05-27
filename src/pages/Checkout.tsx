@@ -169,7 +169,6 @@ function CheckoutContent() {
                 email: shippingData.email.trim(),
                 firstName: shippingData.firstName?.trim(),
                 lastName: shippingData.lastName?.trim(),
-                phoneNumber: (paymentData.phoneNumber || shippingData.phone)?.trim(),
                 txRef: txRef.trim(),
                 orderId: orderResponse.data.orderId
             })

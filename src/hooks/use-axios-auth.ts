@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom"
 
 export const api: AxiosInstance = axios.create({
     baseURL: getServerBaseUrl(),
-    timeout: 10000,
+    timeout: 30000,
     withCredentials: true // Important for Better Auth cookies - cookies are sent automatically
 })
 

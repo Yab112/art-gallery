@@ -3,10 +3,13 @@ import { SectionTitle } from "@/components/section-title"
 import { Button } from "@/components/ui/button"
 import { mapArtworkToCardProps } from "@/lib/utils/artwork-mapper"
 import { useArtworks } from "@/queries/artworkQueries"
+import { usePlatformSettings } from "@/queries/settingsQueries"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useMemo, useState } from "react"
 
 export function FeaturedArtworks() {
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
     const [currentIndex, setCurrentIndex] = useState(0)
     const itemsPerPage = 4
 
@@ -39,11 +42,6 @@ export function FeaturedArtworks() {
         // Add favorite logic here
     }
 
-    const handleSearch = (id: string) => {
-        console.log("[v0] Search artwork:", id)
-        // Add search logic here
-    }
-
     const visibleArtworks = artworks.slice(currentIndex, currentIndex + itemsPerPage)
 
     if (isLoading) {
@@ -52,7 +50,7 @@ export function FeaturedArtworks() {
                 <div className="mx-auto max-w-7xl">
                     <SectionTitle
                         title="FEATURED ARTWORKS"
-                        subtitle="Artopia Selection"
+                        subtitle={`${siteName} Selection`}
                         className="mb-8"
                     />
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -77,7 +75,7 @@ export function FeaturedArtworks() {
                 <div className="mx-auto max-w-7xl">
                     <SectionTitle
                         title="FEATURED ARTWORKS"
-                        subtitle="Artopia Selection"
+                        subtitle={`${siteName} Selection`}
                         className="mb-8"
                     />
                     <p className="text-center text-gray-500">
@@ -94,7 +92,7 @@ export function FeaturedArtworks() {
                 <div className="relative mb-12">
                     <SectionTitle
                         title="FEATURED ARTWORKS"
-                        subtitle="Artopia Selection"
+                        subtitle={`${siteName} Selection`}
                         className="mb-8"
                     />
 
@@ -127,7 +125,6 @@ export function FeaturedArtworks() {
                             key={artwork.id}
                             {...artwork}
                             onFavorite={handleFavorite}
-                            onSearch={handleSearch}
                         />
                     ))}
                 </div>

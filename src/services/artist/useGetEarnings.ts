@@ -17,6 +17,14 @@ export interface EarningsData {
     earning: number
     totalWithdrawn: number
     availableBalance: number
+    
+    // Separate balances
+    totalEarningsPaypal: number
+    totalEarningsChapa: number
+    totalWithdrawnPaypal: number
+    totalWithdrawnChapa: number
+    availableBalancePaypal: number
+    availableBalanceChapa: number
 }
 
 export interface EarningsResponse {

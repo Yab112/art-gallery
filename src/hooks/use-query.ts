@@ -51,9 +51,9 @@ export const useFetchData = <T>(
         }),
         staleTime: options?.staleTime ?? 5 * 60 * 1000,
         enabled: options?.enabled ?? true,
-        retry: 1, // Retry once on failure
-        retryOnMount: true, // Retry when component remounts
-        refetchOnWindowFocus: false, // Prevent refetch on window focus to avoid cancellations
+        retry: options?.retry ?? 1,
+        retryOnMount: options?.retryOnMount ?? true,
+        refetchOnWindowFocus: options?.refetchOnWindowFocus ?? false,
         placeholderData: keepPreviousData
     })
 }

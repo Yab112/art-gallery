@@ -2,17 +2,26 @@ import useAxiosAuth from "@/hooks/use-axios-auth"
 import { useQuery } from "@tanstack/react-query"
 
 export interface TrendingArtist {
-    userId: string
+    id: string
     name: string
     avatar: string
+    email?: string
     artworkCount: number
-    totalViews: number
-    totalLikes: number
-    totalComments: number
-    totalFavorites: number
-    totalSales: number
-    salesCount: number
-    totalEarnings: number
+    location?: string
+    profileViews?: number
+    heatScore?: number
+    totalViews?: number
+    totalLikes?: number
+    totalComments?: number
+    totalFavorites?: number
+    totalSales?: number
+    salesCount?: number
+    totalEarnings?: number
+    talentTypes?: {
+        id: string
+        name: string
+        slug: string
+    }[]
 }
 
 interface TrendingArtistsResponse {

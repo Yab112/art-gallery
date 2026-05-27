@@ -1,6 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { usePlatformSettings } from "@/queries/settingsQueries"
 import type { ArtworkFormData } from "@/lib/schemas/artwork.schema"
 import { type Control, Controller, type FieldErrors } from "react-hook-form"
 
@@ -16,6 +17,8 @@ interface BankingSectionProps {
  * Uses React Hook Form Controller for form state management
  */
 export function BankingSection({ control, errors, formData }: BankingSectionProps) {
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
     return (
         <div className="space-y-6">
             <h3 className="font-semibold text-xl">
@@ -144,7 +147,7 @@ export function BankingSection({ control, errors, formData }: BankingSectionProp
                             <a href="#" className="text-primary underline">
                                 sales mandate
                             </a>{" "}
-                            to Artopia
+                            to {siteName}
                             <span className="text-destructive">*</span>
                         </Label>
                     </div>

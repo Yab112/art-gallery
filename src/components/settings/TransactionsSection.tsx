@@ -49,6 +49,15 @@ const Pagination = ({
     </div>
 )
 
+const formatCurrency = (amount: number | string, currency: string | null) => {
+    const isETB = currency?.toUpperCase() === "ETB"
+    const formatted = Number(amount).toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    })
+    return isETB ? `Br ${formatted}` : `$${formatted}`
+}
+
 export function TransactionsSection() {
     const [activeTab, setActiveTab] = useState<"list" | "graphs">("list")
     const [expandedTransactions, setExpandedTransactions] = useState<Set<string>>(new Set())
@@ -90,16 +99,16 @@ export function TransactionsSection() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case "COMPLETED":
-                return "text-green-600 bg-green-50"
+                return "text-green-700 bg-green-50/50 border border-green-100"
             case "INITIATED":
-                return "text-yellow-600 bg-yellow-50"
+                return "text-yellow-700 bg-yellow-50/50 border border-yellow-100"
             case "FAILED":
             case "CANCELLED":
-                return "text-red-600 bg-red-50"
+                return "text-zinc-700 bg-zinc-50 border border-zinc-200"
             case "REFUNDED":
-                return "text-orange-600 bg-orange-50"
+                return "text-orange-700 bg-orange-50/50 border border-orange-100"
             default:
-                return "text-gray-600 bg-gray-50"
+                return "text-zinc-500 bg-zinc-50/50 border border-zinc-100"
         }
     }
 
@@ -171,9 +180,9 @@ export function TransactionsSection() {
                         onClick={() => setActiveTab("list")}
                         className={`${
                             activeTab === "list"
-                                ? "border-red-700 text-red-700"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                        } flex items-center gap-1.5 whitespace-nowrap border-b-2 px-1 py-2.5 font-medium text-sm`}
+                                ? "border-black font-semibold text-black"
+                                : "border-transparent text-zinc-500 hover:text-zinc-900"
+                        } flex items-center gap-1.5 whitespace-nowrap border-b-2 px-1 py-2.5 text-xs uppercase tracking-wider`}
                     >
                         <List className="h-3.5 w-3.5" />
                         List
@@ -182,9 +191,9 @@ export function TransactionsSection() {
                         onClick={() => setActiveTab("graphs")}
                         className={`${
                             activeTab === "graphs"
-                                ? "border-red-700 text-red-700"
-                                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                        } flex items-center gap-1.5 whitespace-nowrap border-b-2 px-1 py-2.5 font-medium text-sm`}
+                                ? "border-black font-semibold text-black"
+                                : "border-transparent text-zinc-500 hover:text-zinc-900"
+                        } flex items-center gap-1.5 whitespace-nowrap border-b-2 px-1 py-2.5 text-xs uppercase tracking-wider`}
                     >
                         <BarChart3 className="h-3.5 w-3.5" />
                         Analytics
@@ -207,7 +216,7 @@ export function TransactionsSection() {
                                     setStatusFilter(e.target.value)
                                     setPage(1)
                                 }}
-                                className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:border-transparent focus:outline-none focus:ring-1 focus:ring-red-500"
+                                className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:border-transparent focus:outline-none focus:ring-1 focus:ring-black"
                             >
                                 <option value="all">All</option>
                                 <option value="INITIATED">Initiated</option>
@@ -227,7 +236,7 @@ export function TransactionsSection() {
                                     setProviderFilter(e.target.value)
                                     setPage(1)
                                 }}
-                                className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:border-transparent focus:outline-none focus:ring-1 focus:ring-red-500"
+                                className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:border-transparent focus:outline-none focus:ring-1 focus:ring-black"
                             >
                                 <option value="all">All</option>
                                 <option value="chapa">Chapa</option>
@@ -300,26 +309,23 @@ export function TransactionsSection() {
                                                             <span
                                                                 className={`font-semibold ${
                                                                     transaction.type === "CREDIT"
-                                                                        ? "text-green-600"
-                                                                        : "text-red-600"
+                                                                        ? "text-green-700"
+                                                                        : "text-zinc-950"
                                                                 }`}
                                                             >
                                                                 {transaction.type === "CREDIT"
                                                                     ? "+"
                                                                     : "-"}
-                                                                $
-                                                                {Number(
-                                                                    transaction.amount
-                                                                ).toLocaleString("en-US", {
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0
-                                                                })}
+                                                                {formatCurrency(
+                                                                    transaction.amount,
+                                                                    transaction.currency
+                                                                )}
                                                             </span>
                                                             <span
                                                                 className={`rounded px-1.5 py-0.5 font-medium text-[10px] ${
                                                                     transaction.type === "CREDIT"
-                                                                        ? "bg-green-50 text-green-700"
-                                                                        : "bg-red-50 text-red-700"
+                                                                        ? "border border-green-100 bg-green-50/50 text-green-700"
+                                                                        : "border border-zinc-200 bg-zinc-50 text-zinc-700"
                                                                 }`}
                                                             >
                                                                 {transaction.typeLabel ||
@@ -484,20 +490,21 @@ export function TransactionsSection() {
                                                                                 </p>
                                                                                 <p className="text-[10px] text-gray-500">
                                                                                     {item.quantity}{" "}
-                                                                                    × $
-                                                                                    {Number(
-                                                                                        item.price
-                                                                                    ).toFixed(0)}
+                                                                                    ×{" "}
+                                                                                    {formatCurrency(
+                                                                                        item.price,
+                                                                                        transaction.currency
+                                                                                    )}
                                                                                 </p>
                                                                             </div>
                                                                             <p className="font-semibold text-gray-900 text-xs">
-                                                                                $
-                                                                                {(
+                                                                                {formatCurrency(
                                                                                     Number(
                                                                                         item.price
                                                                                     ) *
-                                                                                    item.quantity
-                                                                                ).toFixed(0)}
+                                                                                        item.quantity,
+                                                                                    transaction.currency
+                                                                                )}
                                                                             </p>
                                                                         </div>
                                                                     )
@@ -544,13 +551,10 @@ export function TransactionsSection() {
                                                                 Total
                                                             </p>
                                                             <p className="font-bold text-base text-gray-900">
-                                                                $
-                                                                {Number(
-                                                                    transaction.order.totalAmount
-                                                                ).toLocaleString("en-US", {
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0
-                                                                })}
+                                                                {formatCurrency(
+                                                                    transaction.order.totalAmount,
+                                                                    transaction.currency
+                                                                )}
                                                             </p>
                                                         </div>
                                                     </div>

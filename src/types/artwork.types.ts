@@ -8,9 +8,9 @@ export interface Artwork {
     state: string
     yearOfArtwork: string
     dimensions: {
-        height: number
-        width: number
-        depth?: number
+        height: string
+        width: string
+        depth?: string
     }
     isFramed: boolean
     weight: string
@@ -109,9 +109,9 @@ export interface CreateArtworkDto {
     state: string
     yearOfArtwork: string
     dimensions: {
-        height: number
-        width: number
-        depth?: number
+        height: string
+        width: string
+        depth?: string
     }
     isFramed: boolean
     weight: string

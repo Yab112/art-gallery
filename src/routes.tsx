@@ -27,13 +27,13 @@ import NoMatch from "./pages/NoMatch"
 import OrdersPage from "./pages/Orders"
 import PaymentCancelPage from "./pages/PaymentCancel"
 import PaymentSuccessPage from "./pages/PaymentSuccess"
-import ProfilePage from "./pages/Profile"
 import PublicCollectionsPage from "./pages/PublicCollections"
 import ResetPasswordPage from "./pages/ResetPassword"
 import SettingsPage from "./pages/Settings"
 import SignupPage from "./pages/Signup"
 import VerifyEmailPage from "./pages/VerifyEmail"
 import SellArtPage from "./pages/sellArt"
+import ProfilePage from "./pages/Profile"
 
 export const router = createBrowserRouter([
     {

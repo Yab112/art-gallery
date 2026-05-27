@@ -69,10 +69,12 @@
 
     body {
         overflow-x: hidden;
+        scrollbar-gutter: stable;
     }
 
     html {
         overflow-x: hidden;
+        scrollbar-gutter: stable;
     }
 
     /* Subtle outline on focus for all input fields */
@@ -102,15 +104,15 @@
         display: none;
     }
 
-    /* Very thin custom scrollbar for independent scrolling sections */
+    /* Very thin modern scrollbar for independent scrolling sections */
     .custom-scrollbar {
         scrollbar-width: thin;
-        scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+        scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar {
-        width: 3px;
-        height: 3px;
+        width: 2px;
+        height: 2px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
@@ -118,12 +120,17 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.15);
-        border-radius: 10px;
+        background-color: rgba(0, 0, 0, 0.12);
+        border-radius: 99px;
+        transition: background-color 0.2s ease;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(0, 0, 0, 0.3);
+        background-color: rgba(0, 0, 0, 0.28);
+    }
+
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
     }
 
     @keyframes scroll {
@@ -217,16 +224,21 @@
     @apply italic;
 }
 
-/* Fix for Radix UI Select dropdown page shift issue */
-/* Prevents margin/padding from being added when dropdowns open */
+
+
+/* Prevent Radix UI from adding right margin/padding when locking scrollbar */
+/* This targets the inline styles that Radix often injects */
+html body[data-scroll-locked],
+html body[data-radix-scroll-lock],
+html body[style*="margin-right"],
+html body[style*="padding-right"],
 body[data-scroll-locked],
-html[data-scroll-locked],
 body[data-radix-scroll-lock],
-html[data-radix-scroll-lock] {
+body[style*="margin-right"],
+body[style*="padding-right"] {
     margin-right: 0 !important;
-    margin-left: 0 !important;
     padding-right: 0 !important;
-    padding-left: 0 !important;
+    overflow: visible !important;
 }
 
 /* Fix for Dialog overlay blocking page interactions */
@@ -250,4 +262,14 @@ body:not(:has([data-radix-dialog-overlay][data-state="open"])) [data-radix-dialo
 /* Emergency fix - if body has pointer-events none, force it back */
 body[style*="pointer-events: none"]:not(:has([data-radix-dialog-overlay][data-state="open"])) {
     pointer-events: auto !important;
+}
+/* Hide number input spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
 }

@@ -22,6 +22,12 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -30,21 +36,27 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useMyCollections } from "@/queries/collectionQueries"
+import { useCollectionSettings } from "@/queries/settingsQueries"
 import { collectionKeys } from "@/queries/queryKeys"
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries"
 import { useCreateCollection } from "@/services/collections/useCreateCollection"
 import { useDeleteCollection } from "@/services/collections/useDeleteCollection"
 import { usePublishCollection } from "@/services/collections/usePublishCollection"
 import { useUnpublishCollection } from "@/services/collections/useUnpublishCollection"
+import { useUpdateCollection } from "@/services/collections/useUpdateCollection"
 import { uploadFileToS3 } from "@/services/upload"
 import { useQueryClient } from "@tanstack/react-query"
 import {
     ArrowLeft,
+    ChevronDown,
+    EyeOff,
     FolderOpen,
+    Globe,
     Grid,
     Image as ImageIcon,
     List,
     Loader2,
+    Lock,
     Plus,
     Trash2,
     Upload,
@@ -90,8 +102,9 @@ export default function CollectionsPage() {
     const navigate = useNavigate()
     const { data, isLoading, error } = useMyCollections(page, limit)
     const { deleteCollection, isDeleting } = useDeleteCollection()
-    const { publishCollection } = usePublishCollection()
-    const { unpublishCollection } = useUnpublishCollection()
+    const { publishCollection, isPublishing } = usePublishCollection()
+    const { unpublishCollection, isUnpublishing } = useUnpublishCollection()
+    const { updateCollection, isUpdating } = useUpdateCollection()
     const { createCollection, isCreating } = useCreateCollection()
     const { mutateAsync: getPresignedUrl } = useGetPresignedImageUploadUrl()
     const queryClient = useQueryClient()
@@ -110,6 +123,7 @@ export default function CollectionsPage() {
     const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
     const [coverImagePreview, setCoverImagePreview] = useState<string>("")
     const [isUploadingCover, setIsUploadingCover] = useState(false)
+    const [collectionImageErrors, setCollectionImageErrors] = useState<Record<string, boolean>>({})
 
     // Delete confirmation dialog state
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -118,10 +132,10 @@ export default function CollectionsPage() {
     const collections = data?.collections || []
     const pagination = data
         ? {
-              page: data.page || 1,
-              limit: data.limit || limit,
-              total: data.total || 0,
-              pages: data.pages || 1
+              page: data.page || (data as any).pagination?.page || 1,
+              limit: data.limit || (data as any).pagination?.limit || limit,
+              total: data.total ?? (data as any).pagination?.total ?? 0,
+              pages: data.pages || (data as any).pagination?.pages || 1
           }
         : { page: 1, limit, total: 0, pages: 1 }
 
@@ -144,24 +158,27 @@ export default function CollectionsPage() {
         }
     }
 
-    const minArtworksToPublish = 3
+    const { data: collectionSettings } = useCollectionSettings()
+    const minArtworksToPublish = collectionSettings?.settings?.minArtworksForPublish
 
-    const handlePublishToggle = async (
+    const handleVisibilityChange = async (
         collectionId: string,
-        currentVisibility: string,
+        newVisibility: string,
         artworkCount = 0
     ) => {
         try {
-            if (currentVisibility === "public") {
-                await unpublishCollection(collectionId)
-            } else {
-                if (artworkCount < minArtworksToPublish) {
+            if (newVisibility === "public") {
+                if (minArtworksToPublish !== undefined && artworkCount < minArtworksToPublish) {
                     toast.error(
                         `Collection must have at least ${minArtworksToPublish} artworks to be published. Currently has ${artworkCount}.`
                     )
                     return
                 }
                 await publishCollection(collectionId)
+            } else if (newVisibility === "unlisted") {
+                await updateCollection(collectionId, { visibility: "unlisted" } as any)
+            } else if (newVisibility === "private") {
+                await unpublishCollection(collectionId)
             }
             queryClient.invalidateQueries({ queryKey: collectionKeys.lists() })
         } catch (error: any) {
@@ -321,19 +338,22 @@ export default function CollectionsPage() {
                             {viewMode === "grid" ? (
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
                                     {collections.map((collection) => (
-                                        <Link
+                                        <div
                                             key={collection.id}
-                                            to={`/collections/${collection.id}`}
-                                            className="group block"
+                                            className="group relative overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300"
                                         >
-                                            <div className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
+                                            <Link
+                                                to={`/collections/${collection.id}`}
+                                                className="block"
+                                            >
                                                 {/* Cover Image */}
                                                 <div className="relative h-32 w-full overflow-hidden bg-gray-100">
-                                                    {collection.coverImage ? (
+                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                         <img
                                                             src={collection.coverImage}
                                                             alt={collection.name}
-                                                            className="h-full w-full object-cover"
+                                                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                         />
                                                     ) : (
                                                         <div className="flex h-full w-full items-center justify-center bg-gray-50">
@@ -358,88 +378,106 @@ export default function CollectionsPage() {
                                                 </div>
 
                                                 {/* Collection Info */}
-                                                <div className="p-3">
-                                                    <h3 className="mb-1 line-clamp-1 font-medium text-gray-900 text-sm">
+                                                <div className="p-3 pb-0">
+                                                    <h3 className="mb-1 line-clamp-1 font-medium text-gray-900 text-sm group-hover:text-red-700 transition-colors">
                                                         {collection.name}
                                                     </h3>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="flex items-center gap-1 text-gray-500 text-xs">
-                                                            <ImageIcon className="h-3 w-3" />
-                                                            {"artworkCount" in collection &&
-                                                            collection.artworkCount !== undefined
-                                                                ? collection.artworkCount
-                                                                : 0}
-                                                        </span>
-                                                        <div className="flex items-center gap-1">
+                                                </div>
+                                            </Link>
+
+                                            <div className="flex items-center justify-between p-3 pt-1">
+                                                <span className="flex items-center gap-1 text-gray-500 text-xs">
+                                                    <ImageIcon className="h-3 w-3" />
+                                                    {"artworkCount" in collection &&
+                                                    collection.artworkCount !== undefined
+                                                        ? collection.artworkCount
+                                                        : 0}
+                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    <DropdownMenu modal={false}>
+                                                        <DropdownMenuTrigger asChild>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                title={
-                                                                    collection.visibility !==
-                                                                        "public" &&
-                                                                    (collection.artworkCount ?? 0) <
-                                                                        minArtworksToPublish
-                                                                        ? `Add at least ${minArtworksToPublish} artworks to publish`
-                                                                        : undefined
-                                                                }
-                                                                disabled={
-                                                                    collection.visibility !==
-                                                                        "public" &&
-                                                                    (collection.artworkCount ?? 0) <
-                                                                        minArtworksToPublish
-                                                                }
-                                                                onClick={async (e) => {
-                                                                    e.preventDefault()
-                                                                    e.stopPropagation()
-                                                                    await handlePublishToggle(
-                                                                        collection.id,
-                                                                        collection.visibility,
-                                                                        collection.artworkCount ?? 0
-                                                                    )
-                                                                }}
-                                                                className="h-6 px-2 text-xs"
+                                                                className="h-6 gap-1 border-gray-200 px-2 text-[10px] shadow-sm hover:bg-gray-50 focus:ring-0 focus:ring-offset-0"
+                                                                disabled={isUpdating || isPublishing || isUnpublishing}
                                                             >
-                                                                {collection.visibility === "public"
-                                                                    ? "Unpublish"
-                                                                    : "Publish"}
+                                                                {isUpdating || isPublishing || isUnpublishing ? (
+                                                                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                                ) : collection.visibility === "public" ? (
+                                                                    <Globe className="h-2.5 w-2.5 text-green-600" />
+                                                                ) : collection.visibility === "unlisted" ? (
+                                                                    <EyeOff className="h-2.5 w-2.5 text-yellow-600" />
+                                                                ) : (
+                                                                    <Lock className="h-2.5 w-2.5 text-gray-500" />
+                                                                )}
+                                                                <span className="capitalize">{collection.visibility}</span>
+                                                                <ChevronDown className="h-2.5 w-2.5 opacity-50" />
                                                             </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault()
-                                                                    e.stopPropagation()
-                                                                    handleDeleteClick(collection.id)
-                                                                }}
-                                                                disabled={isDeleting}
-                                                                className="h-6 w-6 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-32">
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleVisibilityChange(collection.id, "private", collection.artworkCount ?? 0)}
+                                                                className="gap-2 text-[10px]"
                                                             >
-                                                                <Trash2 className="h-3 w-3" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
+                                                                <Lock className="h-3.5 w-3.5 text-gray-500" />
+                                                                <span>Private</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleVisibilityChange(collection.id, "unlisted", collection.artworkCount ?? 0)}
+                                                                className="gap-2 text-[10px]"
+                                                            >
+                                                                <EyeOff className="h-3.5 w-3.5 text-yellow-600" />
+                                                                <span>Unlisted</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleVisibilityChange(collection.id, "public", collection.artworkCount ?? 0)}
+                                                                className="gap-2 text-[10px]"
+                                                                disabled={minArtworksToPublish !== undefined && (collection.artworkCount ?? 0) < minArtworksToPublish}
+                                                            >
+                                                                <Globe className="h-3.5 w-3.5 text-green-600" />
+                                                                <span>Public</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            handleDeleteClick(collection.id)
+                                                        }}
+                                                        disabled={isDeleting}
+                                                        className="h-6 w-6 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
                                                 </div>
                                             </div>
-                                        </Link>
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="space-y-2">
                                     {collections.map((collection) => (
-                                        <Link
+                                        <div
                                             key={collection.id}
-                                            to={`/collections/${collection.id}`}
-                                            className="group block"
+                                            className="group relative overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300"
                                         >
-                                            <div className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
-                                                <div className="flex items-center">
+                                            <div className="flex items-center">
+                                                <Link
+                                                    to={`/collections/${collection.id}`}
+                                                    className="flex flex-1 items-center min-w-0"
+                                                >
                                                     {/* Cover Image - Horizontal */}
                                                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden bg-gray-100">
-                                                        {collection.coverImage ? (
+                                                        {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                             <img
                                                                 src={collection.coverImage}
                                                                 alt={collection.name}
-                                                                className="h-full w-full object-cover"
+                                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                                onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                                                             />
                                                         ) : (
                                                             <div className="flex h-full w-full items-center justify-center bg-gray-50">
@@ -465,80 +503,92 @@ export default function CollectionsPage() {
                                                     </div>
 
                                                     {/* Collection Info - Horizontal */}
-                                                    <div className="flex min-w-0 flex-1 items-center justify-between px-3 py-2">
-                                                        <div className="min-w-0 flex-1">
-                                                            <h3 className="mb-0.5 truncate font-medium text-gray-900 text-sm">
-                                                                {collection.name}
-                                                            </h3>
-                                                            <span className="flex items-center gap-1 text-gray-500 text-xs">
-                                                                <ImageIcon className="h-3 w-3" />
-                                                                {"artworkCount" in collection &&
-                                                                collection.artworkCount !==
-                                                                    undefined
-                                                                    ? collection.artworkCount
-                                                                    : 0}{" "}
-                                                                {("artworkCount" in collection &&
-                                                                collection.artworkCount !==
-                                                                    undefined
-                                                                    ? collection.artworkCount
-                                                                    : 0) === 1
-                                                                    ? "artwork"
-                                                                    : "artworks"}
-                                                            </span>
-                                                        </div>
+                                                    <div className="flex-1 min-w-0 px-3 py-2">
+                                                        <h3 className="mb-0.5 truncate font-medium text-gray-900 text-sm group-hover:text-red-700 transition-colors">
+                                                            {collection.name}
+                                                        </h3>
+                                                        <span className="flex items-center gap-1 text-gray-500 text-xs">
+                                                            <ImageIcon className="h-3 w-3" />
+                                                            {"artworkCount" in collection &&
+                                                            collection.artworkCount !==
+                                                                undefined
+                                                                ? collection.artworkCount
+                                                                : 0}{" "}
+                                                            {("artworkCount" in collection &&
+                                                            collection.artworkCount !==
+                                                                undefined
+                                                                ? collection.artworkCount
+                                                                : 0) === 1
+                                                                ? "artwork"
+                                                                : "artworks"}
+                                                        </span>
+                                                    </div>
+                                                </Link>
 
-                                                        {/* Action Buttons */}
-                                                        <div className="flex items-center gap-1">
+                                                {/* Action Buttons */}
+                                                <div className="flex items-center gap-1 px-3">
+                                                    <DropdownMenu modal={false}>
+                                                        <DropdownMenuTrigger asChild>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                title={
-                                                                    collection.visibility !==
-                                                                        "public" &&
-                                                                    (collection.artworkCount ?? 0) <
-                                                                        minArtworksToPublish
-                                                                        ? `Add at least ${minArtworksToPublish} artworks to publish`
-                                                                        : undefined
-                                                                }
-                                                                disabled={
-                                                                    collection.visibility !==
-                                                                        "public" &&
-                                                                    (collection.artworkCount ?? 0) <
-                                                                        minArtworksToPublish
-                                                                }
-                                                                onClick={async (e) => {
-                                                                    e.preventDefault()
-                                                                    e.stopPropagation()
-                                                                    await handlePublishToggle(
-                                                                        collection.id,
-                                                                        collection.visibility,
-                                                                        collection.artworkCount ?? 0
-                                                                    )
-                                                                }}
-                                                                className="h-7 px-2 text-xs"
+                                                                className="h-7 gap-1.5 border-gray-200 px-2.5 text-xs shadow-sm hover:bg-gray-50 focus:ring-0 focus:ring-offset-0"
+                                                                disabled={isUpdating || isPublishing || isUnpublishing}
                                                             >
-                                                                {collection.visibility === "public"
-                                                                    ? "Unpublish"
-                                                                    : "Publish"}
+                                                                {isUpdating || isPublishing || isUnpublishing ? (
+                                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                                ) : collection.visibility === "public" ? (
+                                                                    <Globe className="h-3 w-3 text-green-600" />
+                                                                ) : collection.visibility === "unlisted" ? (
+                                                                    <EyeOff className="h-3 w-3 text-yellow-600" />
+                                                                ) : (
+                                                                    <Lock className="h-3 w-3 text-gray-500" />
+                                                                )}
+                                                                <span className="capitalize">{collection.visibility}</span>
+                                                                <ChevronDown className="h-3 w-3 opacity-50" />
                                                             </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault()
-                                                                    e.stopPropagation()
-                                                                    handleDeleteClick(collection.id)
-                                                                }}
-                                                                disabled={isDeleting}
-                                                                className="h-7 w-7 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-32">
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleVisibilityChange(collection.id, "private", collection.artworkCount ?? 0)}
+                                                                className="gap-2 text-xs"
                                                             >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
+                                                                <Lock className="h-4 w-4 text-gray-500" />
+                                                                <span>Private</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleVisibilityChange(collection.id, "unlisted", collection.artworkCount ?? 0)}
+                                                                className="gap-2 text-xs"
+                                                            >
+                                                                <EyeOff className="h-4 w-4 text-yellow-600" />
+                                                                <span>Unlisted</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleVisibilityChange(collection.id, "public", collection.artworkCount ?? 0)}
+                                                                className="gap-2 text-xs"
+                                                                disabled={minArtworksToPublish !== undefined && (collection.artworkCount ?? 0) < minArtworksToPublish}
+                                                            >
+                                                                <Globe className="h-4 w-4 text-green-600" />
+                                                                <span>Public</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            handleDeleteClick(collection.id)
+                                                        }}
+                                                        disabled={isDeleting}
+                                                        className="h-7 w-7 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
                                                 </div>
                                             </div>
-                                        </Link>
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -624,7 +674,7 @@ export default function CollectionsPage() {
                                 </SelectContent>
                             </Select>
                             <p className="mt-1 text-muted-foreground text-xs">
-                                Collections need at least 3 artworks to be published. Publish from
+                                Collections need at least {minArtworksToPublish} artworks to be published. Publish from
                                 the collection page once you’ve added enough.
                             </p>
                         </div>

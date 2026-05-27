@@ -33,3 +33,10 @@ export interface CreateCollectionDto {
     coverImage?: string
     visibility?: string
 }
+
+export interface UpdateCollectionDto {
+    name?: string
+    description?: string
+    coverImage?: string
+    visibility?: string
+}

@@ -212,103 +212,96 @@ export default function SettingsPage() {
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen bg-gray-50">
-                <div className="container mx-auto max-w-6xl px-4 py-8">
+            <div className="h-screen overflow-hidden bg-white flex flex-col">
+                <div className="container mx-auto max-w-5xl px-4 flex flex-col flex-1 min-h-0">
                     {/* Header */}
-                    <div className="mb-6 rounded-lg border border-gray-200 bg-white shadow-sm">
-                        <div className="p-6">
-                            <div className="flex items-center space-x-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                                    <SettingsIcon className="h-6 w-6 text-gray-700" />
-                                </div>
-                                <div>
-                                    <h1 className="font-bold text-3xl text-gray-900">Settings</h1>
-                                    <p className="mt-1 text-gray-500">
-                                        Manage your account settings and preferences
-                                    </p>
-                                </div>
-                            </div>
+                    <div className="pt-10 mb-8 pb-6 border-b border-zinc-100 flex items-center justify-between flex-shrink-0">
+                        <div>
+                            <h1 className="font-bold text-2xl text-zinc-900 tracking-tight uppercase">Settings</h1>
+                            <p className="text-zinc-500 text-xs mt-1">
+                                Manage your account settings and preferences
+                            </p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-12 md:grid-cols-12 flex-1 min-h-0">
                         {/* Sidebar Navigation */}
-                        <div className="md:col-span-1">
-                            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                                <nav className="space-y-2">
-                                    <div className="px-4 py-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">
+                        <div className="md:col-span-3 md:sticky md:top-24 self-start">
+                            <div className="bg-transparent p-0">
+                                <nav className="space-y-1">
+                                    <div className="px-3 py-1.5 font-bold text-zinc-400 text-[11px] uppercase tracking-wider">
                                         General
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("profile")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "profile"
-                                                ? "bg-red-50 font-medium text-red-700"
-                                                : "text-gray-700 hover:bg-gray-50"
+                                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-left transition-all border-l-2 ${activeTab === "profile"
+                                                ? "border-black text-zinc-900 bg-zinc-50/80"
+                                                : "border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/40"
                                             }`}
                                     >
-                                        <User className="h-5 w-5" />
+                                        <User className="h-4 w-4" />
                                         Profile
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("security")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "security"
-                                                ? "bg-red-50 font-medium text-red-700"
-                                                : "text-gray-700 hover:bg-gray-50"
+                                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-left transition-all border-l-2 ${activeTab === "security"
+                                                ? "border-black text-zinc-900 bg-zinc-50/80"
+                                                : "border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/40"
                                             }`}
                                     >
-                                        <Shield className="h-5 w-5" />
+                                        <Shield className="h-4 w-4" />
                                         Security
                                     </button>
 
-                                    <div className="my-3 border-t" />
+                                    <div className="my-2 border-t border-zinc-100" />
 
-                                    <div className="px-4 py-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">
+                                    <div className="px-3 py-1.5 font-bold text-zinc-400 text-[11px] uppercase tracking-wider">
                                         Artist Dashboard
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("earnings")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "earnings"
-                                                ? "bg-red-50 font-medium text-red-700"
-                                                : "text-gray-700 hover:bg-gray-50"
+                                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-left transition-all border-l-2 ${activeTab === "earnings"
+                                                ? "border-black text-zinc-900 bg-zinc-50/80"
+                                                : "border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/40"
                                             }`}
                                     >
-                                        <DollarSign className="h-5 w-5" />
+                                        <DollarSign className="h-4 w-4" />
                                         Earnings
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("withdrawals")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "withdrawals"
-                                                ? "bg-red-50 font-medium text-red-700"
-                                                : "text-gray-700 hover:bg-gray-50"
+                                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-left transition-all border-l-2 ${activeTab === "withdrawals"
+                                                ? "border-black text-zinc-900 bg-zinc-50/80"
+                                                : "border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/40"
                                             }`}
                                     >
-                                        <Wallet className="h-5 w-5" />
+                                        <Wallet className="h-4 w-4" />
                                         Withdrawals
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("billing-payments")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "billing-payments"
-                                                ? "bg-red-50 font-medium text-red-700"
-                                                : "text-gray-700 hover:bg-gray-50"
+                                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-left transition-all border-l-2 ${activeTab === "billing-payments"
+                                                ? "border-black text-zinc-900 bg-zinc-50/80"
+                                                : "border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/40"
                                             }`}
                                     >
-                                        <CreditCard className="h-5 w-5" />
+                                        <CreditCard className="h-4 w-4" />
                                         Billing & Payments
                                     </button>
 
-                                    <div className="my-3 border-t" />
+                                    <div className="my-2 border-t border-zinc-100" />
 
-                                    <div className="px-4 py-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">
+                                    <div className="px-3 py-1.5 font-bold text-zinc-400 text-[11px] uppercase tracking-wider">
                                         Transactions
                                     </div>
                                     <button
                                         onClick={() => setActiveTab("transactions")}
-                                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${activeTab === "transactions"
-                                                ? "bg-red-50 font-medium text-red-700"
-                                                : "text-gray-700 hover:bg-gray-50"
+                                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-left transition-all border-l-2 ${activeTab === "transactions"
+                                                ? "border-black text-zinc-900 bg-zinc-50/80"
+                                                : "border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/40"
                                             }`}
                                     >
-                                        <Receipt className="h-5 w-5" />
+                                        <Receipt className="h-4 w-4" />
                                         Transactions
                                     </button>
                                 </nav>
@@ -316,14 +309,19 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Main Content */}
-                        <div className="md:col-span-3">
+                        <div className="md:col-span-9 md:overflow-y-auto md:h-full pb-12 custom-scrollbar">
                             {/* Profile Settings */}
                             {activeTab === "profile" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Profile Settings
-                                    </h2>
-                                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Profile Settings
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            Update your personal details and public profile information
+                                        </p>
+                                    </div>
+                                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-xl">
                                         <div className="space-y-2">
                                             <Label htmlFor="name">Full Name</Label>
                                             <Input
@@ -373,9 +371,9 @@ export default function SettingsPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={isUpdating}
-                                                className="flex items-center gap-2 bg-red-700 text-white hover:bg-red-800"
+                                                className="flex items-center gap-2 bg-black text-white hover:bg-zinc-800 transition-all rounded-lg text-xs py-2 px-4"
                                             >
-                                                <Save className="h-4 w-4" />
+                                                <Save className="h-3.5 w-3.5" />
                                                 {isUpdating ? "Saving..." : "Save Changes"}
                                             </Button>
                                         </div>
@@ -385,259 +383,271 @@ export default function SettingsPage() {
 
                             {/* Security Settings */}
                             {activeTab === "security" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Security Settings
-                                    </h2>
-                                    <div className="space-y-6">
-                                        <div className="space-y-4">
-                                            <div className="rounded-lg border border-gray-200 p-4">
-                                                <div className="mb-4">
-                                                    <h3 className="mb-1 font-medium text-gray-900">
-                                                        Change Password
-                                                    </h3>
-                                                    <p className="text-gray-500 text-sm">
-                                                        Update your account password to keep your
-                                                        account secure
-                                                    </p>
-                                                    <p className="mt-1 text-gray-400 text-xs">
-                                                        Note: If you signed up with Google, you'll
-                                                        need to use "Forgot Password" first to set a
-                                                        password.
-                                                    </p>
-                                                </div>
-                                                {passwordError && (
-                                                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
-                                                        <p className="font-medium text-red-700 text-sm">
-                                                            {passwordError}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                <form
-                                                    onSubmit={handlePasswordSubmit(
-                                                        onPasswordSubmit
-                                                    )}
-                                                    className="space-y-4"
-                                                >
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="currentPassword">
-                                                            Current Password
-                                                        </Label>
-                                                        <div className="relative">
-                                                            <Input
-                                                                id="currentPassword"
-                                                                type={
-                                                                    showCurrentPassword
-                                                                        ? "text"
-                                                                        : "password"
-                                                                }
-                                                                {...registerPassword(
-                                                                    "currentPassword",
-                                                                    {
-                                                                        required:
-                                                                            "Current password is required"
-                                                                    }
-                                                                )}
-                                                                placeholder="Enter your current password"
-                                                                className="pr-10"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setShowCurrentPassword(
-                                                                        !showCurrentPassword
-                                                                    )
-                                                                }
-                                                                className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700"
-                                                            >
-                                                                {showCurrentPassword ? (
-                                                                    <EyeOff className="h-4 w-4" />
-                                                                ) : (
-                                                                    <Eye className="h-4 w-4" />
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                        {passwordErrors.currentPassword && (
-                                                            <p className="text-red-500 text-sm">
-                                                                {
-                                                                    passwordErrors.currentPassword
-                                                                        .message
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="newPassword">
-                                                            New Password
-                                                        </Label>
-                                                        <div className="relative">
-                                                            <Input
-                                                                id="newPassword"
-                                                                type={
-                                                                    showNewPassword
-                                                                        ? "text"
-                                                                        : "password"
-                                                                }
-                                                                {...registerPassword(
-                                                                    "newPassword",
-                                                                    {
-                                                                        required:
-                                                                            "New password is required",
-                                                                        minLength: {
-                                                                            value: 8,
-                                                                            message:
-                                                                                "Password must be at least 8 characters"
-                                                                        },
-                                                                        maxLength: {
-                                                                            value: 128,
-                                                                            message:
-                                                                                "Password must be less than 128 characters"
-                                                                        }
-                                                                    }
-                                                                )}
-                                                                placeholder="Enter your new password"
-                                                                className="pr-10"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setShowNewPassword(
-                                                                        !showNewPassword
-                                                                    )
-                                                                }
-                                                                className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700"
-                                                            >
-                                                                {showNewPassword ? (
-                                                                    <EyeOff className="h-4 w-4" />
-                                                                ) : (
-                                                                    <Eye className="h-4 w-4" />
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                        {passwordErrors.newPassword && (
-                                                            <p className="text-red-500 text-sm">
-                                                                {passwordErrors.newPassword.message}
-                                                            </p>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="confirmPassword">
-                                                            Confirm New Password
-                                                        </Label>
-                                                        <div className="relative">
-                                                            <Input
-                                                                id="confirmPassword"
-                                                                type={
-                                                                    showConfirmPassword
-                                                                        ? "text"
-                                                                        : "password"
-                                                                }
-                                                                {...registerPassword(
-                                                                    "confirmPassword",
-                                                                    {
-                                                                        required:
-                                                                            "Please confirm your new password",
-                                                                        validate: (value) =>
-                                                                            value === newPassword ||
-                                                                            "Passwords do not match"
-                                                                    }
-                                                                )}
-                                                                placeholder="Confirm your new password"
-                                                                className="pr-10"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setShowConfirmPassword(
-                                                                        !showConfirmPassword
-                                                                    )
-                                                                }
-                                                                className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700"
-                                                            >
-                                                                {showConfirmPassword ? (
-                                                                    <EyeOff className="h-4 w-4" />
-                                                                ) : (
-                                                                    <Eye className="h-4 w-4" />
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                        {passwordErrors.confirmPassword && (
-                                                            <p className="text-red-500 text-sm">
-                                                                {
-                                                                    passwordErrors.confirmPassword
-                                                                        .message
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex justify-end pt-2">
-                                                        <Button
-                                                            type="submit"
-                                                            disabled={isChangingPassword}
-                                                            className="flex items-center gap-2 bg-red-700 text-white hover:bg-red-800"
-                                                        >
-                                                            <Save className="h-4 w-4" />
-                                                            {isChangingPassword
-                                                                ? "Changing..."
-                                                                : "Change Password"}
-                                                        </Button>
-                                                    </div>
-                                                </form>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Security Settings
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            Secure your account by updating your credentials and password
+                                        </p>
+                                    </div>
+                                    <div className="space-y-6 max-w-xl">
+                                        {passwordError && (
+                                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                                                <p className="font-medium text-zinc-700 text-sm">
+                                                    {passwordError}
+                                                </p>
                                             </div>
-                                        </div>
+                                        )}
+                                        <form
+                                            onSubmit={handlePasswordSubmit(
+                                                onPasswordSubmit
+                                            )}
+                                            className="space-y-4"
+                                        >
+                                            <div className="space-y-2">
+                                                <Label htmlFor="currentPassword">
+                                                    Current Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="currentPassword"
+                                                        type={
+                                                            showCurrentPassword
+                                                                ? "text"
+                                                                : "password"
+                                                        }
+                                                        {...registerPassword(
+                                                            "currentPassword",
+                                                            {
+                                                                required:
+                                                                    "Current password is required"
+                                                            }
+                                                        )}
+                                                        placeholder="Enter your current password"
+                                                        className="pr-10"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setShowCurrentPassword(
+                                                                !showCurrentPassword
+                                                            )
+                                                        }
+                                                        className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        {showCurrentPassword ? (
+                                                            <EyeOff className="h-4 w-4" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {passwordErrors.currentPassword && (
+                                                    <p className="text-red-500 text-sm">
+                                                        {
+                                                            passwordErrors.currentPassword
+                                                                .message
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="newPassword">
+                                                    New Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="newPassword"
+                                                        type={
+                                                            showNewPassword
+                                                                ? "text"
+                                                                : "password"
+                                                        }
+                                                        {...registerPassword(
+                                                            "newPassword",
+                                                            {
+                                                                required:
+                                                                    "New password is required",
+                                                                minLength: {
+                                                                    value: 8,
+                                                                    message:
+                                                                        "Password must be at least 8 characters"
+                                                                },
+                                                                maxLength: {
+                                                                    value: 128,
+                                                                    message:
+                                                                        "Password must be less than 128 characters"
+                                                                }
+                                                            }
+                                                        )}
+                                                        placeholder="Enter your new password"
+                                                        className="pr-10"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setShowNewPassword(
+                                                                !showNewPassword
+                                                            )
+                                                        }
+                                                        className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        {showNewPassword ? (
+                                                            <EyeOff className="h-4 w-4" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {passwordErrors.newPassword && (
+                                                    <p className="text-red-500 text-sm">
+                                                        {passwordErrors.newPassword.message}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="confirmPassword">
+                                                    Confirm New Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="confirmPassword"
+                                                        type={
+                                                            showConfirmPassword
+                                                                ? "text"
+                                                                : "password"
+                                                        }
+                                                        {...registerPassword(
+                                                            "confirmPassword",
+                                                            {
+                                                                required:
+                                                                    "Please confirm your new password",
+                                                                validate: (value) =>
+                                                                    value === newPassword ||
+                                                                    "Passwords do not match"
+                                                            }
+                                                        )}
+                                                        placeholder="Confirm your new password"
+                                                        className="pr-10"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setShowConfirmPassword(
+                                                                !showConfirmPassword
+                                                            )
+                                                        }
+                                                        className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700"
+                                                    >
+                                                        {showConfirmPassword ? (
+                                                            <EyeOff className="h-4 w-4" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {passwordErrors.confirmPassword && (
+                                                    <p className="text-red-500 text-sm">
+                                                        {
+                                                            passwordErrors.confirmPassword
+                                                                .message
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="flex justify-end pt-2">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={isChangingPassword}
+                                                    className="flex items-center gap-2 bg-black text-white hover:bg-zinc-800 transition-all rounded-lg text-xs py-2 px-4"
+                                                >
+                                                    <Save className="h-3.5 w-3.5" />
+                                                    {isChangingPassword
+                                                        ? "Changing..."
+                                                        : "Change Password"}
+                                                </Button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             )}
 
                             {/* Earnings Dashboard */}
                             {activeTab === "earnings" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Earnings Dashboard
-                                    </h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Earnings Dashboard
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            Track your artist sales, platform earnings, and available payout balances
+                                        </p>
+                                    </div>
                                     <EarningsDashboard />
                                 </div>
                             )}
 
                             {/* Withdrawals */}
                             {activeTab === "withdrawals" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Withdrawals
-                                    </h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Withdrawals
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            Request custom payouts and track your pending and historic withdrawals
+                                        </p>
+                                    </div>
                                     <WithdrawalSection />
                                 </div>
                             )}
 
                             {/* Billing & Payments */}
                             {activeTab === "billing-payments" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Billing & Payments
-                                    </h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Billing & Payments
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            Configure and manage your payout method preferences for withdrawals
+                                        </p>
+                                    </div>
                                     <BillingPaymentsSection />
                                 </div>
                             )}
 
                             {/* Payment Method (Withdrawal Methods) */}
                             {activeTab === "payment-method" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Payment Method
-                                    </h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Payment Method
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            Configure your payout method preferences
+                                        </p>
+                                    </div>
                                     <PaymentMethodSection />
                                 </div>
                             )}
 
                             {/* Transactions */}
                             {activeTab === "transactions" && (
-                                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                                    <h2 className="mb-6 font-semibold text-gray-900 text-xl">
-                                        Transactions
-                                    </h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="font-bold text-zinc-900 text-lg uppercase tracking-wider">
+                                            Transactions
+                                        </h2>
+                                        <p className="text-zinc-500 text-xs mt-1">
+                                            View a full history of all credit and debit transactions
+                                        </p>
+                                    </div>
                                     <TransactionsSection />
                                 </div>
                             )}

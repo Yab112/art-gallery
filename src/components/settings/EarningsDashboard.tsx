@@ -6,23 +6,13 @@ import { Calendar, DollarSign, TrendingDown } from "lucide-react"
 import { useState } from "react"
 
 interface BackendEarningsData {
-    earning: number // From user table (source of truth)
-    totalEarnings: number // Alias for earning
-    totalSales: number
-    totalCommission: number
-    totalWithdrawn: number
-    availableBalance: number
-    salesCount: number
-    sales: Array<{
-        artworkId: string
-        artworkTitle: string
-        artworkImage: string
-        salePrice: number
-        commission: number
-        earnings: number
-        soldAt: string
-        buyerEmail: string
-    }>
+    earning: number // Legacy total
+    totalEarningsPaypal: number
+    totalEarningsChapa: number
+    totalWithdrawnPaypal: number
+    totalWithdrawnChapa: number
+    availableBalancePaypal: number
+    availableBalanceChapa: number
 }
 
 interface EarningsResponse {
@@ -31,13 +21,12 @@ interface EarningsResponse {
 }
 
 interface EarningsData {
-    totalEarnings: number
-    availableForWithdrawal: number
-    totalWithdrawn: number
-    monthlyEarnings?: Array<{
-        month: string
-        earnings: number
-    }>
+    totalPaypal: number
+    availablePaypal: number
+    withdrawnPaypal: number
+    totalChapa: number
+    availableChapa: number
+    withdrawnChapa: number
 }
 
 export function EarningsDashboard() {
@@ -50,12 +39,13 @@ export function EarningsDashboard() {
             const response = await axiosAuth.get<EarningsResponse>("/artist/earnings")
             const backendData = response.data.data
 
-            // Map backend response to component's expected format
             return {
-                totalEarnings: backendData.earning || backendData.totalEarnings || 0, // Use earning from user table
-                availableForWithdrawal: backendData.availableBalance || 0,
-                totalWithdrawn: backendData.totalWithdrawn || 0,
-                monthlyEarnings: undefined // Not available from endpoint currently
+                totalPaypal: backendData.totalEarningsPaypal || 0,
+                availablePaypal: backendData.availableBalancePaypal || 0,
+                withdrawnPaypal: backendData.totalWithdrawnPaypal || 0,
+                totalChapa: backendData.totalEarningsChapa || 0,
+                availableChapa: backendData.availableBalanceChapa || 0,
+                withdrawnChapa: backendData.totalWithdrawnChapa || 0,
             }
         }
     })
@@ -86,40 +76,71 @@ export function EarningsDashboard() {
     }
 
     const earnings = data || {
-        totalEarnings: 0,
-        availableForWithdrawal: 0,
-        totalWithdrawn: 0
+        totalPaypal: 0,
+        availablePaypal: 0,
+        withdrawnPaypal: 0,
+        totalChapa: 0,
+        availableChapa: 0,
+        withdrawnChapa: 0,
     }
 
-    const stats = [
+    const sections = [
         {
-            label: "Total Earnings",
-            value: `$${earnings.totalEarnings.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            icon: DollarSign,
-            color: "text-green-600",
-            bgColor: "bg-green-50",
-            description: "Total earnings from user table"
+            title: "PayPal Earnings (USD)",
+            stats: [
+                {
+                    label: "Total Earnings",
+                    value: `$${earnings.totalPaypal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    icon: DollarSign,
+                    color: "text-green-600",
+                    bgColor: "bg-green-50",
+                },
+                {
+                    label: "Available Balance",
+                    value: `$${earnings.availablePaypal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    icon: DollarSign,
+                    color: "text-blue-600",
+                    bgColor: "bg-blue-50",
+                },
+                {
+                    label: "Total Withdrawn",
+                    value: `$${earnings.withdrawnPaypal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    icon: TrendingDown,
+                    color: "text-gray-600",
+                    bgColor: "bg-gray-50",
+                }
+            ]
         },
         {
-            label: "Available for Withdrawal",
-            value: `$${earnings.availableForWithdrawal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            icon: DollarSign,
-            color: "text-blue-600",
-            bgColor: "bg-blue-50",
-            description: "Available balance after withdrawals"
-        },
-        {
-            label: "Total Withdrawn",
-            value: `$${earnings.totalWithdrawn.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            icon: TrendingDown,
-            color: "text-gray-600",
-            bgColor: "bg-gray-50",
-            description: "Total amount withdrawn"
+            title: "Chapa Earnings (ETB)",
+            stats: [
+                {
+                    label: "Total Earnings",
+                    value: `ETB ${earnings.totalChapa.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    icon: DollarSign,
+                    color: "text-orange-600",
+                    bgColor: "bg-orange-50",
+                },
+                {
+                    label: "Available Balance",
+                    value: `ETB ${earnings.availableChapa.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    icon: DollarSign,
+                    color: "text-blue-600",
+                    bgColor: "bg-blue-50",
+                },
+                {
+                    label: "Total Withdrawn",
+                    value: `ETB ${earnings.withdrawnChapa.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    icon: TrendingDown,
+                    color: "text-gray-600",
+                    bgColor: "bg-gray-50",
+                }
+            ]
         }
     ]
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-10">
             {/* Time Range Filter */}
             <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -135,58 +156,33 @@ export function EarningsDashboard() {
                     >
                         All Time
                     </Button>
-                    <Button
-                        variant={timeRange === "month" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setTimeRange("month")}
-                        className="rounded-full px-4"
-                    >
-                        This Month
-                    </Button>
-                    <Button
-                        variant={timeRange === "year" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setTimeRange("year")}
-                        className="rounded-full px-4"
-                    >
-                        This Year
-                    </Button>
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {stats.map((stat, index) => {
-                    const Icon = stat.icon
-                    return (
-                        <div
-                            key={index}
-                            className={`${stat.bgColor} rounded-lg border border-gray-200 p-6`}
-                        >
-                            <div className="mb-2 flex items-center justify-between">
-                                <p className="font-medium text-gray-600 text-sm">{stat.label}</p>
-                                <Icon className={`h-5 w-5 ${stat.color}`} />
-                            </div>
-                            <p className={`font-bold text-2xl ${stat.color}`}>{stat.value}</p>
-                            {stat.description && (
-                                <p className="mt-1 text-gray-500 text-xs">{stat.description}</p>
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
-
-            {/* Earnings Chart Placeholder */}
-            {earnings.monthlyEarnings && earnings.monthlyEarnings.length > 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6">
-                    <h3 className="mb-4 font-semibold text-gray-900 text-lg">Earnings Over Time</h3>
-                    <div className="flex h-64 items-center justify-center text-gray-500">
-                        <p>Chart visualization coming soon</p>
+            {sections.map((section, sIndex) => (
+                <div key={sIndex} className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">{section.title}</h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        {section.stats.map((stat, index) => {
+                            const Icon = stat.icon
+                            return (
+                                <div
+                                    key={index}
+                                    className={`${stat.bgColor} rounded-lg border border-gray-200 p-6`}
+                                >
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <p className="font-medium text-gray-600 text-sm">{stat.label}</p>
+                                        <Icon className={`h-5 w-5 ${stat.color}`} />
+                                    </div>
+                                    <p className={`font-bold text-2xl ${stat.color}`}>{stat.value}</p>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
-            )}
+            ))}
 
-            {earnings.totalEarnings === 0 && (
+            {earnings.totalPaypal === 0 && earnings.totalChapa === 0 && (
                 <div className="py-8 text-center text-gray-500">
                     <p>No earnings data available yet.</p>
                     <p className="mt-2 text-sm">Start selling your artwork to see earnings here.</p>

@@ -95,17 +95,19 @@ export function TrendingArtists() {
 
     // Map trending artists data to the Artist interface expected by ArtistCard
     const mappedArtists = artists.map((artist) => ({
-        id: artist.userId,
+        id: artist.id,
         name: artist.name,
-        country: "Unknown", // We don't have country data from backend yet
+        email: artist.email,
+        country: artist.location || "Unknown",
         followers: 0, // We don't have followers data from backend yet
         artworks: artist.artworkCount || 0,
         avatar: artist.avatar || "/placeholder.svg",
         sales: artist.totalSales || 0,
-        views: artist.totalViews || 0,
-        rating: artist.salesCount > 0 ? 4.5 : undefined, // Optional rating based on sales
-        isTopSelling: artist.salesCount > 0,
-        isMostViewed: (artist.totalViews || 0) > 100
+        views: artist.totalViews || artist.profileViews || 0,
+        rating: (artist.salesCount || 0) > 0 ? 4.5 : undefined, // Optional rating based on sales
+        isTopSelling: (artist.salesCount || 0) > 0,
+        isMostViewed: (artist.totalViews || artist.profileViews || 0) > 100,
+        talentTypes: artist.talentTypes || []
     }))
 
     if (isLoading) {

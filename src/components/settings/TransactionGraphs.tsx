@@ -6,8 +6,8 @@ import { useState } from "react"
 // Simple bar chart component using CSS - Compact (for single data series)
 const SimpleBarChart = ({
     data,
-    color = "bg-red-600",
-    hoverColor = "hover:bg-red-700"
+    color = "bg-zinc-950",
+    hoverColor = "hover:bg-zinc-850"
 }: {
     data: Array<{ date: string; amount: number; count: number }>
     color?: string
@@ -95,10 +95,10 @@ const DualBarChart = ({
                                     title={`Credits: $${credit.amount.toFixed(2)}`}
                                 />
                             )}
-                            {/* Debits bar (red) */}
+                            {/* Debits bar (zinc) */}
                             {debit.amount > 0 && (
                                 <div
-                                    className="w-full rounded-t bg-red-600 transition-all hover:bg-red-700"
+                                    className="w-full rounded-t bg-zinc-950 transition-all hover:bg-zinc-850"
                                     style={{
                                         height: `${(debit.amount / maxAmount) * 100}%`,
                                         minHeight: "3px"
@@ -117,7 +117,7 @@ const DualBarChart = ({
                                 </span>
                             )}
                             {debit.amount > 0 && (
-                                <span className="font-medium text-[10px] text-red-600">
+                                <span className="font-medium text-[10px] text-zinc-900">
                                     -${debit.amount.toFixed(0)}
                                 </span>
                             )}
@@ -146,7 +146,7 @@ const SimplePieChart = ({
     }
 
     const total = entries.reduce((sum, [_, value]) => sum + value.count, 0)
-    const colors = ["#dc2626", "#2563eb", "#16a34a", "#ea580c", "#9333ea"]
+    const colors = ["#09090b", "#27272a", "#71717a", "#a1a1aa", "#d4d4d8"]
 
     return (
         <div className="space-y-2">
@@ -201,10 +201,10 @@ export function TransactionGraphs() {
 
     if (!stats) {
         return (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 py-12 text-center">
-                <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                <p className="font-medium text-gray-600">No transaction data available</p>
-                <p className="mt-1 text-gray-500 text-sm">
+            <div className="rounded-xl border border-zinc-100 bg-zinc-50/50 py-12 text-center shadow-none">
+                <BarChart3 className="mx-auto mb-4 h-12 w-12 text-zinc-400" />
+                <p className="font-bold text-zinc-700 text-sm">No transaction data available</p>
+                <p className="mt-1 text-zinc-500 text-xs">
                     Transaction statistics will appear here once you have transaction history.
                 </p>
             </div>
@@ -214,14 +214,14 @@ export function TransactionGraphs() {
     return (
         <div className="space-y-4">
             {/* Period Selector - Compact */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-gray-200 border-b pb-2">
-                <h3 className="whitespace-nowrap font-semibold text-base text-gray-900">Analytics</h3>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-zinc-100 border-b pb-2">
+                <h3 className="whitespace-nowrap font-bold text-base text-zinc-900 uppercase tracking-wider">Analytics</h3>
                 <div className="flex flex-wrap items-center gap-1.5">
                     <Button
                         variant={period === "week" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setPeriod("week")}
-                        className={`h-7 rounded-full px-3 text-xs ${period === "week" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                        className={`h-7 rounded-full px-3 text-[10px] uppercase font-semibold tracking-wider transition-all ${period === "week" ? "bg-black text-white hover:bg-zinc-800" : "bg-transparent text-zinc-500 hover:text-black border border-zinc-200"}`}
                     >
                         Week
                     </Button>
@@ -229,7 +229,7 @@ export function TransactionGraphs() {
                         variant={period === "month" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setPeriod("month")}
-                        className={`h-7 rounded-full px-3 text-xs ${period === "month" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                        className={`h-7 rounded-full px-3 text-[10px] uppercase font-semibold tracking-wider transition-all ${period === "month" ? "bg-black text-white hover:bg-zinc-800" : "bg-transparent text-zinc-500 hover:text-black border border-zinc-200"}`}
                     >
                         Month
                     </Button>
@@ -237,7 +237,7 @@ export function TransactionGraphs() {
                         variant={period === "year" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setPeriod("year")}
-                        className={`h-7 rounded-full px-3 text-xs ${period === "year" ? "bg-red-700 hover:bg-red-800" : ""}`}
+                        className={`h-7 rounded-full px-3 text-[10px] uppercase font-semibold tracking-wider transition-all ${period === "year" ? "bg-black text-white hover:bg-zinc-800" : "bg-transparent text-zinc-500 hover:text-black border border-zinc-200"}`}
                     >
                         Year
                     </Button>
@@ -246,10 +246,10 @@ export function TransactionGraphs() {
 
             {/* Summary Cards - Compact */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <div className="rounded-md border border-gray-200 bg-white p-3">
+                <div className="rounded-xl border border-zinc-100 bg-white p-3 shadow-none">
                     <div className="mb-1 flex items-center gap-1.5">
                         <TrendingUp className="h-4 w-4 text-green-600" />
-                        <p className="text-gray-600 text-xs">Credits</p>
+                        <p className="text-zinc-500 text-xs">Credits</p>
                     </div>
                     <p className="font-bold text-green-600 text-lg">
                         +$
@@ -259,12 +259,12 @@ export function TransactionGraphs() {
                         })}
                     </p>
                 </div>
-                <div className="rounded-md border border-gray-200 bg-white p-3">
+                <div className="rounded-xl border border-zinc-100 bg-white p-3 shadow-none">
                     <div className="mb-1 flex items-center gap-1.5">
-                        <TrendingUp className="h-4 w-4 rotate-180 text-red-600" />
-                        <p className="text-gray-600 text-xs">Debits</p>
+                        <TrendingUp className="h-4 w-4 rotate-180 text-zinc-950" />
+                        <p className="text-zinc-500 text-xs">Debits</p>
                     </div>
-                    <p className="font-bold text-lg text-red-600">
+                    <p className="font-bold text-lg text-zinc-950">
                         -$
                         {(stats.totalDebits || 0).toLocaleString("en-US", {
                             minimumFractionDigits: 0,
@@ -272,15 +272,15 @@ export function TransactionGraphs() {
                         })}
                     </p>
                 </div>
-                <div className="rounded-md border border-gray-200 bg-white p-3">
+                <div className="rounded-xl border border-zinc-100 bg-white p-3 shadow-none">
                     <div className="mb-1 flex items-center gap-1.5">
                         <BarChart3 className="h-4 w-4 text-blue-600" />
-                        <p className="text-gray-600 text-xs">Net</p>
+                        <p className="text-zinc-500 text-xs">Net</p>
                     </div>
                     <p
                         className={`font-bold text-lg ${(stats.totalCredits || 0) - (stats.totalDebits || 0) >= 0
                             ? "text-green-600"
-                            : "text-red-600"
+                            : "text-zinc-950"
                             }`}
                     >
                         $
@@ -293,26 +293,26 @@ export function TransactionGraphs() {
                         )}
                     </p>
                 </div>
-                <div className="rounded-md border border-gray-200 bg-white p-3">
+                <div className="rounded-xl border border-zinc-100 bg-white p-3 shadow-none">
                     <div className="mb-1 flex items-center gap-1.5">
                         <PieChart className="h-4 w-4 text-purple-600" />
-                        <p className="text-gray-600 text-xs">Count</p>
+                        <p className="text-zinc-500 text-xs">Count</p>
                     </div>
-                    <p className="font-bold text-gray-900 text-lg">{stats.totalCount}</p>
+                    <p className="font-bold text-zinc-900 text-lg">{stats.totalCount}</p>
                 </div>
             </div>
 
             {/* Charts - Compact Grid */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {/* Credits and Debits Over Time */}
-                <div className="rounded-md border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">
+                <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none">
+                    <h3 className="mb-3 font-semibold text-zinc-900 text-sm">
                         Credits & Debits Over Time
                     </h3>
                     {stats.byDateCredits && stats.byDateDebits ? (
                         <DualBarChart
-                            creditsData={stats.byDateCredits}
-                            debitsData={stats.byDateDebits}
+                             creditsData={stats.byDateCredits}
+                             debitsData={stats.byDateDebits}
                         />
                     ) : (
                         <SimpleBarChart data={stats.byDate} />
@@ -320,18 +320,18 @@ export function TransactionGraphs() {
                     <div className="mt-3 flex items-center justify-center gap-4 text-xs">
                         <div className="flex items-center gap-1.5">
                             <div className="h-3 w-3 rounded bg-green-600" />
-                            <span className="text-gray-600">Credits (Earnings)</span>
+                            <span className="text-zinc-650">Credits (Earnings)</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <div className="h-3 w-3 rounded bg-red-600" />
-                            <span className="text-gray-600">Debits (Purchases/Withdrawals)</span>
+                            <div className="h-3 w-3 rounded bg-zinc-950" />
+                            <span className="text-zinc-650">Debits (Purchases/Withdrawals)</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Credits Over Time */}
-                <div className="rounded-md border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">
+                <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none">
+                    <h3 className="mb-3 font-semibold text-zinc-900 text-sm">
                         Credits (Earnings) Over Time
                     </h3>
                     {stats.byDateCredits ? (
@@ -341,45 +341,45 @@ export function TransactionGraphs() {
                             hoverColor="hover:bg-green-700"
                         />
                     ) : (
-                        <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                        <div className="flex h-48 items-center justify-center text-zinc-550 text-sm">
                             No data
                         </div>
                     )}
                 </div>
 
                 {/* Debits Over Time */}
-                <div className="rounded-md border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">
+                <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none">
+                    <h3 className="mb-3 font-semibold text-zinc-900 text-sm">
                         Debits (Purchases/Withdrawals) Over Time
                     </h3>
                     {stats.byDateDebits ? (
                         <SimpleBarChart
                             data={stats.byDateDebits}
-                            color="bg-red-600"
-                            hoverColor="hover:bg-red-700"
+                            color="bg-zinc-950"
+                            hoverColor="hover:bg-zinc-850"
                         />
                     ) : (
-                        <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
+                        <div className="flex h-48 items-center justify-center text-zinc-550 text-sm">
                             No data
                         </div>
                     )}
                 </div>
 
                 {/* Transactions by Status */}
-                <div className="rounded-md border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">By Status</h3>
+                <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none">
+                    <h3 className="mb-3 font-semibold text-zinc-900 text-sm">By Status</h3>
                     <SimplePieChart data={stats.byStatus} />
                 </div>
 
                 {/* Transactions by Provider */}
-                <div className="rounded-md border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">By Provider</h3>
+                <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none">
+                    <h3 className="mb-3 font-semibold text-zinc-900 text-sm">By Provider</h3>
                     <SimplePieChart data={stats.byProvider} />
                 </div>
 
                 {/* Transaction Count Over Time */}
-                <div className="rounded-md border border-gray-200 bg-white p-4">
-                    <h3 className="mb-3 font-semibold text-gray-900 text-sm">Count Over Time</h3>
+                <div className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none">
+                    <h3 className="mb-3 font-semibold text-zinc-900 text-sm">Count Over Time</h3>
                     {stats.byDate.length === 0 ? (
                         <div className="flex h-48 items-center justify-center text-gray-500 text-sm">
                             No data

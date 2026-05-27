@@ -15,7 +15,6 @@ interface ShippingData {
 
 interface PaymentData {
     provider: "chapa" | "paypal" | "card"
-    phoneNumber?: string
 }
 
 interface CheckoutContextType {

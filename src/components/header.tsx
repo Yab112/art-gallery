@@ -4,6 +4,7 @@ import { useArtworks } from "@/queries/artworkQueries"
 import { useCartSummary } from "@/queries/cartQueries"
 import { useCollections } from "@/queries/collectionQueries"
 import { useGetAllArtists } from "@/services/artist/useGetAllArtists"
+import { usePlatformSettings } from "@/queries/settingsQueries"
 import {
     Heart,
     Loader2,
@@ -30,9 +31,11 @@ import { UserDropdown } from "./user-dropdown"
 
 function Logo() {
     const [imageError, setImageError] = useState(false)
+    const { data: platformSettings } = usePlatformSettings()
+    const siteName = platformSettings?.settings?.siteName
 
     if (imageError) {
-        return <span className="block font-bold text-2xl text-red-500 md:text-4xl">artopia</span>
+        return <span className="block font-bold text-2xl text-red-500 md:text-4xl">{siteName?.toLowerCase()}</span>
     }
 
     return (
@@ -47,6 +50,7 @@ function Logo() {
 
 function MobileUserMenu({ onItemClick }: { onItemClick: () => void }) {
     const { user, isAuthenticated, isLoading, logout } = useAuth()
+    const { data: platformSettings } = usePlatformSettings()
     const navigate = useNavigate()
     const [showAuth, setShowAuth] = useState(false)
     const [authView, setAuthView] = useState<"signin" | "signup">("signin")
@@ -163,7 +167,7 @@ function MobileUserMenu({ onItemClick }: { onItemClick: () => void }) {
     return (
         <div className="space-y-2">
             <div className="border-b px-2 pb-2">
-                <p className="text-gray-600 text-sm">Welcome to Artopia</p>
+                <p className="text-gray-600 text-sm">Welcome to {platformSettings?.settings?.siteName || "Artopia"}</p>
             </div>
             <button
                 className="flex w-full items-center rounded px-2 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-100"

@@ -173,7 +173,7 @@ export function ArtistProfileEnhanced({
     }
 
     return (
-        <div className="mb-12 space-y-6">
+        <div className="mb-12 space-y-4">
             {/* Cover Image - Full Width Black Banner */}
             <div className="px-4">
                 <div className="relative h-32 w-full overflow-hidden bg-black sm:h-48">
@@ -197,18 +197,18 @@ export function ArtistProfileEnhanced({
             </div>
 
             {/* Profile Header */}
-            <div className="container mx-auto max-w-6xl px-4">
+            <div className="container mx-auto mt-2 max-w-6xl px-4">
                 <div className="mb-6">
                     <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-                        <div className="-mt-16 flex w-full flex-col items-center space-y-4 sm:-mt-20 sm:flex-row sm:items-end sm:space-x-6 sm:space-y-0">
+                        <div className="flex w-full flex-col items-center space-y-4 sm:flex-row sm:items-end sm:space-x-6 sm:space-y-0">
                             {/* Profile Picture */}
-                            <div className="relative flex w-full flex-shrink-0 justify-center sm:w-auto">
+                            <div className="relative -mt-16 flex w-full flex-shrink-0 justify-center sm:-mt-20 sm:w-auto">
                                 {user.image && !profileImageFailed ? (
                                     <img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
-                                        className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-40 sm:w-40 sm:border-[8px]"
-                                        style={{ borderColor: "#F9FAFB" }}
+                                        className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
+                                        style={{ borderColor: "#FFFFFF" }}
                                         onError={() => {
                                             setProfileImageFailed(true) // Mark as failed, prevent retry
                                         }}
@@ -217,16 +217,16 @@ export function ArtistProfileEnhanced({
                                     <img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
-                                        className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-40 sm:w-40 sm:border-[8px]"
-                                        style={{ borderColor: "#F9FAFB" }}
+                                        className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
+                                        style={{ borderColor: "#FFFFFF" }}
                                         onError={() => {
                                             setPlaceholderImageFailed(true) // Mark placeholder as failed
                                         }}
                                     />
                                 ) : (
                                     <div
-                                        className="flex h-32 w-32 items-center justify-center rounded-full border-[6px] bg-blue-600 sm:h-40 sm:w-40 sm:border-[8px]"
-                                        style={{ borderColor: "#F9FAFB" }}
+                                        className="flex h-32 w-32 items-center justify-center rounded-full border-[6px] bg-blue-600 sm:h-48 sm:w-48 sm:border-[8px]"
+                                        style={{ borderColor: "#FFFFFF" }}
                                     >
                                         <span className="font-bold text-3xl text-white sm:text-4xl">
                                             {(user.name || "A")[0].toUpperCase()}
@@ -426,7 +426,7 @@ export function ArtistProfileEnhanced({
                 totalArtworks >= 20 ||
                 profileViews > 500 ||
                 (memberSince && new Date().getFullYear() - memberSince >= 3)) && (
-                    <div className="container mx-auto max-w-6xl px-4">
+                    <div className="container mx-auto mt-6 max-w-6xl px-4">
                         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                             {primaryTalentType && (
                                 <span className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 font-medium text-gray-600 text-xs">
@@ -466,7 +466,7 @@ export function ArtistProfileEnhanced({
 
             {/* Engagement Metrics Row */}
             {isOnline && (
-                <div className="container mx-auto max-w-6xl px-4">
+                <div className="container mx-auto mt-6 max-w-6xl px-4">
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                         {/* Online Status Card */}
                         <div className="rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 p-4">
@@ -527,7 +527,7 @@ export function ArtistProfileEnhanced({
       )} */}
 
             {/* Main Content with Right Sidebar */}
-            <div className="container mx-auto max-w-6xl px-4">
+            <div className="container mx-auto mt-8 max-w-6xl px-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     {/* Main Content Area */}
                     <div className="space-y-6 md:col-span-2">

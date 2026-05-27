@@ -5,6 +5,8 @@ import axios from "axios"
 export interface RequestWithdrawalParams {
     amount: number
     iban: string
+    bankCode?: string
+    accountName?: string
 }
 
 export interface RequestWithdrawalResponse {

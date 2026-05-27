@@ -159,8 +159,8 @@ export function PaymentMethodSection() {
                     }}
                 >
                     <DialogTrigger asChild>
-                        <Button className="bg-red-700 text-white hover:bg-red-800">
-                            <Plus className="mr-2 h-4 w-4" />
+                        <Button className="bg-black text-white hover:bg-zinc-800 transition-all rounded-lg text-xs py-2 px-4">
+                            <Plus className="mr-1.5 h-3.5 w-3.5" />
                             Add Payment Method
                         </Button>
                     </DialogTrigger>
@@ -296,7 +296,7 @@ export function PaymentMethodSection() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" className="bg-red-700 hover:bg-red-800">
+                                <Button type="submit" className="bg-black text-white hover:bg-zinc-800 transition-all rounded-lg text-xs py-2 px-4">
                                     {editingMethod ? "Update" : "Add"} Payment Method
                                 </Button>
                             </div>
@@ -317,7 +317,7 @@ export function PaymentMethodSection() {
                     {paymentMethods.map((method) => (
                         <div
                             key={method.id}
-                            className="rounded-lg border border-gray-200 bg-white p-4"
+                            className="rounded-xl border border-zinc-100 bg-white p-4 shadow-none"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
