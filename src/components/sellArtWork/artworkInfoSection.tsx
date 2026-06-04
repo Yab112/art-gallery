@@ -204,7 +204,11 @@ export function ArtworkInfoSection({ control, errors }: ArtworkInfoSectionProps)
                     <FormField
                         label="Dimensions (cm)"
                         required
-                        description={errors.dimensions?.message}
+                        description={
+                            errors.dimensions?.height?.message ||
+                            errors.dimensions?.width?.message ||
+                            (errors.dimensions as any)?.message
+                        }
                     >
                         <div className="grid grid-cols-3 gap-2">
                             <Controller

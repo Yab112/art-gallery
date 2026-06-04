@@ -125,8 +125,13 @@ export function SearchFilters({
         categoryIds.length > 0
 
     const getCategoryName = (id: string) => {
-        if (!categoriesData?.data) return id
-        const category = categoriesData.data.find((c: any) => c.id === id)
+        if (!categoriesData) return id
+        // categoriesData can be an array or { categories: [] }
+        const categories = Array.isArray(categoriesData) 
+            ? categoriesData 
+            : (categoriesData.categories || [])
+        
+        const category = categories.find((c: any) => c.id === id)
         return category ? category.name : id
     }
 

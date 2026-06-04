@@ -44,8 +44,6 @@ export const artworkFormSchema = z.object({
 
     // Section 5: Banking information
     accountHolder: z.string().min(1, "Account holder is required"),
-    iban: z.string().min(1, "IBAN is required"),
-    bicCode: z.string().optional(),
     acceptTermsOfSale: z
         .boolean()
         .refine((val) => val === true, "You must accept the terms of sale"),
