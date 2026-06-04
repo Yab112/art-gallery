@@ -677,6 +677,17 @@ export default function ProfilePage() {
                                     }}
                                     openMenu={openMenu}
                                     onOpenChange={setOpenMenu}
+                                    extraAction={
+                                        !isViewingOtherProfile && (
+                                            <Button
+                                                onClick={() => navigate("/sellart")}
+                                                className="bg-red-700 text-white hover:bg-red-800"
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Create Artwork
+                                            </Button>
+                                        )
+                                    }
                                 />
 
                                 {isLoadingArtworks ? (
