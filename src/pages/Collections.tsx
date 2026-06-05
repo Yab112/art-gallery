@@ -1,4 +1,5 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
+import { truncateCollectionName, CollectionCoverImage } from "@/components/collections/collection-card"
 import { CollectionsSkeleton } from "@/components/skeletons/collections-skeleton"
 import {
     AlertDialog,
@@ -280,55 +281,65 @@ export default function CollectionsPage() {
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen bg-gray-50">
-                <div className="container mx-auto max-w-7xl px-4 py-4">
-                    {/* Header */}
-                    <div className="mb-4 border-gray-200 border-b bg-white py-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => navigate("/profile")}
-                                    className="h-8 w-8"
-                                >
-                                    <ArrowLeft className="h-4 w-4" />
-                                </Button>
-                                <h1 className="font-semibold text-gray-900 text-xl">
+            <div className="min-h-screen bg-white">
+                <div className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8">
+                    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate("/profile")}
+                                className="mt-1 h-9 w-9 shrink-0 rounded-full"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                            <div>
+                                <p className="mb-2 font-semibold text-[11px] text-red-700 uppercase tracking-[0.22em]">
+                                    Profile
+                                </p>
+                                <h1 className="font-poppins font-semibold text-[1.85rem] text-gray-900 leading-tight sm:text-[2.35rem]">
                                     My Collections
                                 </h1>
-                                <span className="text-gray-500 text-sm">({pagination.total})</span>
+                                <p className="mt-2 text-gray-500 text-sm">
+                                    {pagination.total}{" "}
+                                    {pagination.total === 1 ? "collection" : "collections"}
+                                </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                {/* View Mode Toggle */}
-                                <div className="flex items-center gap-0.5 rounded-md border border-gray-300 bg-gray-50 p-0.5">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setViewMode("grid")}
-                                        className={`h-7 px-2 ${viewMode === "grid" ? "bg-white shadow-sm" : "bg-transparent hover:bg-transparent"}`}
-                                    >
-                                        <Grid className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setViewMode("list")}
-                                        className={`h-7 px-2 ${viewMode === "list" ? "bg-white shadow-sm" : "bg-transparent hover:bg-transparent"}`}
-                                    >
-                                        <List className="h-3.5 w-3.5" />
-                                    </Button>
-                                </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex h-9 items-center gap-0.5 rounded-full border border-gray-200 bg-white px-1">
                                 <Button
-                                    variant="outline"
+                                    variant={viewMode === "grid" ? "default" : "ghost"}
                                     size="sm"
-                                    className="flex h-7 items-center gap-1.5 px-3 text-sm"
-                                    onClick={() => setIsCreateModalOpen(true)}
+                                    onClick={() => setViewMode("grid")}
+                                    className={`h-7 w-8 rounded-full ${
+                                        viewMode === "grid"
+                                            ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                            : "text-gray-500"
+                                    }`}
                                 >
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Create
+                                    <Grid className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant={viewMode === "list" ? "default" : "ghost"}
+                                    size="sm"
+                                    onClick={() => setViewMode("list")}
+                                    className={`h-7 w-8 rounded-full ${
+                                        viewMode === "list"
+                                            ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                            : "text-gray-500"
+                                    }`}
+                                >
+                                    <List className="h-3.5 w-3.5" />
                                 </Button>
                             </div>
+                            <Button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="rounded-full bg-red-700 text-white hover:bg-red-800"
+                            >
+                                <Plus className="mr-1.5 h-4 w-4" />
+                                Create collection
+                            </Button>
                         </div>
                     </div>
 
@@ -336,62 +347,71 @@ export default function CollectionsPage() {
                     {collections.length > 0 ? (
                         <>
                             {viewMode === "grid" ? (
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                     {collections.map((collection) => (
                                         <div
                                             key={collection.id}
-                                            className="group relative overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300"
+                                            className="rounded-xl border border-gray-200 bg-white"
                                         >
                                             <Link
                                                 to={`/collections/${collection.id}`}
-                                                className="block"
+                                                state={{ from: "/profile/collections" }}
+                                                className="block overflow-hidden rounded-t-[11px]"
                                             >
-                                                {/* Cover Image */}
-                                                <div className="relative h-32 w-full overflow-hidden bg-gray-100">
+                                                <div className="relative aspect-[4/3]">
                                                     {collection.coverImage && !collectionImageErrors[collection.id] ? (
-                                                        <img
+                                                        <CollectionCoverImage
                                                             src={collection.coverImage}
                                                             alt={collection.name}
-                                                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                             onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
+                                                            className="absolute inset-0 h-full w-full"
                                                         />
                                                     ) : (
-                                                        <div className="flex h-full w-full items-center justify-center bg-gray-50">
-                                                            <FolderOpen className="h-8 w-8 text-gray-400" />
+                                                        <div className="flex h-full w-full items-center justify-center bg-stone-100 text-gray-400 text-sm">
+                                                            No cover
                                                         </div>
                                                     )}
-                                                    {/* Visibility Badge */}
-                                                    <div className="absolute top-2 right-2">
+                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/5" />
+                                                    <div className="pointer-events-none absolute top-3 right-3">
                                                         <span
-                                                            className={`rounded px-1.5 py-0.5 font-medium text-[10px] ${
+                                                            className={`rounded-full px-2.5 py-1 font-medium text-[11px] capitalize backdrop-blur-sm ${
                                                                 collection.visibility === "public"
-                                                                    ? "bg-green-500 text-white"
-                                                                    : collection.visibility ===
-                                                                        "unlisted"
-                                                                      ? "bg-yellow-500 text-white"
-                                                                      : "bg-gray-500 text-white"
+                                                                    ? "bg-green-600/90 text-white"
+                                                                    : collection.visibility === "unlisted"
+                                                                      ? "bg-amber-500/90 text-white"
+                                                                      : "bg-gray-700/90 text-white"
                                                             }`}
                                                         >
                                                             {collection.visibility}
                                                         </span>
                                                     </div>
-                                                </div>
-
-                                                {/* Collection Info */}
-                                                <div className="p-3 pb-0">
-                                                    <h3 className="mb-1 line-clamp-1 font-medium text-gray-900 text-sm group-hover:text-red-700 transition-colors">
-                                                        {collection.name}
-                                                    </h3>
+                                                    <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-4">
+                                                        <h3
+                                                            className="truncate font-semibold text-white text-base leading-snug sm:text-lg"
+                                                            title={collection.name}
+                                                        >
+                                                            {truncateCollectionName(collection.name)}
+                                                        </h3>
+                                                        <span className="mt-2 inline-flex items-center gap-1 text-white/85 text-xs sm:text-sm">
+                                                            <ImageIcon className="h-3.5 w-3.5" />
+                                                            {"artworkCount" in collection &&
+                                                            collection.artworkCount !== undefined
+                                                                ? collection.artworkCount
+                                                                : 0}{" "}
+                                                            {("artworkCount" in collection &&
+                                                            collection.artworkCount !== undefined
+                                                                ? collection.artworkCount
+                                                                : 0) === 1
+                                                                ? "artwork"
+                                                                : "artworks"}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </Link>
 
-                                            <div className="flex items-center justify-between p-3 pt-1">
-                                                <span className="flex items-center gap-1 text-gray-500 text-xs">
-                                                    <ImageIcon className="h-3 w-3" />
-                                                    {"artworkCount" in collection &&
-                                                    collection.artworkCount !== undefined
-                                                        ? collection.artworkCount
-                                                        : 0}
+                                            <div className="flex items-center justify-between px-4 py-3">
+                                                <span className="text-gray-500 text-sm">
+                                                    Manage visibility
                                                 </span>
                                                 <div className="flex items-center gap-1">
                                                     <DropdownMenu modal={false}>
@@ -459,64 +479,59 @@ export default function CollectionsPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                     {collections.map((collection) => (
                                         <div
                                             key={collection.id}
-                                            className="group relative overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300"
+                                            className="rounded-xl border border-gray-200 bg-white"
                                         >
-                                            <div className="flex items-center">
+                                            <div className="flex items-stretch overflow-hidden rounded-t-[11px]">
                                                 <Link
                                                     to={`/collections/${collection.id}`}
-                                                    className="flex flex-1 items-center min-w-0"
+                                                    state={{ from: "/profile/collections" }}
+                                                    className="flex min-w-0 flex-1 items-center"
                                                 >
-                                                    {/* Cover Image - Horizontal */}
-                                                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden bg-gray-100">
-                                                        {collection.coverImage && !collectionImageErrors[collection.id] ? (
-                                                            <img
-                                                                src={collection.coverImage}
-                                                                alt={collection.name}
-                                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                                                onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
-                                                            />
-                                                        ) : (
-                                                            <div className="flex h-full w-full items-center justify-center bg-gray-50">
-                                                                <FolderOpen className="h-6 w-6 text-gray-400" />
-                                                            </div>
-                                                        )}
-                                                        {/* Visibility Badge */}
-                                                        <div className="absolute top-1 right-1">
+                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
+                                                        <CollectionCoverImage
+                                                            src={collection.coverImage}
+                                                            alt={collection.name}
+                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
+                                                            className="h-28 w-36 shrink-0 sm:h-32 sm:w-44"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-28 w-36 shrink-0 items-center justify-center bg-stone-100 text-gray-400 text-xs sm:h-32 sm:w-44">
+                                                            No cover
+                                                        </div>
+                                                    )}
+
+                                                    <div className="min-w-0 flex-1 px-4 py-3 sm:px-5">
+                                                        <div className="mb-1 flex items-center gap-2">
+                                                            <h3
+                                                                className="truncate font-semibold text-base text-gray-900 sm:text-lg"
+                                                                title={collection.name}
+                                                            >
+                                                                {truncateCollectionName(collection.name)}
+                                                            </h3>
                                                             <span
-                                                                className={`rounded px-1 py-0.5 font-medium text-[9px] ${
-                                                                    collection.visibility ===
-                                                                    "public"
-                                                                        ? "bg-green-500 text-white"
-                                                                        : collection.visibility ===
-                                                                            "unlisted"
-                                                                          ? "bg-yellow-500 text-white"
-                                                                          : "bg-gray-500 text-white"
+                                                                className={`shrink-0 rounded-full px-2 py-0.5 font-medium text-[10px] capitalize ${
+                                                                    collection.visibility === "public"
+                                                                        ? "bg-green-100 text-green-700"
+                                                                        : collection.visibility === "unlisted"
+                                                                          ? "bg-amber-100 text-amber-700"
+                                                                          : "bg-gray-100 text-gray-600"
                                                                 }`}
                                                             >
                                                                 {collection.visibility}
                                                             </span>
                                                         </div>
-                                                    </div>
-
-                                                    {/* Collection Info - Horizontal */}
-                                                    <div className="flex-1 min-w-0 px-3 py-2">
-                                                        <h3 className="mb-0.5 truncate font-medium text-gray-900 text-sm group-hover:text-red-700 transition-colors">
-                                                            {collection.name}
-                                                        </h3>
-                                                        <span className="flex items-center gap-1 text-gray-500 text-xs">
-                                                            <ImageIcon className="h-3 w-3" />
+                                                        <span className="flex items-center gap-1 text-gray-500 text-sm">
+                                                            <ImageIcon className="h-3.5 w-3.5" />
                                                             {"artworkCount" in collection &&
-                                                            collection.artworkCount !==
-                                                                undefined
+                                                            collection.artworkCount !== undefined
                                                                 ? collection.artworkCount
                                                                 : 0}{" "}
                                                             {("artworkCount" in collection &&
-                                                            collection.artworkCount !==
-                                                                undefined
+                                                            collection.artworkCount !== undefined
                                                                 ? collection.artworkCount
                                                                 : 0) === 1
                                                                 ? "artwork"

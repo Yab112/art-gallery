@@ -1,4 +1,5 @@
 import { PublicCollectionsSkeleton } from "@/components/skeletons/public-collections-skeleton"
+import { CollectionGridCard, CollectionListRow } from "@/components/collections/collection-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,21 +28,17 @@ import { useCreateCollection } from "@/services/collections/useCreateCollection"
 import { uploadFileToS3 } from "@/services/upload"
 import { useQueryClient } from "@tanstack/react-query"
 import {
-    Filter,
-    Flame,
     FolderOpen,
     Grid,
-    Image as ImageIcon,
     List,
     Loader2,
     Plus,
     Search,
     Upload,
-    User,
     X
 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 // Simple pagination component
@@ -367,153 +364,117 @@ export default function PublicCollectionsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="container mx-auto max-w-7xl px-4 py-4">
-                {/* Header */}
-                <div className="mb-3 rounded-md border border-gray-200 bg-white">
-                    <div className="p-3">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 sm:h-8 sm:w-8">
-                                    <FolderOpen className="h-5 w-5 text-red-700 sm:h-4 sm:w-4" />
-                                </div>
-                                <div>
-                                    <h1 className="font-bold text-2xl text-gray-900 sm:text-3xl">
-                                        Collections
-                                    </h1>
-                                    <p className="mt-0.5 text-gray-500 text-xs">
-                                        {filteredCollections.length}{" "}
-                                        {filteredCollections.length === 1
-                                            ? "collection"
-                                            : "collections"}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                {user && (
-                                    <>
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => navigate("/profile/collections")}
-                                            className="flex h-10 items-center justify-center gap-2 rounded-full px-6 text-sm"
-                                        >
-                                            <FolderOpen className="h-4 w-4" />
-                                            My Collections
-                                        </Button>
-                                        <Button
-                                            onClick={handleCreateCollectionClick}
-                                            className="flex h-10 items-center justify-center gap-2 rounded-full bg-red-700 px-6 text-sm text-white hover:bg-red-800"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            Create Collection
-                                        </Button>
-                                    </>
-                                )}
-                                {!user && (
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            navigate(
-                                                `/login?redirect=${encodeURIComponent("/collections")}`
-                                            )
-                                        }
-                                        className="flex h-10 items-center justify-center gap-2 rounded-full px-6 text-sm"
-                                    >
-                                        Sign in to create a collection
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
+        <div className="min-h-screen bg-white">
+            <div className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p className="mb-2 font-semibold text-[11px] text-red-700 uppercase tracking-[0.22em]">
+                            Browse
+                        </p>
+                        <h1 className="font-poppins font-semibold text-[1.85rem] text-gray-900 leading-tight sm:text-[2.35rem]">
+                            Collections
+                        </h1>
+                        <p className="mt-2 text-gray-500 text-sm sm:text-base">
+                            {filteredCollections.length}{" "}
+                            {filteredCollections.length === 1 ? "collection" : "collections"}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {user && (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => navigate("/profile/collections")}
+                                    className="rounded-full"
+                                >
+                                    My collections
+                                </Button>
+                                <Button
+                                    onClick={handleCreateCollectionClick}
+                                    className="rounded-full bg-red-700 text-white hover:bg-red-800"
+                                >
+                                    <Plus className="mr-1.5 h-4 w-4" />
+                                    Create collection
+                                </Button>
+                            </>
+                        )}
+                        {!user && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    navigate(`/login?redirect=${encodeURIComponent("/collections")}`)
+                                }
+                                className="rounded-full"
+                            >
+                                Sign in to create
+                            </Button>
+                        )}
                     </div>
                 </div>
 
-                {/* Hot Collections Section */}
                 {!isLoadingHotCollections && hotCollections.length > 0 && (
-                    <div className="mb-3 rounded-md border border-gray-200 bg-white p-4">
-                        <div className="mb-4 flex items-center space-x-1.5">
-                            <Flame className="h-5 w-5 text-red-700" />
-                            <h2 className="font-semibold text-gray-900 text-xl">Hot Collections</h2>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                    <section className="mb-10">
+                        <h2 className="mb-4 font-semibold text-gray-900 text-lg">Featured collections</h2>
+                        <div className="scrollbar-hide -mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
                             {hotCollections.map((collection) => (
-                                <Link
-                                    key={collection.id}
-                                    to={`/collections/${collection.id}`}
-                                    className="group block"
-                                >
-                                    <div className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
-                                        <div className="relative h-20 w-full overflow-hidden bg-gray-100">
-                                            {collection.coverImage && !collectionImageErrors[collection.id] ? (
-                                                <img
-                                                    src={collection.coverImage}
-                                                    alt={collection.name}
-                                                    className="h-full w-full object-cover"
-                                                    onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center bg-gray-50">
-                                                    <FolderOpen className="h-5 w-5 text-gray-400" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-2">
-                                            <h3 className="mb-0.5 line-clamp-1 font-medium text-gray-900 text-xs">
-                                                {collection.name}
-                                            </h3>
-                                            <div className="flex items-center justify-between text-[10px] text-gray-500">
-                                                <span className="flex items-center gap-0.5">
-                                                    <ImageIcon className="h-2.5 w-2.5" />
-                                                    {collection.artworkCount || 0}
-                                                </span>
-                                                {collection.user && (
-                                                    <span className="flex max-w-[60px] items-center gap-0.5 truncate">
-                                                        <User className="h-2.5 w-2.5 flex-shrink-0" />
-                                                        <span className="truncate">
-                                                            {collection.user.name}
-                                                        </span>
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
+                                <div key={collection.id} className="w-[min(85vw,320px)] shrink-0 sm:w-80">
+                                    <CollectionGridCard
+                                        collection={collection}
+                                        featured
+                                        imageError={collectionImageErrors[collection.id]}
+                                        onImageError={() =>
+                                            setCollectionImageErrors((prev) => ({
+                                                ...prev,
+                                                [collection.id]: true
+                                            }))
+                                        }
+                                    />
+                                </div>
                             ))}
                         </div>
-                    </div>
+                    </section>
                 )}
 
-                {/* All Collections Section */}
-                <div className="mb-3 rounded-md border border-gray-200 bg-white p-4">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 className="font-semibold text-base text-gray-900">
-                            All Collections ({filteredCollections.length})
-                        </h2>
-                        <div className="flex items-center gap-1.5">
+                <section>
+                    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">
+                            All collections
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="flex h-7 items-center gap-1.5 text-xs"
+                                className="rounded-full"
                                 onClick={() => setShowFilters(!showFilters)}
                             >
-                                <Filter className="h-3 w-3" />
-                                {showFilters ? "Hide" : "Filters"}
+                                {showFilters ? "Hide filters" : "Filters"}
                             </Button>
-                            <Button
-                                variant={viewMode === "grid" ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setViewMode("grid")}
-                                className="h-7 w-7 p-0"
-                            >
-                                <Grid className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                                variant={viewMode === "list" ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setViewMode("list")}
-                                className="h-7 w-7 p-0"
-                            >
-                                <List className="h-3.5 w-3.5" />
-                            </Button>
+                            <div className="flex h-9 items-center gap-0.5 rounded-full border border-gray-200 bg-white px-1">
+                                <Button
+                                    variant={viewMode === "grid" ? "default" : "ghost"}
+                                    size="sm"
+                                    onClick={() => setViewMode("grid")}
+                                    className={`h-7 w-8 rounded-full ${
+                                        viewMode === "grid"
+                                            ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                            : "text-gray-500"
+                                    }`}
+                                >
+                                    <Grid className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant={viewMode === "list" ? "default" : "ghost"}
+                                    size="sm"
+                                    onClick={() => setViewMode("list")}
+                                    className={`h-7 w-8 rounded-full ${
+                                        viewMode === "list"
+                                            ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                            : "text-gray-500"
+                                    }`}
+                                >
+                                    <List className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
@@ -622,110 +583,41 @@ export default function PublicCollectionsPage() {
                     ) : (
                         <>
                             {viewMode === "grid" ? (
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                     {filteredCollections.map((collection) => (
-                                        <Link
+                                        <CollectionGridCard
                                             key={collection.id}
-                                            to={`/collections/${collection.id}`}
-                                            className="group block"
-                                        >
-                                            <div className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
-                                                {/* Cover Image */}
-                                                <div className="relative h-24 w-full overflow-hidden bg-gray-100">
-                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
-                                                        <img
-                                                            src={collection.coverImage}
-                                                            alt={collection.name}
-                                                            className="h-full w-full object-cover"
-                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-full w-full items-center justify-center bg-gray-50">
-                                                            <FolderOpen className="h-6 w-6 text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Collection Info */}
-                                                <div className="p-2">
-                                                    <h3 className="mb-0.5 line-clamp-1 font-medium text-gray-900 text-xs">
-                                                        {collection.name}
-                                                    </h3>
-                                                    <div className="flex items-center justify-between text-[10px] text-gray-500">
-                                                        <span className="flex items-center gap-0.5">
-                                                            <ImageIcon className="h-2.5 w-2.5" />
-                                                            {collection.artworkCount || 0}
-                                                        </span>
-                                                        {collection.user && (
-                                                            <span className="flex max-w-[60px] items-center gap-0.5 truncate">
-                                                                <User className="h-2.5 w-2.5 flex-shrink-0" />
-                                                                <span className="truncate">
-                                                                    {collection.user.name}
-                                                                </span>
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Link>
+                                            collection={collection}
+                                            imageError={collectionImageErrors[collection.id]}
+                                            onImageError={() =>
+                                                setCollectionImageErrors((prev) => ({
+                                                    ...prev,
+                                                    [collection.id]: true
+                                                }))
+                                            }
+                                        />
                                     ))}
                                 </div>
                             ) : (
-                                <div className="space-y-1.5">
+                                <div className="space-y-4">
                                     {filteredCollections.map((collection) => (
-                                        <Link
+                                        <CollectionListRow
                                             key={collection.id}
-                                            to={`/collections/${collection.id}`}
-                                            className="group block"
-                                        >
-                                            <div className="flex h-16 items-center overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-300">
-                                                {/* Cover Image - Horizontal */}
-                                                <div className="relative h-full w-16 flex-shrink-0 overflow-hidden bg-gray-100">
-                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
-                                                        <img
-                                                            src={collection.coverImage}
-                                                            alt={collection.name}
-                                                            className="h-full w-full object-cover"
-                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-full w-full items-center justify-center bg-gray-50">
-                                                            <FolderOpen className="h-6 w-6 text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Collection Info - Horizontal */}
-                                                <div className="flex h-full min-w-0 flex-1 items-center justify-between px-2.5 py-1.5">
-                                                    <div className="min-w-0 flex-1">
-                                                        <h3 className="mb-0.5 truncate font-medium text-gray-900 text-xs">
-                                                            {collection.name}
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                                                            <span className="flex items-center gap-0.5">
-                                                                <ImageIcon className="h-2.5 w-2.5" />
-                                                                {collection.artworkCount || 0}
-                                                            </span>
-                                                            {collection.user && (
-                                                                <span className="flex max-w-[80px] items-center gap-0.5 truncate">
-                                                                    <User className="h-2.5 w-2.5 flex-shrink-0" />
-                                                                    <span className="truncate">
-                                                                        {collection.user.name}
-                                                                    </span>
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Link>
+                                            collection={collection}
+                                            imageError={collectionImageErrors[collection.id]}
+                                            onImageError={() =>
+                                                setCollectionImageErrors((prev) => ({
+                                                    ...prev,
+                                                    [collection.id]: true
+                                                }))
+                                            }
+                                        />
                                     ))}
                                 </div>
                             )}
 
-                            {/* Pagination */}
                             {pagination.pages > 1 && (
-                                <div className="mt-4">
+                                <div className="mt-10">
                                     <Pagination
                                         currentPage={pagination.page}
                                         totalPages={pagination.pages}
@@ -735,7 +627,7 @@ export default function PublicCollectionsPage() {
                             )}
                         </>
                     )}
-                </div>
+                </section>
 
                 {/* Create Collection Modal */}
                 <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>

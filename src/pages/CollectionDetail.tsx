@@ -65,12 +65,13 @@ import {
     EyeOff
 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 
 export default function CollectionDetailPage() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
+    const location = useLocation()
     const { user } = useAuth()
     const { data, isLoading, error } = useCollection(id || "")
     const { removeArtwork: removeArtworkFromCollection } = useRemoveArtworkFromCollection()
@@ -86,7 +87,7 @@ export default function CollectionDetailPage() {
     const collection = data?.collection
     const isOwner = collection?.createdBy === user?.id
     const isGuest = !user
-    const backHref = isGuest ? "/collections" : "/profile/collections"
+    const backHref = (location.state as { from?: string } | null)?.from ?? "/collections"
 
     // Edit modal state
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -205,7 +206,7 @@ export default function CollectionDetailPage() {
             queryClient.invalidateQueries({ queryKey: collectionKeys.lists() })
             setDeleteDialogOpen(false)
             toast.success("Collection deleted successfully")
-            navigate("/profile/collections")
+            navigate(backHref)
         } catch (error: any) {
             toast.error(`Failed to delete collection: ${error?.message || "An error occurred"}`)
         }
