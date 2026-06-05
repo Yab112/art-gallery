@@ -57,6 +57,7 @@ import {
     Images,
     MapPin,
     Mountain,
+    Phone,
     Plus,
     Trash2,
     Upload,
@@ -814,7 +815,8 @@ export default function ProfilePage() {
                                     {/* Bio Section */}
                                     {((profile as any)?.bio ||
                                         (profile as any)?.location ||
-                                        (profile as any)?.website) && (
+                                        (profile as any)?.website ||
+                                        (profile as any)?.phone) && (
                                             <div className="space-y-4">
                                                 {(profile as any)?.bio && (
                                                     <div className="rounded-lg border border-red-100/50 bg-red-50/30 p-5">
@@ -826,7 +828,9 @@ export default function ProfilePage() {
                                                         </p>
                                                     </div>
                                                 )}
-                                                {((profile as any)?.location || (profile as any)?.website) && (
+                                                {((profile as any)?.location ||
+                                                    (profile as any)?.website ||
+                                                    (profile as any)?.phone) && (
                                                     <div className="flex flex-wrap items-center gap-5 text-sm">
                                                         {(profile as any)?.location && (
                                                             <div className="flex items-center gap-2 text-gray-700">
@@ -834,6 +838,17 @@ export default function ProfilePage() {
                                                                 <span className="font-medium">
                                                                     {(profile as any).location}
                                                                 </span>
+                                                            </div>
+                                                        )}
+                                                        {(profile as any)?.phone && (
+                                                            <div className="flex items-center gap-2 text-gray-700">
+                                                                <Phone className="h-4 w-4 text-gray-500" />
+                                                                <a
+                                                                    href={`tel:${(profile as any).phone}`}
+                                                                    className="font-medium transition-colors hover:text-red-600"
+                                                                >
+                                                                    {(profile as any).phone}
+                                                                </a>
                                                             </div>
                                                         )}
                                                         {(profile as any)?.website && (
