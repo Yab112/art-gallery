@@ -86,7 +86,7 @@ export function MarketplaceCta({
                         <Button
                             variant="outline"
                             size="lg"
-                            className="rounded-full border-white/30 bg-transparent px-6 text-white hover:bg-white/10"
+                            className="rounded-full border-white/30 bg-transparent px-6 text-white hover:text-orange-600 hover:bg-none hover:bg-transparent"
                             onClick={onSecondaryClick}
                         >
                             {secondaryButtonText}

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/hooks/use-auth"
+import { cn } from "@/lib/utils"
 import { useCollections, useHotCollections } from "@/queries/collectionQueries"
 import { collectionKeys } from "@/queries/queryKeys"
 import { useGetPresignedImageUploadUrl } from "@/queries/uploadQueries"
@@ -481,22 +482,34 @@ export default function PublicCollectionsPage() {
                     {/* Quick Filter Chips */}
                     <div className="mb-3 flex flex-wrap gap-1.5">
                         <Badge
-                            variant={activeQuickFilter === "most-artworks" ? "default" : "outline"}
-                            className="cursor-pointer px-2 py-0.5 text-xs"
+                            variant="outline"
+                            className={cn(
+                                "cursor-pointer px-2 py-0.5 text-xs",
+                                activeQuickFilter === "most-artworks" &&
+                                    "border-orange-500 bg-red-800 text-white hover:bg-red-600"
+                            )}
                             onClick={() => handleQuickFilter("most-artworks")}
                         >
                             Most Artworks
                         </Badge>
                         <Badge
-                            variant={activeQuickFilter === "recent" ? "default" : "outline"}
-                            className="cursor-pointer px-2 py-0.5 text-xs"
+                            variant="outline"
+                            className={cn(
+                                "cursor-pointer px-2 py-0.5 text-xs",
+                                activeQuickFilter === "recent" &&
+                                    "border-orange-500 bg-red-800 text-white hover:bg-red-600"
+                            )}
                             onClick={() => handleQuickFilter("recent")}
                         >
                             Recently Added
                         </Badge>
                         <Badge
-                            variant={activeQuickFilter === "popular" ? "default" : "outline"}
-                            className="cursor-pointer px-2 py-0.5 text-xs"
+                            variant="outline"
+                            className={cn(
+                                "cursor-pointer px-2 py-0.5 text-xs",
+                                activeQuickFilter === "popular" &&
+                                    "border-orange-500 bg-orange-500 text-white hover:bg-red-600"
+                            )}
                             onClick={() => handleQuickFilter("popular")}
                         >
                             Popular

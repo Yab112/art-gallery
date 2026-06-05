@@ -1,5 +1,6 @@
 import { ArtworkCard } from "@/components/artwork-card"
 import { CollectionDetailSkeleton } from "@/components/skeletons/collection-detail-skeleton"
+import { CollectionDescription } from "@/components/collections/collection-description"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -461,9 +462,7 @@ export default function CollectionDetailPage() {
                                 <h2 className="mb-2.5 font-medium text-gray-500 text-sm uppercase tracking-wide">
                                     Description
                                 </h2>
-                                <p className="whitespace-normal break-words text-gray-700 text-sm leading-relaxed">
-                                    {collection.description}
-                                </p>
+                                <CollectionDescription text={collection.description} />
                             </div>
                         )}
                     </div>

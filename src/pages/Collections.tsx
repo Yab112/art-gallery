@@ -1,5 +1,5 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
-import { truncateCollectionName, CollectionCoverImage } from "@/components/collections/collection-card"
+import { CollectionCoverImage, CollectionCardGlassFooter } from "@/components/collections/collection-card"
 import { CollectionsSkeleton } from "@/components/skeletons/collections-skeleton"
 import {
     AlertDialog,
@@ -54,7 +54,6 @@ import {
     FolderOpen,
     Globe,
     Grid,
-    Image as ImageIcon,
     List,
     Loader2,
     Lock,
@@ -358,7 +357,7 @@ export default function CollectionsPage() {
                                                 state={{ from: "/profile/collections" }}
                                                 className="block overflow-hidden rounded-t-[11px]"
                                             >
-                                                <div className="relative aspect-[4/3]">
+                                                <div className="relative aspect-[4/3] overflow-hidden">
                                                     {collection.coverImage && !collectionImageErrors[collection.id] ? (
                                                         <CollectionCoverImage
                                                             src={collection.coverImage}
@@ -371,7 +370,6 @@ export default function CollectionsPage() {
                                                             No cover
                                                         </div>
                                                     )}
-                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/5" />
                                                     <div className="pointer-events-none absolute top-3 right-3">
                                                         <span
                                                             className={`rounded-full px-2.5 py-1 font-medium text-[11px] capitalize backdrop-blur-sm ${
@@ -385,27 +383,15 @@ export default function CollectionsPage() {
                                                             {collection.visibility}
                                                         </span>
                                                     </div>
-                                                    <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-4">
-                                                        <h3
-                                                            className="truncate font-semibold text-white text-base leading-snug sm:text-lg"
-                                                            title={collection.name}
-                                                        >
-                                                            {truncateCollectionName(collection.name)}
-                                                        </h3>
-                                                        <span className="mt-2 inline-flex items-center gap-1 text-white/85 text-xs sm:text-sm">
-                                                            <ImageIcon className="h-3.5 w-3.5" />
-                                                            {"artworkCount" in collection &&
+                                                    <CollectionCardGlassFooter
+                                                        name={collection.name}
+                                                        artworkCount={
+                                                            "artworkCount" in collection &&
                                                             collection.artworkCount !== undefined
                                                                 ? collection.artworkCount
-                                                                : 0}{" "}
-                                                            {("artworkCount" in collection &&
-                                                            collection.artworkCount !== undefined
-                                                                ? collection.artworkCount
-                                                                : 0) === 1
-                                                                ? "artwork"
-                                                                : "artworks"}
-                                                        </span>
-                                                    </div>
+                                                                : 0
+                                                        }
+                                                    />
                                                 </div>
                                             </Link>
 
@@ -485,32 +471,34 @@ export default function CollectionsPage() {
                                             key={collection.id}
                                             className="rounded-xl border border-gray-200 bg-white"
                                         >
-                                            <div className="flex items-stretch overflow-hidden rounded-t-[11px]">
+                                            <div className="flex items-stretch overflow-hidden">
                                                 <Link
                                                     to={`/collections/${collection.id}`}
                                                     state={{ from: "/profile/collections" }}
                                                     className="flex min-w-0 flex-1 items-center"
                                                 >
-                                                    {collection.coverImage && !collectionImageErrors[collection.id] ? (
-                                                        <CollectionCoverImage
-                                                            src={collection.coverImage}
-                                                            alt={collection.name}
-                                                            onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
-                                                            className="h-28 w-36 shrink-0 sm:h-32 sm:w-44"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-28 w-36 shrink-0 items-center justify-center bg-stone-100 text-gray-400 text-xs sm:h-32 sm:w-44">
-                                                            No cover
-                                                        </div>
-                                                    )}
+                                                    <div className="relative h-24 w-32 shrink-0 overflow-hidden bg-gray-100 sm:h-28 sm:w-36">
+                                                        {collection.coverImage && !collectionImageErrors[collection.id] ? (
+                                                            <CollectionCoverImage
+                                                                src={collection.coverImage}
+                                                                alt={collection.name}
+                                                                onError={() => setCollectionImageErrors(prev => ({ ...prev, [collection.id]: true }))}
+                                                                className="h-full w-full"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-full w-full items-center justify-center bg-stone-100 text-gray-400 text-xs">
+                                                                No cover
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                                    <div className="min-w-0 flex-1 px-4 py-3 sm:px-5">
-                                                        <div className="mb-1 flex items-center gap-2">
+                                                    <div className="min-w-0 flex-1 px-4 py-3">
+                                                        <div className="mb-0.5 flex items-center gap-2">
                                                             <h3
-                                                                className="truncate font-semibold text-base text-gray-900 sm:text-lg"
+                                                                className="line-clamp-1 min-w-0 flex-1 font-semibold text-base text-gray-900 leading-tight sm:text-lg"
                                                                 title={collection.name}
                                                             >
-                                                                {truncateCollectionName(collection.name)}
+                                                                {collection.name}
                                                             </h3>
                                                             <span
                                                                 className={`shrink-0 rounded-full px-2 py-0.5 font-medium text-[10px] capitalize ${
@@ -524,8 +512,7 @@ export default function CollectionsPage() {
                                                                 {collection.visibility}
                                                             </span>
                                                         </div>
-                                                        <span className="flex items-center gap-1 text-gray-500 text-sm">
-                                                            <ImageIcon className="h-3.5 w-3.5" />
+                                                        <p className="line-clamp-1 text-gray-500 text-sm leading-tight">
                                                             {"artworkCount" in collection &&
                                                             collection.artworkCount !== undefined
                                                                 ? collection.artworkCount
@@ -536,7 +523,7 @@ export default function CollectionsPage() {
                                                                 : 0) === 1
                                                                 ? "artwork"
                                                                 : "artworks"}
-                                                        </span>
+                                                        </p>
                                                     </div>
                                                 </Link>
 

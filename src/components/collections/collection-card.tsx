@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { ImageIcon, User } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 
@@ -69,6 +68,41 @@ export function CollectionCoverImage({
     )
 }
 
+interface CollectionCardGlassFooterProps {
+    name: string
+    artworkCount: number
+    userName?: string
+    className?: string
+}
+
+export function CollectionCardGlassFooter({
+    name,
+    artworkCount,
+    userName,
+    className
+}: CollectionCardGlassFooterProps) {
+    const meta = [
+        `${artworkCount} ${artworkCount === 1 ? "artwork" : "artworks"}`,
+        userName
+    ]
+        .filter(Boolean)
+        .join(" · ")
+
+    return (
+        <div
+            className={cn(
+                "pointer-events-none absolute inset-x-0 bottom-0 border-white/20 border-t bg-black/40 px-3 py-2.5 backdrop-blur-md",
+                className
+            )}
+        >
+            <h3 className="line-clamp-1 font-semibold text-sm text-white leading-tight" title={name}>
+                {name}
+            </h3>
+            <p className="line-clamp-1 text-white/75 text-xs leading-tight">{meta}</p>
+        </div>
+    )
+}
+
 interface CollectionGridCardProps {
     collection: CollectionCardData
     imageError?: boolean
@@ -86,7 +120,6 @@ export function CollectionGridCard({
     listFrom = "/collections"
 }: CollectionGridCardProps) {
     const artworkCount = collection.artworkCount ?? 0
-    const displayName = truncateCollectionName(collection.name)
 
     return (
         <Link
@@ -95,11 +128,7 @@ export function CollectionGridCard({
             className="block"
         >
             <article className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <div
-                    className={`relative ${
-                        featured ? "aspect-[16/10]" : "aspect-[4/3]"
-                    }`}
-                >
+                <div className={`relative overflow-hidden ${featured ? "aspect-[16/10]" : "aspect-[4/3]"}`}>
                     {collection.coverImage && !imageError ? (
                         <CollectionCoverImage
                             src={collection.coverImage}
@@ -112,33 +141,12 @@ export function CollectionGridCard({
                             No cover
                         </div>
                     )}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/5" />
-                    <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-4">
-                        <h3
-                            className="truncate font-semibold text-white text-base leading-snug sm:text-lg"
-                            title={collection.name}
-                        >
-                            {displayName}
-                        </h3>
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-white/85 text-xs sm:text-sm">
-                            <span className="inline-flex items-center gap-1">
-                                <ImageIcon className="h-3.5 w-3.5" />
-                                {artworkCount} {artworkCount === 1 ? "artwork" : "artworks"}
-                            </span>
-                            {collection.user?.name && (
-                                <span className="inline-flex min-w-0 max-w-[55%] items-center gap-1">
-                                    <User className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="truncate">{collection.user.name}</span>
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                    <CollectionCardGlassFooter
+                        name={collection.name}
+                        artworkCount={artworkCount}
+                        userName={collection.user?.name}
+                    />
                 </div>
-                {collection.description && (
-                    <p className="line-clamp-2 px-4 py-3 text-gray-600 text-sm leading-relaxed">
-                        {collection.description}
-                    </p>
-                )}
             </article>
         </Link>
     )
@@ -158,7 +166,12 @@ export function CollectionListRow({
     listFrom = "/collections"
 }: CollectionListRowProps) {
     const artworkCount = collection.artworkCount ?? 0
-    const displayName = truncateCollectionName(collection.name)
+    const meta = [
+        `${artworkCount} ${artworkCount === 1 ? "artwork" : "artworks"}`,
+        collection.user?.name
+    ]
+        .filter(Boolean)
+        .join(" · ")
 
     return (
         <Link
@@ -167,42 +180,28 @@ export function CollectionListRow({
             className="block"
         >
             <article className="flex overflow-hidden rounded-xl border border-gray-200 bg-white">
-                {collection.coverImage && !imageError ? (
-                    <CollectionCoverImage
-                        src={collection.coverImage}
-                        alt={collection.name}
-                        onError={onImageError}
-                        className="h-28 w-36 shrink-0 sm:h-32 sm:w-44"
-                    />
-                ) : (
-                    <div className="flex h-28 w-36 shrink-0 items-center justify-center bg-stone-100 text-gray-400 text-xs sm:h-32 sm:w-44">
-                        No cover
-                    </div>
-                )}
-                <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-3 sm:px-5">
+                <div className="relative h-24 w-32 shrink-0 overflow-hidden bg-gray-100 sm:h-28 sm:w-36">
+                    {collection.coverImage && !imageError ? (
+                        <CollectionCoverImage
+                            src={collection.coverImage}
+                            alt={collection.name}
+                            onError={onImageError}
+                            className="h-full w-full"
+                        />
+                    ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-stone-100 text-gray-400 text-xs">
+                            No cover
+                        </div>
+                    )}
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-3">
                     <h3
-                        className="truncate font-semibold text-base text-gray-900 sm:text-lg"
+                        className="line-clamp-1 font-semibold text-base text-gray-900 leading-tight sm:text-lg"
                         title={collection.name}
                     >
-                        {displayName}
+                        {collection.name}
                     </h3>
-                    {collection.description && (
-                        <p className="mt-1 line-clamp-2 text-gray-500 text-sm">
-                            {collection.description}
-                        </p>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-500 text-xs sm:text-sm">
-                        <span className="inline-flex items-center gap-1">
-                            <ImageIcon className="h-3.5 w-3.5" />
-                            {artworkCount} {artworkCount === 1 ? "artwork" : "artworks"}
-                        </span>
-                        {collection.user?.name && (
-                            <span className="inline-flex min-w-0 items-center gap-1">
-                                <User className="h-3.5 w-3.5 shrink-0" />
-                                <span className="truncate">{collection.user.name}</span>
-                            </span>
-                        )}
-                    </div>
+                    <p className="line-clamp-1 text-gray-500 text-sm leading-tight">{meta}</p>
                 </div>
             </article>
         </Link>
