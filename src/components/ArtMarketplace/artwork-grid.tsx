@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge"
 import { useState } from "react"
 import { ArtworkCard } from "@/components/artwork-card"
 import { Button } from "@/components/ui/button"
@@ -6,6 +7,18 @@ import { useAuth } from "@/hooks/use-auth"
 import { useCheckFavorite } from "@/queries/favoriteQueries"
 import { CheckSquare, ChevronLeft, ChevronRight, Heart, Palette, Square } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { cn } from "@/lib/utils"
+
+const statusConfig = {
+    APPROVED: {
+        label: "Available",
+        className: "bg-green-100 text-green-800 border-green-200"
+    },
+    SOLD: {
+        label: "Sold",
+        className: "bg-gray-100 text-gray-800 border-gray-200"
+    }
+} as const
 
 // List view favorite button component
 function ListFavoriteButton({
@@ -143,7 +156,12 @@ export function ArtworkGrid({
             <div className="mx-auto max-w-7xl">
                 {viewMode === "list" ? (
                     <div className="space-y-4">
-                        {artworks.map((artwork) => (
+                        {artworks.map((artwork) => {
+                            const statusInfo = artwork.status
+                                ? statusConfig[artwork.status as keyof typeof statusConfig]
+                                : null
+
+                            return (
                             <div
                                 key={artwork.id}
                                 className={`group relative flex items-center gap-3 sm:gap-4 border-b border-gray-100 bg-white py-3 px-2 sm:px-4 transition-colors hover:bg-gray-50 ${isSelectionMode && selectedArtworkIds.has(artwork.id)
@@ -202,22 +220,40 @@ export function ArtworkGrid({
                                             </div>
                                         </div>
                                     )}
-                                    {/* Status badge if available */}
-                                    {artwork.status && (
-                                        <div className="absolute bottom-1 left-1 rounded bg-white/90 px-1 py-0.5 text-[8px] font-bold tracking-wider text-gray-900 shadow-sm backdrop-blur-sm scale-[0.8] origin-bottom-left">
-                                            {artwork.status}
-                                        </div>
-                                    )}
                                 </div>
 
                                 {/* Details */}
                                 <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
                                     <div className="min-w-0 flex-1">
-                                        <h3 className="truncate font-semibold text-gray-900 text-sm sm:text-base uppercase tracking-wide">
-                                            {artwork.artist}
-                                        </h3>
-                                        <div className="flex items-center gap-2 mt-0.5 text-gray-500 text-xs sm:text-sm">
-                                            <p className="truncate">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <h3
+                                                className="min-w-0 flex-1 truncate font-semibold text-gray-900 text-sm uppercase tracking-wide sm:text-base"
+                                                title={artwork.artist}
+                                            >
+                                                {artwork.artist}
+                                            </h3>
+                                            {statusInfo && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "shrink-0 border px-1.5 py-0 font-medium text-[10px]",
+                                                        statusInfo.className
+                                                    )}
+                                                >
+                                                    {statusInfo.label}
+                                                </Badge>
+                                            )}
+                                            {showFavorite && !isSelectionMode && (
+                                                <div className="shrink-0">
+                                                    <ListFavoriteButton
+                                                        artworkId={artwork.id}
+                                                        onFavorite={onFavorite}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="mt-0.5 flex items-center gap-2 text-gray-500 text-xs sm:text-sm">
+                                            <p className="truncate" title={artwork.title}>
                                                 {artwork.title}
                                                 {artwork.year && ` (${artwork.year})`}
                                             </p>
@@ -229,22 +265,15 @@ export function ArtworkGrid({
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-shrink-0 items-center justify-end gap-2 sm:gap-3">
+                                    <div className="flex flex-shrink-0 items-center justify-end">
                                         <p className="font-semibold text-gray-900 text-base sm:text-lg">
                                             {artwork.price}
                                         </p>
-                                        {showFavorite && !isSelectionMode && (
-                                            <div className="-mr-2">
-                                                <ListFavoriteButton
-                                                    artworkId={artwork.id}
-                                                    onFavorite={onFavorite}
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">

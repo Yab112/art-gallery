@@ -1,9 +1,9 @@
 import { BlogCard } from "@/components/blog/blog-card"
 import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton"
 import { Button } from "@/components/ui/button"
-import { EmptyState } from "@/components/ui/empty-state"
+import { BlogEmptyState } from "@/components/blog/blog-empty-state"
 import { useGetBlogPosts } from "@/services/blog"
-import { BookOpen, FolderOpen } from "lucide-react"
+import { BookOpen } from "lucide-react"
 import { Link } from "react-router-dom"
 
 interface UserBlogsProps {
@@ -67,13 +67,7 @@ export function UserBlogs({ userId, limit = 6 }: UserBlogsProps) {
                 </div>
             ) : (
                 /* Empty State */
-                <div className="rounded-lg border border-gray-200 bg-white p-8">
-                    <EmptyState
-                        icon={FolderOpen}
-                        title="No Blog Posts Yet"
-                        description="This artist hasn't published any blog posts yet."
-                    />
-                </div>
+                <BlogEmptyState />
             )}
         </section>
     )

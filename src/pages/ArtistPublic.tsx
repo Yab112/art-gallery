@@ -8,6 +8,7 @@ import { SimilarArtists } from "@/components/artist/similar-artists"
 import { BlogCard } from "@/components/blog/blog-card"
 import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton"
 import { Button } from "@/components/ui/button"
+import { BlogEmptyState } from "@/components/blog/blog-empty-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { useArtworks } from "@/queries/artworkQueries"
 import { useUser } from "@/queries/userQueries"
@@ -514,13 +515,7 @@ export default function ArtistDetailPage() {
                                 ))}
                             </div>
                         ) : blogs.length === 0 ? (
-                            <div className="mt-12">
-                                <EmptyState
-                                    icon={BookOpen}
-                                    title="No Blog Posts"
-                                    description="This artist hasn't published any blog posts yet."
-                                />
-                            </div>
+                            <BlogEmptyState artistName={user.name} />
                         ) : (
                             <>
                                 <div className="space-y-0 overflow-hidden rounded-lg border border-gray-200 bg-white">

@@ -1,8 +1,7 @@
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid"
-import { CategoryGrid } from "@/components/ArtMarketplace/category-grid"
-import { SectionTitleHero } from "@/components/ArtMarketplace/hero-section"
+import { MarketplaceHero } from "@/components/ArtMarketplace/hero-section"
+import { MarketplaceCta } from "@/components/ArtMarketplace/marketplace-cta"
 import { SearchFilters } from "@/components/ArtMarketplace/search-filters"
-import { CallToAction } from "@/components/call-to-action"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useArtworks } from "@/queries/artworkQueries"
@@ -11,7 +10,7 @@ import { useGetCategories } from "@/services/category/useGetCategories"
 import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkToCollection"
 import { useAddFavorite } from "@/services/favorites/useAddFavorite"
 import { useQueryClient } from "@tanstack/react-query"
-import { CheckSquare, Loader2, Palette, Plus, Square, Grid, List } from "lucide-react"
+import { CheckSquare, Grid, List, Loader2, SlidersHorizontal } from "lucide-react"
 import {
     Select,
     SelectContent,
@@ -19,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -35,6 +34,7 @@ export default function ArtMarketplace() {
 
     // Selection state
     const [selectedArtworkIds, setSelectedArtworkIds] = useState<Set<string>>(new Set())
+    const [filtersOpen, setFiltersOpen] = useState(false)
 
     // Collection operations
     const { addArtwork, isAdding } = useAddArtworkToCollection()
@@ -365,40 +365,45 @@ export default function ArtMarketplace() {
             }
         }) || []
 
+    const ctaPreviewArtworks = useMemo(() => {
+        const candidates = (artworksData?.artworks ?? [])
+            .map((artwork) => {
+                const image = artwork.photos?.[0]
+                if (typeof image !== "string" || image.trim() === "") return null
+                return {
+                    id: artwork.id,
+                    image,
+                    title: artwork.title || "Untitled"
+                }
+            })
+            .filter((item): item is { id: string; image: string; title: string } => item !== null)
+
+        if (candidates.length <= 4) return candidates
+
+        const shuffled = [...candidates]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        return shuffled.slice(0, 4)
+    }, [artworksData?.artworks])
+
     return (
         <div className="min-h-screen bg-white">
-            <SectionTitleHero
-                title="Collect art and design online"
-                subtitle="Discover exceptional artworks from galleries, artists, and collectors worldwide"
-                buttonText="Browse by collection"
+            <MarketplaceHero
+                eyebrow="Art marketplace"
+                title="Explore original art"
+                subtitle="Paintings, photography, and more from artists and collectors worldwide."
+                buttonText="Browse collections"
                 onButtonClick={() => navigate("/collections")}
+                categories={categories}
+                onCategorySelect={handleCategorySelect}
+                selectedCategoryIds={selectedCategoryIds}
+                isLoadingCategories={isLoadingCategories}
             />
 
-            {isLoadingCategories ? (
-                <div className="px-4 pb-8">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="mb-16 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-                            {[...Array(6)].map((_, i) => (
-                                <div key={i} className="animate-pulse">
-                                    <div className="mb-3 aspect-[4/3] rounded-lg bg-gray-200" />
-                                    <div className="mb-2 h-4 w-20 rounded bg-gray-200" />
-                                    <div className="h-3 w-16 rounded bg-gray-200" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            ) : categories.length > 0 ? (
-                <CategoryGrid
-                    categories={categories}
-                    onCategorySelect={handleCategorySelect}
-                    selectedCategoryIds={selectedCategoryIds}
-                />
-            ) : null}
-            {/* Main Content Area */}
-            <div className="mx-auto max-w-7xl px-4 py-8">
-                <div className="flex flex-col gap-10 lg:flex-row">
-                    {/* LEFT SIDEBAR - FILTERS */}
+            <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4">
+                <div className="flex flex-col gap-4 lg:flex-row">
                     <SearchFilters
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
@@ -419,33 +424,45 @@ export default function ArtMarketplace() {
                         onCategoryIdsChange={setCategoryIds}
                         categoriesData={categoriesData}
                         onClearAll={clearAllFilters}
+                        isOpen={filtersOpen}
+                        onClose={() => setFiltersOpen(false)}
                     />
 
-                    {/* RIGHT SIDE - ARTWORKS */}
-                    <div className="flex-1 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar lg:pr-4">
-                        {/* HEADER & TOOLBAR */}
-                        <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 sm:h-8 sm:w-8">
-                                    <Palette className="h-5 w-5 text-red-700 sm:h-4 sm:w-4" />
-                                </div>
-                                <div>
-                                    <h1 className="font-bold text-2xl text-gray-900 sm:text-3xl uppercase tracking-tight">Artworks</h1>
-                                    <div className="flex items-center gap-2 text-gray-500 text-xs">
-                                        <span className="font-semibold text-gray-900">{artworksData?.total || 0}</span>
-                                        <span>{artworksData?.total === 1 ? "Result" : "Results"}</span>
-                                    </div>
-                                </div>
-                            </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="font-semibold text-gray-900 text-base sm:text-lg">
+                                Artworks
+                                <span className="mx-2 font-normal text-gray-300">·</span>
+                                <span className="font-normal text-gray-500 text-sm sm:text-base">
+                                    {artworksData?.total || 0}{" "}
+                                    {artworksData?.total === 1 ? "result" : "results"}
+                                </span>
+                            </p>
 
-                            <div className="flex flex-wrap items-center gap-3">
-                                {/* Sort Dropdown */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-9 rounded-full border-gray-200 px-3 text-sm ${
+                                        filtersOpen ? "border-red-200 bg-red-50 text-red-700" : ""
+                                    }`}
+                                    onClick={() => setFiltersOpen((open) => !open)}
+                                >
+                                    <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                                    Filters
+                                    {hasActiveFilters && (
+                                        <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] text-white">
+                                            !
+                                        </span>
+                                    )}
+                                </Button>
+
                                 <Select
                                     value={sortBy}
                                     onValueChange={setSortBy}
                                     {...({ modal: false } as any)}
                                 >
-                                    <SelectTrigger className="h-10 w-44 rounded-full border-gray-200 bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-red-100">
+                                    <SelectTrigger className="h-9 w-40 rounded-full border-gray-200 bg-white px-3 text-sm focus:ring-2 focus:ring-red-100">
                                         <SelectValue placeholder="Sort by" />
                                     </SelectTrigger>
                                     <SelectContent position="popper" sideOffset={4} className="z-[100]">
@@ -457,27 +474,30 @@ export default function ArtMarketplace() {
                                     </SelectContent>
                                 </Select>
 
-                                {/* View Mode Toggles */}
-                                <div className="flex h-10 items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-2">
+                                <div className="flex h-9 items-center gap-0.5 rounded-full border border-gray-200 bg-white px-1">
                                     <Button
                                         variant={viewMode === "grid" ? "default" : "ghost"}
                                         size="sm"
                                         onClick={() => setViewMode("grid")}
-                                        className={`h-8 w-9 rounded-full ${
-                                            viewMode === "grid" ? "bg-red-50 text-red-700 hover:bg-red-100" : "text-gray-500"
+                                        className={`h-7 w-8 rounded-full ${
+                                            viewMode === "grid"
+                                                ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                                : "text-gray-500"
                                         }`}
                                     >
-                                        <Grid className="h-4 w-4" />
+                                        <Grid className="h-3.5 w-3.5" />
                                     </Button>
                                     <Button
                                         variant={viewMode === "list" ? "default" : "ghost"}
                                         size="sm"
                                         onClick={() => setViewMode("list")}
-                                        className={`h-8 w-9 rounded-full ${
-                                            viewMode === "list" ? "bg-red-50 text-red-700 hover:bg-red-100" : "text-gray-500"
+                                        className={`h-7 w-8 rounded-full ${
+                                            viewMode === "list"
+                                                ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                                : "text-gray-500"
                                         }`}
                                     >
-                                        <List className="h-4 w-4" />
+                                        <List className="h-3.5 w-3.5" />
                                     </Button>
                                 </div>
                             </div>
@@ -521,7 +541,7 @@ export default function ArtMarketplace() {
                             </div>
                         )}
 
-                        <div ref={artworksSectionRef} className="min-h-[600px]">
+                        <div ref={artworksSectionRef} className="min-h-[480px]">
                             {isLoading ? (
                                 <div
                                     className={
@@ -574,11 +594,12 @@ export default function ArtMarketplace() {
                 </div>
             </div>
 
-            <CallToAction
+            <MarketplaceCta
                 title="Start Your Collection Today"
-                subtitle="Join thousands of collectors discovering exceptional art"
+                subtitle="Follow artists, save pieces you love, and build a collection that tells your story."
                 primaryButtonText="Discover Artists"
                 secondaryButtonText="Browse Collections"
+                previewArtworks={ctaPreviewArtworks}
                 onPrimaryClick={() => navigate("/artists")}
                 onSecondaryClick={() => navigate("/collections")}
             />

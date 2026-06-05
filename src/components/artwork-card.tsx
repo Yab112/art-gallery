@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
 import { cn } from "@/lib/utils"
 import { useCheckFavorite } from "@/queries/favoriteQueries"
@@ -149,17 +148,6 @@ export function ArtworkCard({
                 onMouseLeave={handleMouseLeave}
                 onMouseMove={handleMouseMove}
             >
-                {/* Status Badge */}
-                {statusInfo && (
-                    <div className="absolute top-2 left-2 z-20">
-                        <Badge
-                            variant="outline"
-                            className={cn("border font-medium text-xs", statusInfo.className)}
-                        >
-                            {statusInfo.label}
-                        </Badge>
-                    </div>
-                )}
                 {imageError || !image ? (
                     <div className="flex h-full w-full items-center justify-center bg-gray-200">
                         <div className="text-center">
@@ -194,39 +182,43 @@ export function ArtworkCard({
                         onError={() => setImageError(true)}
                     />
                 )}
-                {/* Overlay background on hover (only when favorite button shown) */}
-                {showFavorite && (
-                    <div
-                        className={`pointer-events-none absolute inset-0 cursor-pointer transition-all duration-500 ease-in-out ${isHovered ? "bg-black/60 opacity-100" : "bg-black/0 opacity-0"
-                            }`}
-                    />
-                )}
-                {/* Hover Buttons - slide down from top (hidden for guests) */}
-                {showFavorite && (
-                    <div
-                        className={`absolute top-24 right-0 left-0 z-10 flex cursor-pointer justify-center gap-2 p-4 transition-all duration-500 ease-in-out ${isHovered
-                            ? "pointer-events-auto translate-y-10 opacity-100"
-                            : "-translate-y-full pointer-events-none opacity-0"
-                            }`}
-                    >
-                        <Button
-                            size="sm"
-                            variant="secondary"
-                            className={`bg-white/90 shadow-md hover:bg-white ${isFavorited ? "text-red-500" : ""}`}
-                            onClick={handleFavorite}
-                        >
-                            <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
-                        </Button>
-                    </div>
-                )}
             </div>
 
             {/* Artwork Details */}
             <div className="space-y-1">
-                <h3 className="font-semibold text-black text-sm uppercase tracking-wide">
-                    {artist}
-                </h3>
-                <p className="text-gray-600 text-sm">
+                <div className="flex min-w-0 items-center gap-2">
+                    <h3
+                        className="min-w-0 flex-1 truncate font-semibold text-black text-sm uppercase tracking-wide"
+                        title={artist}
+                    >
+                        {artist}
+                    </h3>
+                    {statusInfo && (
+                        <Badge
+                            variant="outline"
+                            className={cn(
+                                "shrink-0 border px-1.5 py-0 font-medium text-[10px]",
+                                statusInfo.className
+                            )}
+                        >
+                            {statusInfo.label}
+                        </Badge>
+                    )}
+                    {showFavorite && (
+                        <button
+                            type="button"
+                            onClick={handleFavorite}
+                            className={cn(
+                                "shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:text-red-500",
+                                isFavorited && "text-red-500"
+                            )}
+                            aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                        >
+                            <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
+                        </button>
+                    )}
+                </div>
+                <p className="truncate text-gray-600 text-sm" title={title}>
                     <span className="text-orange-500">🏆</span> {title} {year && `(${year})`}
                 </p>
                 <p className="font-bold text-lg">{price}</p>
