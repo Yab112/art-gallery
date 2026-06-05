@@ -10,6 +10,7 @@ import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton"
 import { Button } from "@/components/ui/button"
 import { BlogEmptyState } from "@/components/blog/blog-empty-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useArtworks } from "@/queries/artworkQueries"
 import { useUser } from "@/queries/userQueries"
 import { useGetBlogPosts } from "@/services/blog"
@@ -329,28 +330,15 @@ export default function ArtistDetailPage() {
                         />
                         {/* Artworks Pagination */}
                         {artworksTotal > 0 && (
-                            <div className="mt-8 flex items-center justify-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => updateSearchParams({ page: page - 1 })}
-                                    disabled={page === 1 || artworksPages <= 1}
-                                >
-                                    Previous
-                                </Button>
-                                <span className="text-gray-600 text-sm">
-                                    Page {page} of {artworksPages} ({artworksTotal}{" "}
-                                    {artworksTotal === 1 ? "artwork" : "artworks"})
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => updateSearchParams({ page: page + 1 })}
-                                    disabled={page >= artworksPages || artworksPages <= 1}
-                                >
-                                    Next
-                                </Button>
-                            </div>
+                            <PaginationControls
+                                currentPage={page}
+                                totalPages={artworksPages}
+                                onPageChange={(nextPage) => updateSearchParams({ page: nextPage })}
+                                totalItems={artworksTotal}
+                                itemLabel="artworks"
+                                itemLabelSingular="artwork"
+                                showSinglePageSummary={artworksPages <= 1}
+                            />
                         )}
                     </>
                 )}
@@ -525,31 +513,16 @@ export default function ArtistDetailPage() {
                                 </div>
                                 {/* Pagination */}
                                 {blogsPages > 1 && (
-                                    <div className="mt-8 flex items-center justify-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                                updateSearchParams({ blogPage: blogPage - 1 })
-                                            }
-                                            disabled={blogPage === 1}
-                                        >
-                                            Previous
-                                        </Button>
-                                        <span className="text-gray-600 text-sm">
-                                            Page {blogPage} of {blogsPages} ({blogsTotal} posts)
-                                        </span>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                                updateSearchParams({ blogPage: blogPage + 1 })
-                                            }
-                                            disabled={blogPage >= blogsPages}
-                                        >
-                                            Next
-                                        </Button>
-                                    </div>
+                                    <PaginationControls
+                                        currentPage={blogPage}
+                                        totalPages={blogsPages}
+                                        onPageChange={(nextPage) =>
+                                            updateSearchParams({ blogPage: nextPage })
+                                        }
+                                        totalItems={blogsTotal}
+                                        itemLabel="posts"
+                                        itemLabelSingular="post"
+                                    />
                                 )}
                             </>
                         )}
@@ -621,36 +594,16 @@ export default function ArtistDetailPage() {
                                 </div>
                                 {/* Pagination */}
                                 {collectionsPages > 1 && (
-                                    <div className="mt-8 flex items-center justify-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                                updateSearchParams({
-                                                    collectionPage: collectionPage - 1
-                                                })
-                                            }
-                                            disabled={collectionPage === 1}
-                                        >
-                                            Previous
-                                        </Button>
-                                        <span className="text-gray-600 text-sm">
-                                            Page {collectionPage} of {collectionsPages} (
-                                            {collectionsTotal} collections)
-                                        </span>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                                updateSearchParams({
-                                                    collectionPage: collectionPage + 1
-                                                })
-                                            }
-                                            disabled={collectionPage >= collectionsPages}
-                                        >
-                                            Next
-                                        </Button>
-                                    </div>
+                                    <PaginationControls
+                                        currentPage={collectionPage}
+                                        totalPages={collectionsPages}
+                                        onPageChange={(nextPage) =>
+                                            updateSearchParams({ collectionPage: nextPage })
+                                        }
+                                        totalItems={collectionsTotal}
+                                        itemLabel="collections"
+                                        itemLabelSingular="collection"
+                                    />
                                 )}
                             </>
                         )}

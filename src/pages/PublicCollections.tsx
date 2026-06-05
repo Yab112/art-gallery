@@ -38,38 +38,10 @@ import {
     Upload,
     X
 } from "lucide-react"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-
-// Simple pagination component
-const Pagination = ({
-    currentPage,
-    totalPages,
-    onPageChange
-}: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => (
-    <div className="flex items-center justify-center gap-2">
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-        >
-            Previous
-        </Button>
-        <span className="text-gray-600 text-sm">
-            Page {currentPage} of {totalPages}
-        </span>
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-        >
-            Next
-        </Button>
-    </div>
-)
 
 export default function PublicCollectionsPage() {
     const [page, setPage] = useState(1)
@@ -630,13 +602,14 @@ export default function PublicCollectionsPage() {
                             )}
 
                             {pagination.pages > 1 && (
-                                <div className="mt-10">
-                                    <Pagination
-                                        currentPage={pagination.page}
-                                        totalPages={pagination.pages}
-                                        onPageChange={setPage}
-                                    />
-                                </div>
+                                <PaginationControls
+                                    currentPage={pagination.page}
+                                    totalPages={pagination.pages}
+                                    onPageChange={setPage}
+                                    totalItems={pagination.total}
+                                    itemLabel="collections"
+                                    itemLabelSingular="collection"
+                                />
                             )}
                         </>
                     )}

@@ -3,9 +3,10 @@ import { useState } from "react"
 import { ArtworkCard } from "@/components/artwork-card"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useAuth } from "@/hooks/use-auth"
 import { useCheckFavorite } from "@/queries/favoriteQueries"
-import { CheckSquare, ChevronLeft, ChevronRight, Heart, Palette, Square } from "lucide-react"
+import { CheckSquare, Heart, Palette, Square } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 
@@ -25,20 +26,27 @@ function ListFavoriteButton({
     artworkId,
     onFavorite
 }: { artworkId: string; onFavorite: (id: string) => void }) {
+    const navigate = useNavigate()
+    const { isAuthenticated } = useAuth()
     const { data: favoriteCheck } = useCheckFavorite(artworkId)
     const isFavorited = favoriteCheck?.isFavorite || false
 
     return (
         <button
+            type="button"
             onClick={(e) => {
                 e.stopPropagation()
+                if (!isAuthenticated) {
+                    navigate(`/login?redirect=${encodeURIComponent(`/artwork/${artworkId}`)}`)
+                    return
+                }
                 onFavorite(artworkId)
             }}
-            className={`rounded-full p-2 transition-colors hover:bg-gray-100 ${isFavorited ? "text-red-500" : "text-gray-400"
+            className={`rounded-full p-1 transition-colors hover:text-red-500 ${isFavorited ? "text-red-500" : "text-gray-400"
                 }`}
             aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
         >
-            <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
+            <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
         </button>
     )
 }
@@ -82,8 +90,7 @@ export function ArtworkGrid({
     onToggleSelection,
     hideFavorite = false
 }: ArtworkGridProps) {
-    const { isAuthenticated } = useAuth()
-    const showFavorite = !hideFavorite && isAuthenticated
+    const showFavorite = !hideFavorite
     const navigate = useNavigate()
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
@@ -106,48 +113,6 @@ export function ArtworkGrid({
         )
     }
 
-    // Generate page numbers to display
-    const getPageNumbers = () => {
-        const safeTotalPages = totalPages ?? 1
-        const safeCurrentPage = currentPage ?? 1
-        if (!safeTotalPages || !safeCurrentPage) return []
-
-        const pages: (number | string)[] = []
-        const maxVisible = 5
-
-        if (safeTotalPages <= maxVisible) {
-            // Show all pages if total is small
-            for (let i = 1; i <= safeTotalPages; i++) {
-                pages.push(i)
-            }
-        } else {
-            // Always show first page
-            pages.push(1)
-
-            if (safeCurrentPage > 3) {
-                pages.push("...")
-            }
-
-            // Show pages around current page
-            const start = Math.max(2, safeCurrentPage - 1)
-            const end = Math.min(safeTotalPages - 1, safeCurrentPage + 1)
-
-            for (let i = start; i <= end; i++) {
-                pages.push(i)
-            }
-
-            if (safeCurrentPage < safeTotalPages - 2) {
-                pages.push("...")
-            }
-
-            // Always show last page
-            pages.push(safeTotalPages)
-        }
-
-        return pages
-    }
-
-    const pageNumbers = getPageNumbers()
     const safeTotalPages = totalPages ?? 1
     const safeCurrentPage = currentPage ?? 1
 
@@ -232,25 +197,25 @@ export function ArtworkGrid({
                                             >
                                                 {artwork.artist}
                                             </h3>
-                                            {statusInfo && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "shrink-0 border px-1.5 py-0 font-medium text-[10px]",
-                                                        statusInfo.className
-                                                    )}
-                                                >
-                                                    {statusInfo.label}
-                                                </Badge>
-                                            )}
-                                            {showFavorite && !isSelectionMode && (
-                                                <div className="shrink-0">
+                                            <div className="flex shrink-0 items-center gap-1.5">
+                                                {statusInfo && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "border px-1.5 py-0 font-medium text-[10px]",
+                                                            statusInfo.className
+                                                        )}
+                                                    >
+                                                        {statusInfo.label}
+                                                    </Badge>
+                                                )}
+                                                {showFavorite && !isSelectionMode && (
                                                     <ListFavoriteButton
                                                         artworkId={artwork.id}
                                                         onFavorite={onFavorite}
                                                     />
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="mt-0.5 flex items-center gap-2 text-gray-500 text-xs sm:text-sm">
                                             <p className="truncate" title={artwork.title}>
@@ -316,7 +281,7 @@ export function ArtworkGrid({
                                         onFavorite={onFavorite}
                                         isMasonry={false}
                                         disableNavigation={isSelectionMode}
-                                        hideFavorite={!showFavorite}
+                                        hideFavorite={hideFavorite}
                                     />
                                 </div>
                             </div>
@@ -324,78 +289,17 @@ export function ArtworkGrid({
                     </div>
                 )}
 
-                {/* Pagination - Show if we have page info and artworks */}
                 {onPageChange && (
-                    <div className="mt-12 flex flex-col items-center justify-center gap-4 pb-8">
-                        {safeTotalPages > 1 ? (
-                            <>
-                                <div className="flex w-full flex-col items-center gap-6 sm:flex-row sm:justify-center">
-                                    {/* Navigation Buttons - First row on mobile, split on desktop */}
-                                    <div className="flex w-full items-center justify-between gap-4 sm:order-1 sm:w-auto">
-                                        <Button
-                                            variant="outline"
-                                            size="lg"
-                                            disabled={safeCurrentPage === 1}
-                                            onClick={() => onPageChange(safeCurrentPage - 1)}
-                                            className="h-12 flex-1 items-center gap-2 border-gray-200 px-6 sm:h-10 sm:flex-none sm:border-2"
-                                        >
-                                            <ChevronLeft className="h-5 w-5" />
-                                            <span className="font-medium">Previous</span>
-                                        </Button>
-
-                                        <Button
-                                            variant="outline"
-                                            size="lg"
-                                            disabled={safeCurrentPage >= safeTotalPages}
-                                            onClick={() => onPageChange(safeCurrentPage + 1)}
-                                            className="h-12 flex-1 items-center gap-2 border-gray-200 px-6 sm:h-10 sm:flex-none sm:border-2"
-                                        >
-                                            <span className="font-medium">Next</span>
-                                            <ChevronRight className="h-5 w-5" />
-                                        </Button>
-                                    </div>
-
-                                    {/* Page Numbers - Second row on mobile, middle on desktop */}
-                                    <div className="flex flex-wrap items-center justify-center gap-2 sm:order-2">
-                                        {pageNumbers.map((pageNum, index) => (
-                                            <div key={index}>
-                                                {pageNum === "..." ? (
-                                                    <span className="px-2 text-gray-400">...</span>
-                                                ) : (
-                                                    <Button
-                                                        variant={
-                                                            safeCurrentPage === pageNum
-                                                                ? "default"
-                                                                : "outline"
-                                                        }
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            onPageChange(pageNum as number)
-                                                        }
-                                                        className={`h-10 min-w-[40px] rounded-lg sm:h-9 ${safeCurrentPage === pageNum
-                                                                ? "bg-gray-900 font-bold text-white hover:bg-black"
-                                                                : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                                                            }`}
-                                                    >
-                                                        {pageNum}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="mt-2 text-center text-gray-500 text-xs sm:text-sm">
-                                    Showing page <span className="font-semibold text-gray-900">{safeCurrentPage}</span> of <span className="font-semibold text-gray-900">{safeTotalPages}</span> (
-                                    {artworks.length} artworks)
-                                </div>
-                            </>
-                        ) : (
-                            <div className="text-gray-600 text-sm">
-                                Showing all {artworks.length} artworks
-                            </div>
-                        )}
-                    </div>
+                    <PaginationControls
+                        currentPage={safeCurrentPage}
+                        totalPages={safeTotalPages}
+                        onPageChange={onPageChange}
+                        totalItems={safeTotalPages <= 1 ? artworks.length : undefined}
+                        itemLabel="artworks"
+                        itemLabelSingular="artwork"
+                        showSinglePageSummary={safeTotalPages <= 1}
+                        className="pb-8"
+                    />
                 )}
             </div>
         </section>

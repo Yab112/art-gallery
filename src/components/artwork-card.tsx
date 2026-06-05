@@ -84,14 +84,16 @@ export function ArtworkCard({
     // Check authentication status
     const { isAuthenticated } = useAuth()
 
-    // Only show favorite button if not explicitly hidden AND user is authenticated
-    const showFavorite = !hideFavorite && isAuthenticated
+    // Show favorite unless explicitly hidden (e.g. selection-only contexts)
+    const showFavorite = !hideFavorite
 
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation()
 
-        // Safety check - should not be reachable if button is hidden for guests
-        if (!isAuthenticated) return
+        if (!isAuthenticated) {
+            navigate(`/login?redirect=${encodeURIComponent(`/artwork/${id}`)}`)
+            return
+        }
 
         // Optimistically update local state immediately for instant UI feedback
         const currentState = localIsFavorited
@@ -193,30 +195,32 @@ export function ArtworkCard({
                     >
                         {artist}
                     </h3>
-                    {statusInfo && (
-                        <Badge
-                            variant="outline"
-                            className={cn(
-                                "shrink-0 border px-1.5 py-0 font-medium text-[10px]",
-                                statusInfo.className
-                            )}
-                        >
-                            {statusInfo.label}
-                        </Badge>
-                    )}
-                    {showFavorite && (
-                        <button
-                            type="button"
-                            onClick={handleFavorite}
-                            className={cn(
-                                "shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:text-red-500",
-                                isFavorited && "text-red-500"
-                            )}
-                            aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-                        >
-                            <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
-                        </button>
-                    )}
+                    <div className="flex shrink-0 items-center gap-1.5">
+                        {statusInfo && (
+                            <Badge
+                                variant="outline"
+                                className={cn(
+                                    "border px-1.5 py-0 font-medium text-[10px]",
+                                    statusInfo.className
+                                )}
+                            >
+                                {statusInfo.label}
+                            </Badge>
+                        )}
+                        {showFavorite && (
+                            <button
+                                type="button"
+                                onClick={handleFavorite}
+                                className={cn(
+                                    "rounded-full p-1 text-gray-400 transition-colors hover:text-red-500",
+                                    isFavorited && "text-red-500"
+                                )}
+                                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                            >
+                                <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <p className="truncate text-gray-600 text-sm" title={title}>
                     <span className="text-orange-500">🏆</span> {title} {year && `(${year})`}

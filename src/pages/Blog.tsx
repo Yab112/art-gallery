@@ -2,6 +2,7 @@ import { BlogCard } from "@/components/blog/blog-card"
 import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton"
 import { BlogFilters } from "@/components/blog/blog-filters"
 import { CreateBlogModal } from "@/components/blog/create-blog-modal"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { Button } from "@/components/ui/button"
 import {
     Select,
@@ -284,138 +285,15 @@ export default function BlogPage() {
 
                                 {/* Pagination - Always show if there are posts */}
                                 {data && data.total > 0 && (
-                                    <div className="mt-8 flex flex-col items-center justify-center gap-4">
-                                        {data.totalPages > 1 ? (
-                                            <>
-                                                <div className="flex flex-wrap items-center justify-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handlePageChange(page - 1)}
-                                                        disabled={page === 1}
-                                                        className="min-w-[80px]"
-                                                    >
-                                                        Previous
-                                                    </Button>
-
-                                                    <div className="flex items-center gap-1">
-                                                        {/* Show first page if not in initial range */}
-                                                        {data.totalPages > 5 && page > 3 && (
-                                                            <>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() =>
-                                                                        handlePageChange(1)
-                                                                    }
-                                                                    className="min-w-[40px]"
-                                                                >
-                                                                    1
-                                                                </Button>
-                                                                {page > 4 && (
-                                                                    <span className="px-2 text-gray-500">
-                                                                        ...
-                                                                    </span>
-                                                                )}
-                                                            </>
-                                                        )}
-
-                                                        {/* Show page numbers */}
-                                                        {Array.from(
-                                                            {
-                                                                length: Math.min(5, data.totalPages)
-                                                            },
-                                                            (_, i) => {
-                                                                let pageNum
-                                                                if (data.totalPages <= 5) {
-                                                                    pageNum = i + 1
-                                                                } else if (page <= 3) {
-                                                                    pageNum = i + 1
-                                                                } else if (
-                                                                    page >=
-                                                                    data.totalPages - 2
-                                                                ) {
-                                                                    pageNum =
-                                                                        data.totalPages - 4 + i
-                                                                } else {
-                                                                    pageNum = page - 2 + i
-                                                                }
-
-                                                                return (
-                                                                    <Button
-                                                                        key={pageNum}
-                                                                        variant={
-                                                                            page === pageNum
-                                                                                ? "default"
-                                                                                : "outline"
-                                                                        }
-                                                                        size="sm"
-                                                                        onClick={() =>
-                                                                            handlePageChange(
-                                                                                pageNum
-                                                                            )
-                                                                        }
-                                                                        className={
-                                                                            page === pageNum
-                                                                                ? "min-w-[40px] bg-red-700 hover:bg-red-800"
-                                                                                : "min-w-[40px]"
-                                                                        }
-                                                                    >
-                                                                        {pageNum}
-                                                                    </Button>
-                                                                )
-                                                            }
-                                                        )}
-
-                                                        {/* Show last page if not in final range */}
-                                                        {data.totalPages > 5 &&
-                                                            page < data.totalPages - 2 && (
-                                                                <>
-                                                                    {page < data.totalPages - 3 && (
-                                                                        <span className="px-2 text-gray-500">
-                                                                            ...
-                                                                        </span>
-                                                                    )}
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() =>
-                                                                            handlePageChange(
-                                                                                data.totalPages
-                                                                            )
-                                                                        }
-                                                                        className="min-w-[40px]"
-                                                                    >
-                                                                        {data.totalPages}
-                                                                    </Button>
-                                                                </>
-                                                            )}
-                                                    </div>
-
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handlePageChange(page + 1)}
-                                                        disabled={page === data.totalPages}
-                                                        className="min-w-[80px]"
-                                                    >
-                                                        Next
-                                                    </Button>
-                                                </div>
-
-                                                {/* Page info */}
-                                                <p className="text-gray-500 text-sm">
-                                                    Page {page} of {data.totalPages} • {data.total}{" "}
-                                                    total posts
-                                                </p>
-                                            </>
-                                        ) : (
-                                            <p className="text-gray-500 text-sm">
-                                                Showing all {data.total} post
-                                                {data.total !== 1 ? "s" : ""}
-                                            </p>
-                                        )}
-                                    </div>
+                                    <PaginationControls
+                                        currentPage={page}
+                                        totalPages={data.totalPages}
+                                        onPageChange={handlePageChange}
+                                        totalItems={data.total}
+                                        itemLabel="posts"
+                                        itemLabelSingular="post"
+                                        showSinglePageSummary
+                                    />
                                 )}
                             </>
                         )}

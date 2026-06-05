@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useMyArtworks } from "@/queries/artworkQueries"
 import { artworkKeys } from "@/queries/queryKeys"
 import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork"
@@ -21,37 +22,6 @@ import { ArrowLeft, Edit, Eye, Palette, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-
-// Simple pagination component
-const Pagination = ({
-    currentPage,
-    totalPages,
-    onPageChange
-}: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => (
-    <div className="flex items-center justify-center gap-2">
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-7 px-3 text-xs"
-        >
-            Previous
-        </Button>
-        <span className="text-gray-600 text-xs">
-            Page {currentPage} of {totalPages}
-        </span>
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-7 px-3 text-xs"
-        >
-            Next
-        </Button>
-    </div>
-)
 
 export default function MyArtworksPage() {
     const [page, setPage] = useState(1)
@@ -198,13 +168,14 @@ export default function MyArtworksPage() {
 
                             {/* Pagination */}
                             {pagination.pages > 1 && (
-                                <div className="mt-4 flex justify-center">
-                                    <Pagination
-                                        currentPage={pagination.page}
-                                        totalPages={pagination.pages}
-                                        onPageChange={setPage}
-                                    />
-                                </div>
+                                <PaginationControls
+                                    currentPage={pagination.page}
+                                    totalPages={pagination.pages}
+                                    onPageChange={setPage}
+                                    totalItems={pagination.total}
+                                    itemLabel="artworks"
+                                    itemLabelSingular="artwork"
+                                />
                             )}
                         </>
                     ) : (
