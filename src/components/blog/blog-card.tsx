@@ -36,61 +36,61 @@ export function BlogCard({ blogPost, returnTo, returnState }: BlogCardProps) {
             state={returnTo ? { returnTo, returnState } : undefined}
             className="group block"
         >
-            <article className="flex flex-col gap-6 border-gray-100 border-b px-6 py-8 transition-colors duration-200 last:border-b-0 hover:bg-gray-50/50 md:flex-row">
-                {/* Content Section */}
-                <div className="min-w-0 flex-1">
-                    {/* Author & Date */}
-                    <div className="mb-3 flex items-center gap-2.5 text-gray-600 text-sm">
-                        {blogPost.author?.image ? (
-                            <img
-                                src={blogPost.author.image}
-                                alt={blogPost.author.name}
-                                className="h-7 w-7 rounded-full object-cover"
-                            />
-                        ) : (
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-300">
-                                <User className="h-3.5 w-3.5 text-gray-500" />
-                            </div>
-                        )}
-                        <span className="font-medium text-gray-900">
-                            {blogPost.author?.name || "Anonymous"}
-                        </span>
-                        <span className="text-gray-400">·</span>
-                        <span className="text-gray-500">
-                            {formatDate(blogPost.publishedAt || blogPost.createdAt)}
+            <article className="flex flex-col gap-8 py-10 transition-all md:flex-row md:items-start">
+                {/* Content Section - Now on the left */}
+                <div className="flex flex-1 flex-col">
+                    {/* Category Tag - News Style */}
+                    <div className="mb-3">
+                        <span className="font-bold text-red-700 text-[10px] uppercase tracking-[0.2em]">
+                            {blogPost.category || "Inspiration"}
                         </span>
                     </div>
 
+                    {/* Meta Info */}
+                    <div className="mb-4 flex items-center gap-3 font-medium text-gray-400 text-xs tracking-tight">
+                        <span className="text-gray-900">{blogPost.author?.name || "Art Gallery"}</span>
+                        <span className="text-gray-300">|</span>
+                        <span>{formatDate(blogPost.publishedAt || blogPost.createdAt)}</span>
+                    </div>
+
                     {/* Title */}
-                    <h2 className="mb-3 line-clamp-2 font-bold text-2xl text-gray-900 leading-tight transition-colors group-hover:text-red-700 md:text-3xl">
+                    <h2 className="mb-4 font-bold text-2xl text-gray-900 leading-tight transition-colors group-hover:text-red-700 md:text-4xl">
                         {blogPost.title}
                     </h2>
 
                     {/* Excerpt */}
                     {blogPost.excerpt && (
-                        <p className="mb-4 line-clamp-2 hidden text-base text-gray-600 leading-relaxed md:block">
+                        <p className="mb-6 line-clamp-3 text-gray-600 text-lg leading-relaxed">
                             {blogPost.excerpt}
                         </p>
                     )}
 
-                    {/* Footer - Minimal stats */}
-                    <div className="mt-3 flex items-center gap-5 text-gray-500 text-sm">
-                        <span>{blogPost.views.toLocaleString()} views</span>
-                        {blogPost.likes > 0 && <span>{blogPost.likes} likes</span>}
+                    {/* Footer Stats */}
+                    <div className="flex items-center gap-6 text-gray-400 text-sm">
+                        <div className="flex items-center gap-2">
+                            <span>{blogPost.views.toLocaleString()} views</span>
+                        </div>
+                        {blogPost.likes > 0 && (
+                            <div className="flex items-center gap-2">
+                                <span>{blogPost.likes} likes</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Featured Image - Right side on desktop */}
+                {/* Featured Image - Now on the right */}
                 {blogPost.featuredImage && (
-                    <div className="h-40 w-full flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 md:h-40 md:w-56">
+                    <div className="aspect-[16/9] w-full flex-shrink-0 overflow-hidden rounded-sm bg-gray-50 md:w-[440px]">
                         <img
                             src={blogPost.featuredImage}
                             alt={blogPost.title}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                     </div>
                 )}
             </article>
+            {/* Minimal separator */}
+            <div className="h-px w-full bg-gray-100 group-last:hidden" />
         </Link>
     )
 }
