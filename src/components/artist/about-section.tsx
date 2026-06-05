@@ -1,5 +1,5 @@
 import type { UserProfile } from "@/types/user.types"
-import { Calendar, Globe, MapPin, Palette, Users } from "lucide-react"
+import { Calendar, Globe, MapPin, Palette, Phone, Users } from "lucide-react"
 
 interface AboutSectionProps {
     user: UserProfile
@@ -73,6 +73,20 @@ export function AboutSection({ user }: AboutSectionProps) {
                                             month: "long"
                                         })}
                                     </p>
+                                </div>
+                            </div>
+                        )}
+                        {user.phone && (
+                            <div className="flex items-center gap-3">
+                                <Phone className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                    <p className="font-medium text-foreground">Phone</p>
+                                    <a
+                                        href={`tel:${user.phone}`}
+                                        className="text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        {user.phone}
+                                    </a>
                                 </div>
                             </div>
                         )}

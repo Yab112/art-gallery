@@ -14,7 +14,17 @@ import { useUser } from "@/queries/userQueries"
 import { useGetBlogPosts } from "@/services/blog"
 import { useGetUserCollections } from "@/services/collections/useGetUserCollections"
 import { ArrowLeft } from "lucide-react"
-import { Award, BookOpen, Calendar, FolderOpen, Globe, Mail, MapPin, Palette } from "lucide-react"
+import {
+    Award,
+    BookOpen,
+    Calendar,
+    FolderOpen,
+    Globe,
+    Mail,
+    MapPin,
+    Palette,
+    Phone
+} from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Link } from "react-router-dom"
@@ -363,6 +373,7 @@ export default function ArtistDetailPage() {
                             {(user.location ||
                                 user.website ||
                                 user.email ||
+                                user.phone ||
                                 user.createdAt ||
                                 user.artworkCount) && (
                                 <div className="rounded-md border border-gray-100 bg-white p-6">
@@ -443,6 +454,22 @@ export default function ArtistDetailPage() {
                                                     </div>
                                                 </div>
                                             )}
+                                            {user.phone && (
+                                                <div className="flex items-center gap-2">
+                                                    <Phone className="h-4 w-4 text-gray-400" />
+                                                    <div>
+                                                        <p className="font-medium text-gray-900 text-sm">
+                                                            Phone
+                                                        </p>
+                                                        <a
+                                                            href={`tel:${user.phone}`}
+                                                            className="text-gray-600 text-xs transition-colors hover:text-red-600"
+                                                        >
+                                                            {user.phone}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            )}
                                             {user.email && (
                                                 <div className="flex items-center gap-2">
                                                     <Mail className="h-4 w-4 text-gray-400" />
@@ -462,7 +489,11 @@ export default function ArtistDetailPage() {
                             )}
 
                             {/* Empty State */}
-                            {!user.bio && !user.location && !user.website && !user.email && (
+                            {!user.bio &&
+                                !user.location &&
+                                !user.website &&
+                                !user.email &&
+                                !user.phone && (
                                 <div className="rounded-lg border border-gray-300 border-dashed bg-white py-12 text-center">
                                     <p className="text-gray-500">
                                         {user.name || "This artist"} hasn't added any information

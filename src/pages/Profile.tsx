@@ -557,11 +557,6 @@ export default function ProfilePage() {
                                             )}
                                         </div>
                                     </div>
-                                    {"role" in profile && profile.role && (
-                                        <span className="mt-3 inline-block rounded-full bg-red-100 px-3 py-1 font-medium text-red-700 text-xs">
-                                            {profile.role.toUpperCase()}
-                                        </span>
-                                    )}
                                 </div>
                             </div>
                             <div className="flex w-full items-center justify-center gap-2 sm:w-auto">
