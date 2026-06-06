@@ -8,7 +8,6 @@ import { useGetBlogAuthors, useGetBlogPostsInfinite } from "@/services/blog";
 import { BookOpen, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 export default function BlogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -290,7 +289,7 @@ export default function BlogPage() {
         {/* Page Header */}
         <div className="mb-12 flex flex-col items-start justify-between gap-6 border-b border-gray-100 pb-12 md:flex-row md:items-center">
           <div>
-            <h1 className="mb-2 font-black text-4xl text-gray-900 uppercase tracking-tighter md:text-6xl">
+            <h1 className="mb-2 font-bold text-4xl text-gray-900 uppercase tracking-tighter md:text-6xl">
               The Art Journal
             </h1>
           </div>
@@ -298,7 +297,7 @@ export default function BlogPage() {
             {user && (
               <Button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="h-14 rounded-none bg-black px-10 font-black text-white text-sm uppercase tracking-[0.2em] transition-all hover:bg-red-700 shadow-xl"
+                className="h-14 rounded-none bg-red-700 px-10 font-semibold text-white text-sm uppercase tracking-[0.2em] transition-all hover:bg-red-800"
               >
                 <Plus className="mr-3 h-5 w-5" />
                 Write a Story
@@ -523,7 +522,7 @@ export default function BlogPage() {
         <div className="mb-12 border-gray-200 border-y py-16">
           <div className="mb-10 flex items-center justify-between">
             <h2 className="font-black text-gray-900 text-2xl uppercase tracking-widest">
-              The Latest Collection
+              Latest Blogs
             </h2>
           </div>
 
@@ -600,7 +599,7 @@ export default function BlogPage() {
                   <div className="flex flex-col items-center gap-2">
                     <div className="h-1 w-12 bg-gray-100 rounded-full mb-4" />
                     <span className="font-black text-gray-300 text-[10px] uppercase tracking-[0.5em]">
-                      End of Collection
+                      That&apos;s all
                     </span>
                   </div>
                 )}

@@ -1,10 +1,11 @@
 import { ArtworkGrid } from "@/components/ArtMarketplace/artwork-grid"
+import { ArtworkMasonrySkeleton } from "@/components/ArtMarketplace/artwork-masonry-grid"
 import { MarketplaceHero } from "@/components/ArtMarketplace/hero-section"
-import { MarketplaceCta } from "@/components/ArtMarketplace/marketplace-cta"
 import { SearchFilters } from "@/components/ArtMarketplace/search-filters"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
-import { useArtworks } from "@/queries/artworkQueries"
+import { useArtworksInfinite } from "@/queries/artworkQueries"
+import type { ArtworkQueryParams } from "@/types/artwork.types"
 import { collectionKeys } from "@/queries/queryKeys"
 import { useGetCategories } from "@/services/category/useGetCategories"
 import { useAddArtworkToCollection } from "@/services/collections/useAddArtworkToCollection"
@@ -26,6 +27,7 @@ export default function ArtMarketplace() {
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
     const artworksSectionRef = useRef<HTMLDivElement>(null)
+    const loadMoreRef = useRef<HTMLDivElement>(null)
     const { user } = useAuth()
 
     // Check if we're in "add to collection" mode (guests cannot use it)
@@ -43,7 +45,6 @@ export default function ArtMarketplace() {
     // Get filter values from URL query params, with defaults
     const viewMode = (searchParams.get("view") || "grid") as "grid" | "list"
     const searchQuery = searchParams.get("search") || ""
-    const page = Number.parseInt(searchParams.get("page") || "1", 10)
     const sortBy = searchParams.get("sort") || "recommended"
     const priceRange = searchParams.get("priceRange") || "price"
     const mediumParam = searchParams.get("medium") || ""
@@ -95,35 +96,33 @@ export default function ArtMarketplace() {
     }
 
     const setSearchQuery = (query: string) => {
-        // Clear categories when user searches manually
-        updateSearchParams({ search: query || null, categories: [], page: 1 })
+        updateSearchParams({ search: query || null, categories: [] })
     }
 
     const setSortBy = (value: string) => {
-        updateSearchParams({ sort: value, page: 1 })
+        updateSearchParams({ sort: value })
     }
 
     const setPriceRange = (value: string) => {
         updateSearchParams({
             priceRange: value === "price" ? null : value,
-            page: 1
         })
     }
 
     const setMedium = (values: string[]) => {
-        updateSearchParams({ medium: values.length > 0 ? values : null, page: 1 })
+        updateSearchParams({ medium: values.length > 0 ? values : null })
     }
 
     const setOrigin = (values: string[]) => {
-        updateSearchParams({ origin: values.length > 0 ? values : null, page: 1 })
+        updateSearchParams({ origin: values.length > 0 ? values : null })
     }
 
     const setCondition = (values: string[]) => {
-        updateSearchParams({ condition: values.length > 0 ? values : null, page: 1 })
+        updateSearchParams({ condition: values.length > 0 ? values : null })
     }
 
     const setCategoryIds = (ids: string[]) => {
-        updateSearchParams({ categories: ids.length > 0 ? ids : null, page: 1 })
+        updateSearchParams({ categories: ids.length > 0 ? ids : null })
     }
 
     const clearAllFilters = () => {
@@ -157,34 +156,27 @@ export default function ArtMarketplace() {
             if (category && !selectedCategoryIds.includes(category.id)) {
                 // Update URL to use category ID instead of slug
                 updateSearchParams({
-                    category: null, // Remove slug param
-                    categories: [category.id], // Add category ID
-                    page: 1
+                    category: null,
+                    categories: [category.id],
                 })
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [categorySlug, categoriesData])
 
-    // Build query params from filters
-    const buildQueryParams = () => {
-        const params: any = {
-            page,
-            limit: 8
-            // status: "APPROVED",
+    const artworkQueryParams = useMemo(() => {
+        const params: Record<string, unknown> = {
+            limit: 12,
         }
 
-        // Handle category filter - if categories are selected, use categoryIds array
         if (selectedCategoryIds.length > 0) {
             params.categoryIds = selectedCategoryIds
         }
 
-        // Use search query if provided (can be combined with category filter)
         if (searchQuery) {
             params.search = searchQuery
         }
 
-        // Map sort filter to backend params
         switch (sortBy) {
             case "price-low":
                 params.sortBy = "desiredPrice"
@@ -209,7 +201,6 @@ export default function ArtMarketplace() {
                 break
         }
 
-        // Map price range filter
         switch (priceRange) {
             case "under-1k":
                 params.maxPrice = 1000
@@ -227,7 +218,6 @@ export default function ArtMarketplace() {
                 break
         }
 
-        // Map multi-select filters
         if (medium.length > 0) {
             params.support = medium
         }
@@ -241,19 +231,46 @@ export default function ArtMarketplace() {
         }
 
         return params
-    }
+    }, [
+        selectedCategoryIds,
+        searchQuery,
+        sortBy,
+        priceRange,
+        medium,
+        origin,
+        condition,
+    ])
 
-    // Fetch artworks from backend with filters (including category filter)
     const {
-        data: filteredArtworksData,
-        isLoading: isLoadingFilteredArtworks,
-        isFetching: isFetchingFilteredArtworks,
-        error: filteredArtworksError
-    } = useArtworks(buildQueryParams())
+        data: artworksPages,
+        isLoading: isLoadingArtworks,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+        error: artworksError,
+    } = useArtworksInfinite(artworkQueryParams as ArtworkQueryParams)
 
-    const artworksData = filteredArtworksData
-    const isLoading = isLoadingFilteredArtworks || isFetchingFilteredArtworks
-    const error = filteredArtworksError
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage()
+                }
+            },
+            { threshold: 0.1 },
+        )
+
+        const target = loadMoreRef.current
+        if (target) {
+            observer.observe(target)
+        }
+
+        return () => observer.disconnect()
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+    const artworksData = artworksPages?.pages[0]
+    const isLoading = isLoadingArtworks
+    const error = artworksError
 
     const { addFavorite } = useAddFavorite()
 
@@ -313,7 +330,7 @@ export default function ArtMarketplace() {
             ? selectedCategoryIds.filter((id) => id !== categoryId)
             : [...selectedCategoryIds, categoryId]
 
-        updateSearchParams({ categories: newSelectedIds, page: 1 })
+        updateSearchParams({ categories: newSelectedIds })
 
         // Scroll to artworks section if a category is selected (user-initiated)
         if (newSelectedIds.length > 0 && artworksSectionRef.current) {
@@ -330,63 +347,43 @@ export default function ArtMarketplace() {
         }
     }
 
-    const handlePageChange = (newPage: number) => {
-        updateSearchParams({ page: newPage })
-        // Scroll to top of artworks section when page changes
-        if (artworksSectionRef.current) {
-            artworksSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
-    }
-
     // Transform backend data to match component props
-    const artworks =
-        artworksData?.artworks?.map((artwork) => {
-            // Get first photo, or null if no photos exist
-            const firstPhoto = artwork.photos?.[0]
-            // Only use photo if it's a valid URL string
-            const imageUrl =
-                firstPhoto && typeof firstPhoto === "string" && firstPhoto.trim() !== ""
-                    ? firstPhoto
-                    : null
+    const artworks = useMemo(() => {
+        const seen = new Set<string>()
+        const rawArtworks =
+            artworksPages?.pages.flatMap((page) => page.artworks ?? []) ?? []
 
-            return {
-                id: artwork.id,
-                image: imageUrl || "", // Empty string will trigger placeholder in ArtworkCard
-                title: artwork.title || "Untitled",
-                artist: artwork.artist,
-                price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
-                year: artwork.yearOfArtwork,
-                medium: artwork.support, // Changed from technique to support
-                dimensions: artwork.dimensions
-                    ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
-                    : "N/A",
-                seller: artwork.user?.name || "Unknown",
-                status: artwork.status
-            }
-        }) || []
-
-    const ctaPreviewArtworks = useMemo(() => {
-        const candidates = (artworksData?.artworks ?? [])
+        return rawArtworks
+            .filter((artwork) => {
+                if (seen.has(artwork.id)) return false
+                seen.add(artwork.id)
+                return true
+            })
             .map((artwork) => {
-                const image = artwork.photos?.[0]
-                if (typeof image !== "string" || image.trim() === "") return null
+                const firstPhoto = artwork.photos?.[0]
+                const imageUrl =
+                    firstPhoto && typeof firstPhoto === "string" && firstPhoto.trim() !== ""
+                        ? firstPhoto
+                        : null
+
                 return {
                     id: artwork.id,
-                    image,
-                    title: artwork.title || "Untitled"
+                    image: imageUrl || "",
+                    title: artwork.title || "Untitled",
+                    artist: artwork.artist,
+                    price: `US$${artwork.desiredPrice?.toLocaleString() || "0"}`,
+                    year: artwork.yearOfArtwork,
+                    medium: artwork.support,
+                    dimensions: artwork.dimensions
+                        ? `${artwork.dimensions.width} × ${artwork.dimensions.height} in`
+                        : "N/A",
+                    physicalWidth: artwork.dimensions?.width,
+                    physicalHeight: artwork.dimensions?.height,
+                    seller: artwork.user?.name || "Unknown",
+                    status: artwork.status,
                 }
             })
-            .filter((item): item is { id: string; image: string; title: string } => item !== null)
-
-        if (candidates.length <= 4) return candidates
-
-        const shuffled = [...candidates]
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-        }
-        return shuffled.slice(0, 4)
-    }, [artworksData?.artworks])
+    }, [artworksPages])
 
     return (
         <div className="min-h-screen bg-white">
@@ -543,21 +540,7 @@ export default function ArtMarketplace() {
 
                         <div ref={artworksSectionRef} className="min-h-[480px]">
                             {isLoading ? (
-                                <div
-                                    className={
-                                        viewMode === "grid"
-                                            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                                            : "space-y-6"
-                                    }
-                                >
-                                    {[...Array(6)].map((_, i) => (
-                                        <div key={i} className="animate-pulse">
-                                            <div className="mb-4 aspect-[4/5] rounded-2xl bg-gray-100" />
-                                            <div className="mb-2 h-4 w-3/4 rounded-full bg-gray-100" />
-                                            <div className="h-3 w-1/2 rounded-full bg-gray-50" />
-                                        </div>
-                                    ))}
-                                </div>
+                                <ArtworkMasonrySkeleton />
                             ) : error ? (
                                 <div className="flex h-[400px] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50/30 text-center">
                                     <p className="font-medium text-gray-900">Something went wrong</p>
@@ -571,12 +554,14 @@ export default function ArtMarketplace() {
                                     artworks={artworks}
                                     viewMode={viewMode}
                                     onFavorite={handleFavorite}
-                                    currentPage={artworksData?.page ?? page ?? 1}
-                                    totalPages={Math.max(artworksData?.pages ?? 1, 1)}
-                                    onPageChange={handlePageChange}
                                     isSelectionMode={isSelectionMode}
                                     selectedArtworkIds={selectedArtworkIds}
                                     onToggleSelection={handleToggleSelection}
+                                    infiniteScroll={{
+                                        loadMoreRef,
+                                        isFetchingNextPage,
+                                        hasNextPage: !!hasNextPage,
+                                    }}
                                 />
                             ) : (
                                 <div className="flex h-[400px] flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50/30 text-center">
@@ -593,16 +578,6 @@ export default function ArtMarketplace() {
                     </div>
                 </div>
             </div>
-
-            <MarketplaceCta
-                title="Start Your Collection Today"
-                subtitle="Follow artists, save pieces you love, and build a collection that tells your story."
-                primaryButtonText="Discover Artists"
-                secondaryButtonText="Browse Collections"
-                previewArtworks={ctaPreviewArtworks}
-                onPrimaryClick={() => navigate("/artists")}
-                onSecondaryClick={() => navigate("/collections")}
-            />
         </div>
     )
 }

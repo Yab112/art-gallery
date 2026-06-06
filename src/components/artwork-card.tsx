@@ -5,7 +5,7 @@ import { useCheckFavorite } from "@/queries/favoriteQueries"
 import { useAddFavorite } from "@/services/favorites/useAddFavorite"
 import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite"
 import { Heart } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 interface ArtworkCardProps {
@@ -17,6 +17,8 @@ interface ArtworkCardProps {
     year?: string
     medium?: string
     dimensions: string
+    physicalWidth?: string
+    physicalHeight?: string
     seller: string
     status?: string
     onFavorite?: (id: string) => void
@@ -48,6 +50,8 @@ export function ArtworkCard({
     year,
     medium,
     dimensions,
+    physicalWidth,
+    physicalHeight,
     seller,
     status,
     onFavorite,
@@ -87,6 +91,23 @@ export function ArtworkCard({
     // Show favorite unless explicitly hidden (e.g. selection-only contexts)
     const showFavorite = !hideFavorite
 
+    const physicalAspectRatio = useMemo(() => {
+        if (!isMasonry) return null
+        const width = Number.parseFloat(physicalWidth || "")
+        const height = Number.parseFloat(physicalHeight || "")
+        if (!width || !height) return null
+        return width / height
+    }, [isMasonry, physicalWidth, physicalHeight])
+
+    const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
+
+    useEffect(() => {
+        setImageAspectRatio(null)
+    }, [image])
+
+    // Prefer real artwork dimensions (48×24 vs 12×36) — uploads are often same thumbnail size
+    const masonryAspectRatio = physicalAspectRatio ?? imageAspectRatio
+
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation()
 
@@ -115,6 +136,7 @@ export function ArtworkCard({
     }
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isMasonry) return
         const rect = e.currentTarget.getBoundingClientRect()
         const x = ((e.clientX - rect.left) / rect.width) * 100
         const y = ((e.clientY - rect.top) / rect.height) * 100
@@ -127,8 +149,10 @@ export function ArtworkCard({
     }
 
     const handleMouseEnter = () => {
+        if (isMasonry) return
         setIsHovered(true)
     }
+
     return (
         <div
             className="group relative cursor-pointer"
@@ -139,19 +163,29 @@ export function ArtworkCard({
                 }
             }}
         >
-            {/* Artwork Image Container */}
             <div
                 className={cn(
-                    "relative mb-4 overflow-hidden bg-gray-100",
-                    !isMasonry && "aspect-[4/5]",
-                    isSold && "opacity-75"
+                    "relative bg-gray-100",
+                    !isMasonry && "mb-4 aspect-[4/5] overflow-hidden",
+                    isMasonry && "mb-3 overflow-hidden rounded-xl",
+                    isSold && "opacity-75",
                 )}
+                style={
+                    isMasonry && masonryAspectRatio
+                        ? { aspectRatio: masonryAspectRatio }
+                        : undefined
+                }
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onMouseMove={handleMouseMove}
             >
                 {imageError || !image ? (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                    <div
+                        className={cn(
+                            "flex h-full w-full items-center justify-center bg-gray-200",
+                            isMasonry && !masonryAspectRatio && "min-h-[180px]",
+                        )}
+                    >
                         <div className="text-center">
                             <svg
                                 className="mx-auto h-12 w-12 text-gray-400"
@@ -173,13 +207,28 @@ export function ArtworkCard({
                     <img
                         src={image}
                         alt={`${title} by ${artist}`}
+                        loading="lazy"
                         className={cn(
-                            "block h-full w-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
-                            isSold && "grayscale"
+                            "block w-full",
+                            isMasonry
+                                ? "h-full object-cover"
+                                : "h-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
+                            isSold && "grayscale",
                         )}
-                        style={{
-                            transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
-                            transform: isHovered && !isSold ? "scale(1.2)" : "scale(1)"
+                        style={
+                            isMasonry
+                                ? undefined
+                                : {
+                                      transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
+                                      transform: isHovered && !isSold ? "scale(1.2)" : "scale(1)",
+                                  }
+                        }
+                        onLoad={(event) => {
+                            if (!isMasonry || physicalAspectRatio) return
+                            const img = event.currentTarget
+                            if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                                setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+                            }
                         }}
                         onError={() => setImageError(true)}
                     />
@@ -226,10 +275,14 @@ export function ArtworkCard({
                     <span className="text-orange-500">🏆</span> {title} {year && `(${year})`}
                 </p>
                 <p className="font-bold text-lg">{price}</p>
-                <p className="text-gray-600 text-sm">
-                    {medium && `${medium} `}({dimensions})
-                </p>
-                <p className="text-gray-500 text-sm">Seller: {seller}</p>
+                {!isMasonry && (
+                    <>
+                        <p className="text-gray-600 text-sm">
+                            {medium && `${medium} `}({dimensions})
+                        </p>
+                        <p className="text-gray-500 text-sm">Seller: {seller}</p>
+                    </>
+                )}
             </div>
         </div>
     )

@@ -16,6 +16,7 @@ interface MarketplaceCtaProps {
     previewArtworks?: CtaPreviewArtwork[]
     onPrimaryClick?: () => void
     onSecondaryClick?: () => void
+    fullWidth?: boolean
 }
 
 export function MarketplaceCta({
@@ -25,14 +26,21 @@ export function MarketplaceCta({
     secondaryButtonText,
     previewArtworks = [],
     onPrimaryClick,
-    onSecondaryClick
+    onSecondaryClick,
+    fullWidth = false,
 }: MarketplaceCtaProps) {
     const artworks = previewArtworks.filter((item) => item.image).slice(0, 4)
     const rotations = [-6, -2, 2, 6]
 
     return (
-        <section className="mx-3 mb-6 sm:mx-4">
-            <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl bg-gradient-to-br from-gray-950 via-gray-900 to-red-950 px-5 py-8 sm:px-8 sm:py-10">
+        <section className={fullWidth ? "w-full" : "mx-3 mb-6 sm:mx-4"}>
+            <div
+                className={
+                    fullWidth
+                        ? "relative w-full overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-red-950 px-6 py-12 sm:px-10 sm:py-14"
+                        : "relative mx-auto max-w-7xl overflow-hidden rounded-2xl bg-gradient-to-br from-gray-950 via-gray-900 to-red-950 px-5 py-8 sm:px-8 sm:py-10"
+                }
+            >
                 <div className="-right-16 -top-16 pointer-events-none absolute h-48 w-48 rounded-full bg-red-500/20 blur-3xl" />
                 <div className="-bottom-20 -left-10 pointer-events-none absolute h-56 w-56 rounded-full bg-red-700/10 blur-3xl" />
 

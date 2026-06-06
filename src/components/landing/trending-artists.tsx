@@ -1,62 +1,143 @@
 import { ArtistCard } from "@/components/artist/artist-circle-card"
 import { Button } from "@/components/ui/button"
-import { useGetTrendingArtists } from "@/services/artwork/useGetTrendingArtists"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useRef, useState } from "react"
-import { Link } from "react-router-dom"
+import { useGetAllArtistsInfinite } from "@/services/artist/useGetAllArtistsInfinite"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { SectionTitle } from "../section-title"
+
+const PAGE_SIZE = 12
+const AUTO_SCROLL_SPEED = 0.6
 
 export function TrendingArtists() {
     const scrollRef = useRef<HTMLDivElement>(null)
+    const loadMoreRef = useRef<HTMLDivElement>(null)
+    const isPausedRef = useRef(false)
     const [isDragging, setIsDragging] = useState(false)
+    const [isHovered, setIsHovered] = useState(false)
     const [startX, setStartX] = useState(0)
     const [scrollLeft, setScrollLeft] = useState(0)
     const [hasDragged, setHasDragged] = useState(false)
 
-    // Fetch trending artists based on engagement metrics (limit: 10)
-    const { data: trendingData, isLoading, error, isError } = useGetTrendingArtists(10)
+    const {
+        data,
+        isLoading,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+    } = useGetAllArtistsInfinite(PAGE_SIZE)
 
-    const artists = trendingData?.artists || []
+    const artists = useMemo(() => {
+        const seen = new Set<string>()
+        const merged = []
 
-    // Debug logging (development only)
-    if (import.meta.env.DEV) {
-        console.log("Trending Artists Component State:", {
-            isLoading,
-            isError,
-            hasData: !!trendingData,
-            artistsCount: artists.length,
-            error: error
-                ? {
-                      message: (error as any)?.message,
-                      response: (error as any)?.response?.data,
-                      status: (error as any)?.response?.status
-                  }
-                : null
-        })
-
-        if (error) {
-            console.error("Error loading trending artists:", error)
+        for (const page of data?.pages ?? []) {
+            for (const artist of page.artists ?? []) {
+                if (!seen.has(artist.id)) {
+                    seen.add(artist.id)
+                    merged.push(artist)
+                }
+            }
         }
 
-        if (trendingData) {
-            console.log("Trending artists data:", trendingData)
-            console.log("Artists array:", artists)
+        return merged.sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+    }, [data])
+
+    const loadMore = useCallback(() => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage()
         }
-    }
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+    useEffect(() => {
+        isPausedRef.current = isDragging || isHovered
+    }, [isDragging, isHovered])
+
+    // Auto-scroll horizontally
+    useEffect(() => {
+        const container = scrollRef.current
+        if (!container || artists.length === 0) return
+
+        let animationId = 0
+
+        const tick = () => {
+            const el = scrollRef.current
+            if (el && !isPausedRef.current) {
+                const maxScroll = el.scrollWidth - el.clientWidth
+
+                if (maxScroll > 0) {
+                    if (el.scrollLeft >= maxScroll - 2) {
+                        if (hasNextPage && !isFetchingNextPage) {
+                            loadMore()
+                        } else if (!hasNextPage) {
+                            el.scrollLeft = 0
+                        }
+                    } else {
+                        el.scrollLeft += AUTO_SCROLL_SPEED
+                    }
+
+                    if (maxScroll - el.scrollLeft - el.clientWidth < 400) {
+                        loadMore()
+                    }
+                }
+            }
+
+            animationId = requestAnimationFrame(tick)
+        }
+
+        animationId = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(animationId)
+    }, [artists.length, hasNextPage, isFetchingNextPage, loadMore])
+
+    // Horizontal infinite scroll — sentinel enters the scroll container viewport
+    useEffect(() => {
+        const root = scrollRef.current
+        const target = loadMoreRef.current
+        if (!root || !target) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) {
+                    loadMore()
+                }
+            },
+            { root, rootMargin: "0px 120px 0px 0px", threshold: 0.01 },
+        )
+
+        observer.observe(target)
+        return () => observer.disconnect()
+    }, [loadMore, artists.length, hasNextPage, isFetchingNextPage])
+
+    // Backup: scroll event on the horizontal track
+    useEffect(() => {
+        const container = scrollRef.current
+        if (!container) return
+
+        const handleScroll = () => {
+            const { scrollLeft, scrollWidth, clientWidth } = container
+            if (scrollWidth - scrollLeft - clientWidth < 400) {
+                loadMore()
+            }
+        }
+
+        container.addEventListener("scroll", handleScroll, { passive: true })
+        return () => container.removeEventListener("scroll", handleScroll)
+    }, [loadMore])
 
     const scroll = (direction: "left" | "right") => {
-        if (scrollRef.current) {
-            const scrollAmount = 280 // Width of one card plus gap
-            scrollRef.current.scrollBy({
-                left: direction === "left" ? -scrollAmount : scrollAmount,
-                behavior: "smooth"
-            })
+        if (!scrollRef.current) return
+        const scrollAmount = 280
+        scrollRef.current.scrollBy({
+            left: direction === "left" ? -scrollAmount : scrollAmount,
+            behavior: "smooth",
+        })
+        if (direction === "right") {
+            setTimeout(loadMore, 300)
         }
     }
 
-    // Drag to scroll handlers
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!scrollRef.current) return
+        isPausedRef.current = true
         setIsDragging(true)
         setHasDragged(false)
         setStartX(e.pageX - scrollRef.current.offsetLeft)
@@ -69,45 +150,40 @@ export function TrendingArtists() {
         if (!isDragging || !scrollRef.current) return
         e.preventDefault()
         const x = e.pageX - scrollRef.current.offsetLeft
-        const walk = (x - startX) * 2 // Scroll speed multiplier
+        const walk = (x - startX) * 2
         scrollRef.current.scrollLeft = scrollLeft - walk
         if (Math.abs(walk) > 5) {
-            setHasDragged(true) // Only set if actually moved
+            setHasDragged(true)
         }
     }
 
-    const handleMouseUp = () => {
-        if (!scrollRef.current) return
-        setIsDragging(false)
-        scrollRef.current.style.cursor = "grab"
-        scrollRef.current.style.userSelect = "auto"
-        // Reset hasDragged after a short delay to allow click events
-        setTimeout(() => setHasDragged(false), 100)
-    }
-
-    const handleMouseLeave = () => {
+    const endDrag = () => {
         if (!scrollRef.current) return
         setIsDragging(false)
         scrollRef.current.style.cursor = "grab"
         scrollRef.current.style.userSelect = "auto"
         setTimeout(() => setHasDragged(false), 100)
+
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+        if (scrollWidth - scrollLeft - clientWidth < 400) {
+            loadMore()
+        }
     }
 
-    // Map trending artists data to the Artist interface expected by ArtistCard
     const mappedArtists = artists.map((artist) => ({
         id: artist.id,
         name: artist.name,
         email: artist.email,
-        country: artist.location || "Unknown",
-        followers: 0, // We don't have followers data from backend yet
-        artworks: artist.artworkCount || 0,
+        country: artist.country || "Unknown",
+        followers: 0,
+        artworks: artist.artworks || 0,
         avatar: artist.avatar || "/placeholder.svg",
-        sales: artist.totalSales || 0,
-        views: artist.totalViews || artist.profileViews || 0,
-        rating: (artist.salesCount || 0) > 0 ? 4.5 : undefined, // Optional rating based on sales
+        sales: artist.sales || 0,
+        views: artist.views || 0,
+        rating: (artist.salesCount || 0) > 0 ? 4.5 : undefined,
         isTopSelling: (artist.salesCount || 0) > 0,
-        isMostViewed: (artist.totalViews || artist.profileViews || 0) > 100,
-        talentTypes: artist.talentTypes || []
+        isMostViewed: (artist.views || 0) > 100,
+        talentTypes: artist.talentTypes || [],
     }))
 
     if (isLoading) {
@@ -122,12 +198,10 @@ export function TrendingArtists() {
                     <div className="flex gap-4 overflow-x-auto">
                         {[...Array(5)].map((_, i) => (
                             <div key={i} className="w-64 flex-shrink-0 animate-pulse">
-                                <div className="rounded-lg border bg-white p-3 lg:p-4">
-                                    <div className="mx-auto mb-3 h-14 w-14 rounded-full bg-gray-200 sm:h-16 sm:w-16 md:h-18 md:w-18 lg:h-20 lg:w-20" />
+                                <div className="rounded-lg border bg-white p-4">
+                                    <div className="mx-auto mb-3 h-20 w-20 rounded-full bg-gray-200" />
                                     <div className="mx-auto mb-2 h-4 w-3/4 rounded bg-gray-200" />
-                                    <div className="mx-auto mb-2 h-3 w-1/2 rounded bg-gray-200" />
-                                    <div className="mb-1 h-3 w-full rounded bg-gray-200" />
-                                    <div className="h-3 w-full rounded bg-gray-200" />
+                                    <div className="mx-auto h-3 w-1/2 rounded bg-gray-200" />
                                 </div>
                             </div>
                         ))}
@@ -137,7 +211,7 @@ export function TrendingArtists() {
         )
     }
 
-    if (!artists || artists.length === 0) {
+    if (!artists.length) {
         return (
             <section className="px-4 py-16">
                 <div className="mx-auto max-w-7xl">
@@ -155,20 +229,19 @@ export function TrendingArtists() {
     }
 
     return (
-        <section className="px-4 py-16">
-            <div className="mx-auto max-w-7xl">
-                <div className="relative mb-12">
+        <section className="py-16">
+            <div className="mx-auto max-w-7xl px-4">
+                <div className="relative mb-10">
                     <SectionTitle
                         title="TRENDING ARTISTS"
                         subtitle="Discover popular creators"
                         className="mb-8"
                     />
 
-                    {/* Navigation Arrows */}
                     <Button
                         variant="outline"
                         size="icon"
-                        className="-translate-y-1/2 absolute top-1/2 left-0 rounded-full bg-transparent"
+                        className="-translate-y-1/2 absolute top-1/2 left-0 z-10 rounded-full bg-white/90"
                         onClick={() => scroll("left")}
                     >
                         <ChevronLeft className="h-4 w-4" />
@@ -177,42 +250,54 @@ export function TrendingArtists() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="-translate-y-1/2 absolute top-1/2 right-0 rounded-full bg-transparent"
+                        className="-translate-y-1/2 absolute top-1/2 right-0 z-10 rounded-full bg-white/90"
                         onClick={() => scroll("right")}
                     >
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
+            </div>
 
-                {/* Horizontal Scrollable Artists */}
-                <div className="relative">
+            <div
+                ref={scrollRef}
+                className="scrollbar-hide flex cursor-grab gap-4 overflow-x-auto px-4 pb-2 active:cursor-grabbing sm:px-6 lg:px-8"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => {
+                    setIsHovered(false)
+                    endDrag()
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={endDrag}
+            >
+                {mappedArtists.map((artist) => (
                     <div
-                        ref={scrollRef}
-                        className="scrollbar-hide flex cursor-grab gap-4 overflow-x-auto px-2 active:cursor-grabbing"
-                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                        onMouseDown={handleMouseDown}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseLeave}
+                        key={artist.id}
+                        className="w-64 flex-shrink-0"
+                        onClickCapture={(e) => {
+                            if (hasDragged) {
+                                e.preventDefault()
+                                e.stopPropagation()
+                            }
+                        }}
                     >
-                        {mappedArtists.map((artist) => (
-                            <div key={artist.id} className="w-64 flex-shrink-0">
-                                <Link
-                                    to={`/artist/${artist.id}`}
-                                    className="block"
-                                    onClick={(e) => {
-                                        // Prevent navigation if user was dragging
-                                        if (hasDragged) {
-                                            e.preventDefault()
-                                        }
-                                    }}
-                                >
-                                    <ArtistCard artist={artist} showSales={true} showViews={true} />
-                                </Link>
-                            </div>
-                        ))}
+                        <ArtistCard artist={artist} showSales={true} showViews={true} />
                     </div>
-                </div>
+                ))}
+
+                {/* Horizontal infinite scroll sentinel */}
+                <div
+                    ref={loadMoreRef}
+                    className="flex w-16 flex-shrink-0 items-center justify-center"
+                    aria-hidden="true"
+                />
+
+                {isFetchingNextPage && (
+                    <div className="flex w-64 flex-shrink-0 items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-red-700" />
+                    </div>
+                )}
             </div>
         </section>
     )

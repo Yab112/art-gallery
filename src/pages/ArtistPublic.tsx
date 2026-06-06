@@ -5,10 +5,8 @@ import { FilterControls } from "@/components/artist/filter-controls";
 import { ImageModal } from "@/components/artist/image-modal";
 import { NavigationTabs } from "@/components/artist/navigation-tabs";
 import { SimilarArtists } from "@/components/artist/similar-artists";
-import { BlogCard } from "@/components/blog/blog-card";
-import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton";
+import { ArtistBlogPreview } from "@/components/blog/artist-blog-preview";
 import { Button } from "@/components/ui/button";
-import { BlogEmptyState } from "@/components/blog/blog-empty-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useArtworks } from "@/queries/artworkQueries";
 import { useUser } from "@/queries/userQueries";
@@ -47,7 +45,6 @@ export default function ArtistDetailPage() {
 
   // Get filter values from URL query params
   const page = Number.parseInt(searchParams.get("page") || "1", 10);
-  const blogPage = Number.parseInt(searchParams.get("blogPage") || "1", 10);
   const collectionPage = Number.parseInt(
     searchParams.get("collectionPage") || "1",
     10,
@@ -255,19 +252,17 @@ export default function ArtistDetailPage() {
   const { user: currentUser } = useAuth();
   const isOwnProfile = currentUser?.id === id;
 
-  // Fetch artist's blogs (only published and approved for others, all for self)
-  const { data: blogsResponse, isLoading: isLoadingBlogs } = useGetBlogPosts({
+  // Fetch blog count for profile header
+  const { data: blogsMeta } = useGetBlogPosts({
     authorId: id,
     published: isOwnProfile ? undefined : true,
     status: isOwnProfile ? undefined : "APPROVED",
-    page: blogPage,
-    limit: 10,
+    page: 1,
+    limit: 1,
     sortBy: "publishedAt",
     sortOrder: "desc",
   });
-  const blogs = blogsResponse?.data || [];
-  const blogsTotal = blogsResponse?.total || 0;
-  const blogsPages = blogsResponse?.totalPages || 1;
+  const blogsTotal = blogsMeta?.total || 0;
 
   // Fetch artist's collections (only public)
   const { data: collectionsResponse, isLoading: isLoadingCollections } =
@@ -513,38 +508,14 @@ export default function ArtistDetailPage() {
         )}
 
         {activeTab === "blog" && (
-          <div className="mt-8">
-            {isLoadingBlogs ? (
-              <div className="space-y-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
-                {[...Array(5)].map((_, i) => (
-                  <BlogCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : blogs.length === 0 ? (
-              <BlogEmptyState artistName={user.name} />
-            ) : (
-              <>
-                <div className="space-y-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
-                  {blogs.map((post) => (
-                    <BlogCard key={post.id} blogPost={post} />
-                  ))}
-                </div>
-                {/* Pagination */}
-                {blogsPages > 1 && (
-                  <PaginationControls
-                    currentPage={blogPage}
-                    totalPages={blogsPages}
-                    onPageChange={(nextPage) =>
-                      updateSearchParams({ blogPage: nextPage })
-                    }
-                    totalItems={blogsTotal}
-                    itemLabel="posts"
-                    itemLabelSingular="post"
-                  />
-                )}
-              </>
-            )}
-          </div>
+          <ArtistBlogPreview
+            authorId={id || ""}
+            authorName={user.name}
+            limit={4}
+            published={isOwnProfile ? undefined : true}
+            status={isOwnProfile ? undefined : "APPROVED"}
+            className="mt-8"
+          />
         )}
 
         {activeTab === "collections" && (
