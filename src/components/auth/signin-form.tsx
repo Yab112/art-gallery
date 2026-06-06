@@ -114,48 +114,59 @@ export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigatio
     }
 
     return (
-        <div className="w-full space-y-6">
-            <div className="space-y-2">
-                <h1 className="font-bold text-3xl text-gray-900">Login</h1>
-                <p className="text-gray-500">Welcome back! Please login to your account.</p>
+        <div className="w-full space-y-8">
+            <div className="space-y-3 text-left">
+                <h1 className="font-serif text-4xl text-gray-900 tracking-tight">Sign In</h1>
+                <p className="font-medium text-gray-500 text-sm">
+                    Access your curated collection and favorite artists.
+                </p>
             </div>
 
             {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-700">
-                        User Name
+                    <Label htmlFor="email" className="font-semibold text-gray-700 text-xs uppercase tracking-widest">
+                        Email Address
                     </Label>
                     <Input
                         id="email"
                         type="email"
-                        placeholder="username@gmail.com"
+                        placeholder="e.g. curator@arthopia.com"
                         {...register("email", { required: "Email is required" })}
-                        className={`h-12 ${
-                            errors.email ? "border-red-500" : "border-gray-300"
-                        } bg-white`}
+                        className={`h-12 border-gray-200 bg-white px-4 transition-all focus:border-gray-900 focus:ring-0 ${
+                            errors.email ? "border-red-500" : ""
+                        }`}
                     />
-                    {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+                    {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-700">
-                        Password
-                    </Label>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="password" className="font-semibold text-gray-700 text-xs uppercase tracking-widest">
+                            Password
+                        </Label>
+                        <button
+                            type="button"
+                            onClick={onForgotPassword}
+                            className="font-medium text-red-700 text-xs hover:text-red-800"
+                        >
+                            Forgot?
+                        </button>
+                    </div>
                     <div className="relative">
                         <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
+                            placeholder="••••••••"
                             {...register("password", { required: "Password is required" })}
-                            className={`h-12 pr-10 ${
-                                errors.password ? "border-red-500" : "border-gray-300"
-                            } bg-white`}
+                            className={`h-12 border-gray-200 bg-white px-4 pr-10 transition-all focus:border-gray-900 focus:ring-0 ${
+                                errors.password ? "border-red-500" : ""
+                            }`}
                         />
                         <button
                             type="button"
@@ -170,46 +181,38 @@ export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigatio
                         </button>
                     </div>
                     {errors.password && (
-                        <p className="text-red-500 text-sm">{errors.password.message}</p>
+                        <p className="text-red-500 text-xs">{errors.password.message}</p>
                     )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="remember"
-                            checked={form.watch("rememberMe")}
-                            onCheckedChange={(checked) => form.setValue("rememberMe", checked)}
-                        />
-                        <Label htmlFor="remember" className="text-gray-600 text-sm">
-                            Remember Me
-                        </Label>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onForgotPassword}
-                        className="font-medium text-red-700 text-sm hover:text-red-800"
-                    >
-                        Forgot Password?
-                    </button>
+                <div className="flex items-center space-x-2 py-1">
+                    <Checkbox
+                        id="remember"
+                        checked={form.watch("rememberMe")}
+                        onCheckedChange={(checked) => form.setValue("rememberMe", checked)}
+                        className="border-gray-300 data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900"
+                    />
+                    <Label htmlFor="remember" className="text-gray-500 text-xs font-medium">
+                        Remember this device
+                    </Label>
                 </div>
 
                 <Button
                     type="submit"
-                    className="h-12 w-full bg-red-700 font-medium text-white hover:bg-red-800"
+                    className="h-12 w-full rounded-none bg-gray-900 font-bold text-white tracking-widest uppercase text-xs transition-all hover:bg-black"
                     disabled={isLoading || isSocialLoading}
                 >
-                    {isLoading ? "Signing in..." : "Login"}
+                    {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
             </form>
 
             {/* Social Login Divider */}
-            <div className="relative">
+            <div className="relative py-4">
                 <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-gray-300 border-t" />
+                    <span className="w-full border-gray-100 border-t" />
                 </div>
-                <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em]">
+                    <span className="bg-white px-4 text-gray-400">Or continue with</span>
                 </div>
             </div>
 
@@ -218,11 +221,11 @@ export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigatio
                 <Button
                     type="button"
                     variant="outline"
-                    className="h-12 w-full border-gray-300 hover:bg-gray-50"
+                    className="h-12 w-full rounded-none border-gray-200 bg-white font-semibold text-gray-700 text-xs transition-all hover:bg-gray-50"
                     disabled={isLoading || isSocialLoading}
                     onClick={handleGoogleSignIn}
                 >
-                    <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                    <svg className="mr-3 h-4 w-4" viewBox="0 0 24 24">
                         <path
                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                             fill="#4285F4"
@@ -240,30 +243,28 @@ export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigatio
                             fill="#EA4335"
                         />
                     </svg>
-                    {isSocialLoading ? "Signing in..." : "Continue with Google"}
+                    Google
                 </Button>
             </div>
 
-            <div className="space-y-2 text-center">
-                <p className="text-gray-600">
-                    New User?{" "}
+            <div className="space-y-4 pt-4 text-center">
+                <p className="text-gray-500 text-xs">
+                    Don't have an account?{" "}
                     <button
                         type="button"
                         onClick={onSwitchToSignup}
-                        className="font-medium text-red-700 hover:text-red-800"
+                        className="font-bold text-gray-900 underline underline-offset-4 hover:text-red-700"
                     >
-                        Signup
+                        Create One
                     </button>
                 </p>
-                <p className="text-sm">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/buyart")}
-                        className="text-gray-500 underline hover:text-gray-700"
-                    >
-                        Explore as guest
-                    </button>
-                </p>
+                <button
+                    type="button"
+                    onClick={() => navigate("/buyart")}
+                    className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gray-600"
+                >
+                    Explore as guest
+                </button>
             </div>
         </div>
     )

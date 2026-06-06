@@ -11,7 +11,6 @@ import {
     BookOpen,
     Calendar,
     CheckCircle2,
-    Circle,
     Eye,
     Flame,
     FolderOpen,
@@ -102,14 +101,6 @@ export function ArtistProfileEnhanced({
     const profileViews = user.profileViews || 0
     const heatScore = user.heatScore || 0
 
-    // Check if user is online (active within last 5 minutes)
-    const isOnline = useMemo(() => {
-        if (!user.lastActiveAt) return false
-        const lastActive = new Date(user.lastActiveAt)
-        const now = new Date()
-        const diffMinutes = (now.getTime() - lastActive.getTime()) / (1000 * 60)
-        return diffMinutes < 5
-    }, [user.lastActiveAt])
 
     // Check if artist is trending (high heat score)
     const isTrending = heatScore > 50 // Threshold for trending
@@ -242,12 +233,7 @@ export function ArtistProfileEnhanced({
                                     <h1 className="font-bold text-2xl text-gray-900 sm:text-3xl">
                                         {user.name || "Artist"}
                                     </h1>
-                                    {isOnline && (
-                                        <span className="inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-2 py-0.5 font-medium text-green-700 text-xs">
-                                            <Circle className="h-2.5 w-2.5 fill-green-500" />
-                                            Online
-                                        </span>
-                                    )}
+
                                     {isTrending && (
                                         <span className="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-2 py-0.5 font-medium text-orange-700 text-xs">
                                             <Flame className="h-2.5 w-2.5 fill-orange-500" />
@@ -464,25 +450,7 @@ export function ArtistProfileEnhanced({
                     </div>
                 )}
 
-            {/* Engagement Metrics Row */}
-            {isOnline && (
-                <div className="container mx-auto mt-6 max-w-6xl px-4">
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                        {/* Online Status Card */}
-                        <div className="rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 p-4">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-green-100 p-2">
-                                    <Circle className="h-5 w-5 fill-green-600 text-green-600" />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-900 text-lg">Online Now</p>
-                                    <p className="text-gray-600 text-xs">Active recently</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Additional Info Section - Only show timezone and language, NOT subscriptions (private info) */}
             {/* {(timezoneDisplay || languageDisplay) && (

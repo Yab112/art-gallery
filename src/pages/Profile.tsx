@@ -2,11 +2,11 @@ import { ArtworkCard } from "@/components/artwork-card";
 import { NewsBlogCard } from "@/components/blog/news-blog-card";
 import { NewsBlogSkeleton } from "@/components/blog/news-blog-skeleton";
 import { BlogEditSheet } from "@/components/blog/blog-edit-sheet";
-import { FilterControls } from "@/components/artist/filter-controls";
+
 import { NavigationTabs } from "@/components/artist/navigation-tabs";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
-import { ProfileSectionSkeleton } from "@/components/skeletons/profile-section-skeleton";
+import { ArtworkCardSkeleton } from "@/components/skeletons/artwork-card-skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,13 +29,6 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MinimalButton } from "@/components/ui/minimal-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useMyArtworks } from "@/queries/artworkQueries";
@@ -73,15 +66,16 @@ import {
   Globe,
   Images,
   MapPin,
-  MoreVertical,
   Mountain,
   Phone,
   Plus,
+  Share2,
   ThumbsUp,
   Trash2,
   Upload,
   User,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { Palette, Users } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
@@ -113,10 +107,10 @@ export default function ProfilePage() {
     error: myProfileError,
   } = useMyProfile();
 
-  // Navigation and Filter states
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "artworks",
   );
+
 
   // Sync tab state with URL search params
   useEffect(() => {
@@ -131,9 +125,7 @@ export default function ProfilePage() {
     setPage(1);
     setSearchParams({ tab }, { replace: true });
   };
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("newest");
-  const [priceRange, setPriceRange] = useState("");
   const [medium, setMedium] = useState("");
   const [artworkStatus, setArtworkStatus] = useState("APPROVED");
   const [page, setPage] = useState(1);
@@ -170,7 +162,7 @@ export default function ProfilePage() {
   } = useMyArtworks({
     page: activeTab === "artworks" ? page : 1,
     limit: 12,
-    status: artworkStatus || undefined,
+    status: artworkStatus === "ALL" ? undefined : artworkStatus,
     technique: medium || undefined,
     sortBy:
       sortBy === "price-low" || sortBy === "price-high"
@@ -682,8 +674,7 @@ export default function ProfilePage() {
                     </Button>
                     <Button
                       variant="outline"
-                      size="icon"
-                      className="h-10 w-10 text-gray-600"
+                      className="flex-1 items-center gap-2 sm:flex-none"
                       onClick={async () => {
                         const shareData = {
                           title: `${profile.name}'s Profile`,
@@ -705,7 +696,8 @@ export default function ProfilePage() {
                         }
                       }}
                     >
-                      <Globe className="h-4 w-4" />
+                      <Share2 className="h-4 w-4" />
+                      Share
                     </Button>
                   </>
                 ) : (
@@ -760,47 +752,23 @@ export default function ProfilePage() {
             {/* ARTWORKS TAB */}
             {activeTab === "artworks" && (
               <div className="space-y-6">
-                {/* Filter Bar */}
-                <FilterControls
-                  sortBy={sortBy}
-                  onSortChange={(value) => {
-                    setSortBy(value);
-                    setPage(1);
-                  }}
-                  priceRange={priceRange}
-                  onPriceRangeChange={(value) => {
-                    setPriceRange(value);
-                    setPage(1);
-                  }}
-                  medium={medium}
-                  onMediumChange={(value) => {
-                    setMedium(value);
-                    setPage(1);
-                  }}
-                  status={artworkStatus}
-                  onStatusChange={(value) => {
-                    setArtworkStatus(value);
-                    setPage(1);
-                  }}
-                  openMenu={openMenu}
-                  onOpenChange={setOpenMenu}
-                  extraAction={
-                    !isViewingOtherProfile && (
-                      <Button
-                        onClick={() => navigate("/sellart")}
-                        className="bg-red-700 text-white hover:bg-red-800"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Artwork
-                      </Button>
-                    )
-                  }
-                />
+                {/* Actions Bar */}
+                {!isViewingOtherProfile && (
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => navigate("/sellart")}
+                      className="bg-red-700 text-white hover:bg-red-800"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Artwork
+                    </Button>
+                  </div>
+                )}
 
                 {isLoadingArtworks ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {[...Array(8)].map((_, i) => (
-                      <ProfileSectionSkeleton key={i} />
+                      <ArtworkCardSkeleton key={i} />
                     ))}
                   </div>
                 ) : artworksData?.artworks &&
@@ -1294,23 +1262,40 @@ export default function ProfilePage() {
                           <Label htmlFor="collectionVisibility">
                             Visibility
                           </Label>
-                          <Select
-                            value={newCollection.visibility}
-                            onValueChange={(value: "private" | "unlisted") =>
-                              setNewCollection({
-                                ...newCollection,
-                                visibility: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger id="collectionVisibility">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="private">Private</SelectItem>
-                              <SelectItem value="unlisted">Unlisted</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                id="collectionVisibility"
+                                variant="outline"
+                                className="w-full justify-between bg-white text-gray-900 border-gray-200"
+                              >
+                                <span className="capitalize">{newCollection.visibility}</span>
+                                <ChevronDown className="h-4 w-4 opacity-50" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white border border-gray-200 shadow-md">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setNewCollection({
+                                    ...newCollection,
+                                    visibility: "private",
+                                  })
+                                }
+                              >
+                                Private
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setNewCollection({
+                                    ...newCollection,
+                                    visibility: "unlisted",
+                                  })
+                                }
+                              >
+                                Unlisted
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           <p className="text-muted-foreground text-xs">
                             Collections need at least 3 artworks to be
                             published.

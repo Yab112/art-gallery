@@ -118,7 +118,8 @@ export default function ArtistDetailPage() {
     const params: any = {
       page,
       limit: 20,
-      status,
+      // "ALL" means no status filter – omit the field so backend returns everything
+      ...(status && status !== "ALL" ? { status } : {}),
     };
 
     // Filter by userId (more reliable than artist name)
