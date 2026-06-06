@@ -36,7 +36,7 @@ export function BlogCard({ blogPost, returnTo, returnState }: BlogCardProps) {
             state={returnTo ? { returnTo, returnState } : undefined}
             className="group block"
         >
-            <article className="flex flex-col gap-8 py-10 transition-all md:flex-row md:items-start">
+            <article className="flex flex-col gap-8 px-6 py-10 transition-all sm:px-8 md:flex-row md:items-start">
                 {/* Content Section - Now on the left */}
                 <div className="flex flex-1 flex-col">
                     {/* Category Tag - News Style */}

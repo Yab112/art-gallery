@@ -225,7 +225,7 @@ export default function ArtworkDetailPage() {
                                                 <CreateBlogModal />
                                             )}
                                         </div>
-                                        <UserBlogs userId={artwork.userId} />
+                                        <UserBlogs userId={artwork.userId} artistName={artwork.artist} />
                                     </>
                                 )}
                             </div>
@@ -292,7 +292,7 @@ export default function ArtworkDetailPage() {
                                         </h3>
                                         {user && artwork.userId === user.id && <CreateBlogModal />}
                                     </div>
-                                    <UserBlogs userId={artwork.userId} />
+                                    <UserBlogs userId={artwork.userId} artistName={artwork.artist} />
                                     <MoreArtworksFromUser
                                         userId={artwork.userId}
                                         currentArtworkId={id || ""}

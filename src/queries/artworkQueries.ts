@@ -1,7 +1,12 @@
 import useAxiosAuth from "@/hooks/use-axios-auth"
 import { useFetchData } from "@/hooks/use-query"
 import type { Artwork, ArtworkListResponse, ArtworkQueryParams } from "@/types/artwork.types"
-import { type UseQueryOptions, keepPreviousData, useQuery } from "@tanstack/react-query"
+import {
+    type UseQueryOptions,
+    keepPreviousData,
+    useInfiniteQuery,
+    useQuery,
+} from "@tanstack/react-query"
 import { artworkKeys } from "./queryKeys"
 
 // Query Hooks
@@ -71,6 +76,79 @@ export const useArtworks = (
         placeholderData: keepPreviousData,
         refetchOnWindowFocus: false, // Prevent refetch on window focus
         ...options
+    })
+}
+
+const buildArtworkQueryString = (params?: ArtworkQueryParams) => {
+    if (!params) return ""
+
+    const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && key !== "page") {
+            if (Array.isArray(value)) {
+                value.forEach((item) => {
+                    searchParams.append(key, String(item))
+                })
+            } else {
+                searchParams.append(key, String(value))
+            }
+        }
+    })
+    return searchParams.toString()
+}
+
+export const useArtworksInfinite = (params?: ArtworkQueryParams) => {
+    const axiosAuth = useAxiosAuth()
+    const limit = params?.limit ?? 12
+
+    return useInfiniteQuery<ArtworkListResponse>({
+        queryKey: [...artworkKeys.list(params), "infinite"],
+        queryFn: async ({ pageParam = 1 }) => {
+            const queryString = buildArtworkQueryString({ ...params, limit })
+            const pageQuery = queryString
+                ? `${queryString}&page=${pageParam}`
+                : `page=${pageParam}&limit=${limit}`
+
+            const response = await axiosAuth.get<{
+                artworks: any[]
+                pagination?: {
+                    page: number
+                    limit: number
+                    total: number
+                    pages: number
+                }
+            }>(`artworks?${pageQuery}`)
+
+            const data = response.data
+            if (data.pagination) {
+                return {
+                    success: true,
+                    artworks: data.artworks || [],
+                    page: data.pagination.page,
+                    limit: data.pagination.limit,
+                    total: data.pagination.total,
+                    pages: data.pagination.pages,
+                }
+            }
+
+            return {
+                success: true,
+                artworks: data.artworks || [],
+                page: Number(pageParam),
+                limit,
+                total: data.artworks?.length || 0,
+                pages: 1,
+            }
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            if (lastPage.page < lastPage.pages) {
+                return lastPage.page + 1
+            }
+            return undefined
+        },
+        staleTime: 10 * 60 * 1000,
+        refetchOnWindowFocus: false,
     })
 }
 

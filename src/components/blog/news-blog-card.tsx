@@ -39,7 +39,7 @@ export function NewsBlogCard({
   const isOverlay = layout === "OVERLAY";
 
   const categoryName =
-    blogPost.category?.name || blogPost.topic?.name || "Art News";
+    blogPost.category?.name || blogPost.topic?.name || "Blog";
 
   const formatTimeAgo = (dateString?: string) => {
     if (!dateString) return "";
@@ -143,7 +143,7 @@ export function NewsBlogCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
             <div className="absolute bottom-0 left-0 p-8">
               <div className="mb-3 flex items-center gap-3">
-                <span className="block font-black text-red-500 text-[11px] uppercase tracking-[0.2em]">
+                <span className="block font-semibold text-red-700 text-[11px] uppercase tracking-[0.2em]">
                   {blogPost.badge || categoryName}
                 </span>
                 {blogPost.locationTag && (
@@ -524,7 +524,7 @@ export function NewsBlogCard({
 
         <div className="flex flex-col">
           <div className="mb-2 flex items-center gap-2">
-            <span className="font-black text-red-700 text-[11px] uppercase tracking-[0.2em]">
+            <span className="font-semibold text-red-700 text-[11px] uppercase tracking-[0.2em]">
               {blogPost.badge || categoryName}
             </span>
             {blogPost.locationTag && (
@@ -549,7 +549,7 @@ export function NewsBlogCard({
             )}
           </div>
 
-          <h2 className="line-clamp-2 mb-3 font-black text-gray-900 text-xl leading-tight transition-colors group-hover:text-red-700 md:text-2xl">
+          <h2 className="line-clamp-2 mb-3 font-bold text-gray-900 text-xl leading-tight transition-colors group-hover:text-red-700 md:text-2xl">
             {blogPost.title}
             {showStatus && (
               <span

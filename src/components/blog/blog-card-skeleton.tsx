@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function BlogCardSkeleton() {
     return (
-        <article className="flex flex-col gap-6 border-gray-100 border-b px-6 py-8 last:border-b-0 md:flex-row">
+        <article className="flex flex-col gap-6 border-gray-100 border-b px-6 py-10 last:border-b-0 sm:px-8 md:flex-row">
             {/* Content Section */}
             <div className="min-w-0 flex-1">
                 {/* Author & Date */}

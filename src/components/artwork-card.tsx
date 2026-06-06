@@ -17,6 +17,8 @@ interface ArtworkCardProps {
     year?: string
     medium?: string
     dimensions: string
+    physicalWidth?: string
+    physicalHeight?: string
     seller: string
     status?: string
     onFavorite?: (id: string) => void
@@ -26,6 +28,8 @@ interface ArtworkCardProps {
     disableNavigation?: boolean
     /** Hide favorite button in overlay (e.g. for guests on marketplace) */
     hideFavorite?: boolean
+    /** Pre-calculated width/height ratio for masonry tile sizing */
+    masonryAspectRatio?: number
 }
 
 const statusConfig = {
@@ -48,12 +52,15 @@ export function ArtworkCard({
     year,
     medium,
     dimensions,
+    physicalWidth,
+    physicalHeight,
     seller,
     status,
     onFavorite,
     isMasonry = false,
     disableNavigation = false,
-    hideFavorite = false
+    hideFavorite = false,
+    masonryAspectRatio,
 }: ArtworkCardProps) {
     const isSold = status === "SOLD"
     const statusInfo = status ? statusConfig[status as keyof typeof statusConfig] : null
@@ -87,6 +94,21 @@ export function ArtworkCard({
     // Show favorite unless explicitly hidden (e.g. selection-only contexts)
     const showFavorite = !hideFavorite
 
+    const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
+    const [useNaturalImageHeight, setUseNaturalImageHeight] = useState(false)
+
+    useEffect(() => {
+        setImageAspectRatio(null)
+        setUseNaturalImageHeight(false)
+    }, [image])
+
+    const isSquareThumbnail = (ratio: number) => ratio > 0.88 && ratio < 1.12
+
+    // Thumbnails are often uniform squares — keep intentional tile ratios unless the photo is clearly not square
+    const resolvedMasonryRatio = useNaturalImageHeight
+        ? imageAspectRatio
+        : masonryAspectRatio ?? imageAspectRatio
+
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation()
 
@@ -115,6 +137,7 @@ export function ArtworkCard({
     }
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isMasonry) return
         const rect = e.currentTarget.getBoundingClientRect()
         const x = ((e.clientX - rect.left) / rect.width) * 100
         const y = ((e.clientY - rect.top) / rect.height) * 100
@@ -127,8 +150,10 @@ export function ArtworkCard({
     }
 
     const handleMouseEnter = () => {
+        if (isMasonry) return
         setIsHovered(true)
     }
+
     return (
         <div
             className="group relative cursor-pointer"
@@ -139,19 +164,30 @@ export function ArtworkCard({
                 }
             }}
         >
-            {/* Artwork Image Container */}
             <div
                 className={cn(
-                    "relative mb-4 overflow-hidden bg-gray-100",
-                    !isMasonry && "aspect-[4/5]",
-                    isSold && "opacity-75"
+                    "relative bg-gray-100",
+                    !isMasonry && "mb-4 aspect-[4/5] overflow-hidden",
+                    isMasonry && "mb-3 overflow-hidden rounded-xl",
+                    isSold && "opacity-75",
                 )}
+                style={
+                    isMasonry && resolvedMasonryRatio && !useNaturalImageHeight
+                        ? { aspectRatio: resolvedMasonryRatio }
+                        : undefined
+                }
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onMouseMove={handleMouseMove}
             >
                 {imageError || !image ? (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                    <div
+                        className={cn(
+                            "flex h-full w-full items-center justify-center bg-gray-200",
+                            isMasonry && !useNaturalImageHeight && "min-h-[160px]",
+                            isMasonry && useNaturalImageHeight && "min-h-0",
+                        )}
+                    >
                         <div className="text-center">
                             <svg
                                 className="mx-auto h-12 w-12 text-gray-400"
@@ -173,13 +209,37 @@ export function ArtworkCard({
                     <img
                         src={image}
                         alt={`${title} by ${artist}`}
+                        loading="lazy"
                         className={cn(
-                            "block h-full w-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
-                            isSold && "grayscale"
+                            "block w-full",
+                            isMasonry
+                                ? useNaturalImageHeight
+                                    ? "h-auto w-full"
+                                    : resolvedMasonryRatio
+                                      ? "h-full w-full object-cover"
+                                      : "h-auto w-full"
+                                : "h-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
+                            isSold && "grayscale",
                         )}
-                        style={{
-                            transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
-                            transform: isHovered && !isSold ? "scale(1.2)" : "scale(1)"
+                        style={
+                            isMasonry
+                                ? undefined
+                                : {
+                                      transformOrigin: `${imagePosition.x}% ${imagePosition.y}%`,
+                                      transform: isHovered && !isSold ? "scale(1.2)" : "scale(1)",
+                                  }
+                        }
+                        onLoad={(event) => {
+                            if (!isMasonry) return
+                            const img = event.currentTarget
+                            if (img.naturalWidth <= 0 || img.naturalHeight <= 0) return
+
+                            const naturalRatio = img.naturalWidth / img.naturalHeight
+                            setImageAspectRatio(naturalRatio)
+
+                            if (!isSquareThumbnail(naturalRatio)) {
+                                setUseNaturalImageHeight(true)
+                            }
                         }}
                         onError={() => setImageError(true)}
                     />
@@ -226,10 +286,14 @@ export function ArtworkCard({
                     <span className="text-orange-500">🏆</span> {title} {year && `(${year})`}
                 </p>
                 <p className="font-bold text-lg">{price}</p>
-                <p className="text-gray-600 text-sm">
-                    {medium && `${medium} `}({dimensions})
-                </p>
-                <p className="text-gray-500 text-sm">Seller: {seller}</p>
+                {!isMasonry && (
+                    <>
+                        <p className="text-gray-600 text-sm">
+                            {medium && `${medium} `}({dimensions})
+                        </p>
+                        <p className="text-gray-500 text-sm">Seller: {seller}</p>
+                    </>
+                )}
             </div>
         </div>
     )

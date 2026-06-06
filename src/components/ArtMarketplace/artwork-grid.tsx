@@ -1,14 +1,13 @@
 import { Badge } from "@/components/ui/badge"
-import { useState } from "react"
-import { ArtworkCard } from "@/components/artwork-card"
+import { type RefObject, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
-import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useAuth } from "@/hooks/use-auth"
 import { useCheckFavorite } from "@/queries/favoriteQueries"
 import { CheckSquare, Heart, Palette, Square } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { ArtworkMasonryGrid } from "./artwork-masonry-grid"
 
 const statusConfig = {
     APPROVED: {
@@ -60,6 +59,8 @@ interface Artwork {
     year: string
     medium?: string
     dimensions: string
+    physicalWidth?: string
+    physicalHeight?: string
     seller: string
     status?: string
 }
@@ -76,19 +77,23 @@ interface ArtworkGridProps {
     onToggleSelection?: (id: string) => void
     /** Hide favorite button in card overlay (e.g. for guests) */
     hideFavorite?: boolean
+    /** Enable infinite scroll instead of pagination (grid masonry mode) */
+    infiniteScroll?: {
+        loadMoreRef: RefObject<HTMLDivElement>
+        isFetchingNextPage: boolean
+        hasNextPage: boolean
+    }
 }
 
 export function ArtworkGrid({
     artworks,
     viewMode,
     onFavorite,
-    currentPage,
-    totalPages,
-    onPageChange,
     isSelectionMode = false,
     selectedArtworkIds = new Set(),
     onToggleSelection,
-    hideFavorite = false
+    hideFavorite = false,
+    infiniteScroll,
 }: ArtworkGridProps) {
     const showFavorite = !hideFavorite
     const navigate = useNavigate()
@@ -96,31 +101,24 @@ export function ArtworkGrid({
 
     if (artworks.length === 0) {
         return (
-            <section className="flex min-h-[500px] items-center px-4">
-                <div className="mx-auto w-full max-w-7xl">
-                    <EmptyState
-                        icon={Palette}
-                        title="No Artworks Found"
-                        description="We couldn't find any artworks matching your search. Try adjusting your filters or browse our collections."
-                        actionLabel="Browse Collections"
-                        onAction={() => {
-                            // Navigate to collections or clear filters
-                            window.location.href = "/"
-                        }}
-                    />
-                </div>
-            </section>
+            <div className="flex min-h-[500px] items-center">
+                <EmptyState
+                    icon={Palette}
+                    title="No Artworks Found"
+                    description="We couldn't find any artworks matching your search. Try adjusting your filters or browse our collections."
+                    actionLabel="Browse Collections"
+                    onAction={() => {
+                        window.location.href = "/"
+                    }}
+                />
+            </div>
         )
     }
 
-    const safeTotalPages = totalPages ?? 1
-    const safeCurrentPage = currentPage ?? 1
-
     return (
-        <section className="px-4">
-            <div className="mx-auto max-w-7xl">
-                {viewMode === "list" ? (
-                    <div className="space-y-4">
+        <>
+            {viewMode === "list" ? (
+                <div className="space-y-4">
                         {artworks.map((artwork) => {
                             const statusInfo = artwork.status
                                 ? statusConfig[artwork.status as keyof typeof statusConfig]
@@ -241,67 +239,16 @@ export function ArtworkGrid({
                         })}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-                        {artworks.map((artwork) => (
-                            <div key={artwork.id} className="group relative">
-                                {isSelectionMode && (
-                                    <div className="absolute top-2 left-2 z-20">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onToggleSelection?.(artwork.id)
-                                            }}
-                                            className="rounded-md bg-white p-1.5 shadow-md transition-colors hover:bg-gray-50"
-                                        >
-                                            {selectedArtworkIds.has(artwork.id) ? (
-                                                <CheckSquare className="h-5 w-5 text-blue-600" />
-                                            ) : (
-                                                <Square className="h-5 w-5 text-gray-400" />
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
-                                <div
-                                    className={
-                                        isSelectionMode && selectedArtworkIds.has(artwork.id)
-                                            ? "rounded-lg ring-2 ring-blue-500"
-                                            : ""
-                                    }
-                                    onClick={(e) => {
-                                        if (isSelectionMode) {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            onToggleSelection?.(artwork.id)
-                                        }
-                                    }}
-                                    style={isSelectionMode ? { cursor: "pointer" } : {}}
-                                >
-                                    <ArtworkCard
-                                        {...artwork}
-                                        onFavorite={onFavorite}
-                                        isMasonry={false}
-                                        disableNavigation={isSelectionMode}
-                                        hideFavorite={hideFavorite}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {onPageChange && (
-                    <PaginationControls
-                        currentPage={safeCurrentPage}
-                        totalPages={safeTotalPages}
-                        onPageChange={onPageChange}
-                        totalItems={safeTotalPages <= 1 ? artworks.length : undefined}
-                        itemLabel="artworks"
-                        itemLabelSingular="artwork"
-                        showSinglePageSummary={safeTotalPages <= 1}
-                        className="pb-8"
+                    <ArtworkMasonryGrid
+                        artworks={artworks}
+                        onFavorite={onFavorite}
+                        isSelectionMode={isSelectionMode}
+                        selectedArtworkIds={selectedArtworkIds}
+                        onToggleSelection={onToggleSelection}
+                        hideFavorite={hideFavorite}
+                        infiniteScroll={infiniteScroll}
                     />
                 )}
-            </div>
-        </section>
+        </>
     )
 }

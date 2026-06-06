@@ -70,8 +70,8 @@ export function MarketplaceHero({
     }
 
     return (
-        <section className="border-gray-100 border-b bg-gradient-to-b from-stone-50 to-white px-3 pt-5 pb-6 sm:px-4 sm:pt-6 sm:pb-8">
-            <div className="mx-auto max-w-7xl">
+        <section className="border-gray-100 border-b bg-gradient-to-b from-stone-50 to-white px-3 pt-5 pb-6 sm:pt-6 sm:pb-8">
+            <div className="mx-auto max-w-[90rem]">
                 <div className="mb-4 flex flex-col gap-4 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="max-w-2xl">
                         <p className="mb-2 font-semibold text-[11px] text-red-700 uppercase tracking-[0.22em]">
@@ -95,7 +95,7 @@ export function MarketplaceHero({
                 </div>
 
                 {isLoadingCategories ? (
-                    <div className="flex gap-3 overflow-hidden px-1 py-2 sm:gap-4">
+                    <div className="flex gap-3 overflow-hidden py-2 sm:gap-4">
                         {[...Array(6)].map((_, i) => (
                             <div key={i} className="w-40 flex-shrink-0 animate-pulse sm:w-48">
                                 <div className="aspect-[4/3] rounded-xl bg-gray-200" />
@@ -103,7 +103,7 @@ export function MarketplaceHero({
                         ))}
                     </div>
                 ) : categories.length > 0 ? (
-                    <div className="relative sm:px-10">
+                    <div className="relative">
                         <Button
                             variant="outline"
                             size="icon"
@@ -123,7 +123,7 @@ export function MarketplaceHero({
 
                         <div
                             ref={scrollRef}
-                            className="scrollbar-hide -mx-1 flex cursor-grab gap-3 overflow-x-auto px-1 py-2 active:cursor-grabbing sm:gap-4"
+                            className="scrollbar-hide flex cursor-grab gap-3 overflow-x-auto py-2 active:cursor-grabbing sm:gap-4"
                             onMouseDown={handleMouseDown}
                             onMouseLeave={handleMouseUp}
                             onMouseUp={handleMouseUp}

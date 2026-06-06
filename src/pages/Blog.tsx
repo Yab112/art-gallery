@@ -39,9 +39,9 @@ export default function BlogPage() {
         }
       `;
       document.head.appendChild(styleElement);
-    }
+        }
 
-    const interval = setInterval(() => {
+        const interval = setInterval(() => {
       const body = document.body;
       const html = document.documentElement;
       body.style.setProperty("margin-right", "0", "important");
@@ -50,12 +50,12 @@ export default function BlogPage() {
       html.style.setProperty("padding-right", "0", "important");
     }, 16);
 
-    return () => {
+        return () => {
       clearInterval(interval);
     };
   }, []);
 
-  // Get filter values from URL
+    // Get filter values from URL
   const limit = Number.parseInt(searchParams.get("limit") || "30", 10);
   const searchQuery = searchParams.get("search") || "";
   const sortBy = searchParams.get("sortBy") || "createdAt";
@@ -64,13 +64,13 @@ export default function BlogPage() {
   const isAdminView = searchParams.get("adminView") === "true";
   const isAdmin = (user as any)?.role?.toLowerCase() === "admin";
 
-  // Update URL params
-  const updateParams = (updates: Record<string, string | number | null>) => {
+    // Update URL params
+    const updateParams = (updates: Record<string, string | number | null>) => {
     const newParams = new URLSearchParams(searchParams);
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "") {
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === "") {
         newParams.delete(key);
-      } else {
+            } else {
         newParams.set(key, String(value));
       }
     });
@@ -86,12 +86,12 @@ export default function BlogPage() {
     fetchNextPage,
     error,
   } = useGetBlogPostsInfinite({
-    limit,
+        limit,
     published: isAdminView ? undefined : true,
     status: isAdminView ? undefined : "APPROVED",
-    search: searchQuery || undefined,
-    authorId: authorId || undefined,
-    sortBy: sortBy as any,
+        search: searchQuery || undefined,
+        authorId: authorId || undefined,
+        sortBy: sortBy as any,
     sortOrder: sortOrder as "asc" | "desc",
   });
 
@@ -243,23 +243,23 @@ export default function BlogPage() {
       ? allPosts
       : allPosts.filter((post) => !featuredIds.has(post.id));
 
-  const handleSearchChange = (query: string) => {
+    const handleSearchChange = (query: string) => {
     updateParams({ search: query || null });
   };
 
-  const handleSortChange = (value: string) => {
+    const handleSortChange = (value: string) => {
     updateParams({ sortBy: value });
   };
 
-  const handleSortOrderChange = (value: string) => {
+    const handleSortOrderChange = (value: string) => {
     updateParams({ sortOrder: value });
   };
 
-  const handleAuthorChange = (value: string) => {
+    const handleAuthorChange = (value: string) => {
     updateParams({ authorId: value || null });
   };
 
-  return (
+    return (
     <div className="min-h-screen bg-white">
       {/* CNN Style Breaking News Ticker */}
       <div className="border-gray-200 border-b bg-black py-1">
@@ -309,19 +309,19 @@ export default function BlogPage() {
         {/* Page Header */}
         <div className="mb-12 flex flex-col items-start justify-between gap-6 border-b border-gray-100 pb-12 md:flex-row md:items-center">
           <div>
-            <h1 className="mb-2 font-black text-4xl text-gray-900 uppercase tracking-tighter md:text-6xl">
+            <h1 className="mb-2 font-bold text-4xl text-gray-900 uppercase tracking-tighter md:text-6xl">
               The Art Journal
             </h1>
-          </div>
+                        </div>
           <div className="flex flex-wrap items-center gap-4">
-            {user && (
-              <Button
+                        {user && (
+                                <Button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="h-14 rounded-none bg-black px-10 font-black text-white text-sm uppercase tracking-[0.2em] transition-all hover:bg-red-700 shadow-xl"
-              >
+                className="h-14 rounded-none bg-red-700 px-10 font-semibold text-white text-sm uppercase tracking-[0.2em] transition-all hover:bg-red-800"
+                                >
                 <Plus className="mr-3 h-5 w-5" />
                 Write a Story
-              </Button>
+                                </Button>
             )}
           </div>
         </div>
@@ -532,8 +532,8 @@ export default function BlogPage() {
                     />
                   ))}
                 </div>
-              </div>
-            </div>
+                    </div>
+                    </div>
           </section>
         )}
 
@@ -567,46 +567,46 @@ export default function BlogPage() {
             </h2>
           </div>
 
-          <BlogFilters
-            searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-            sortOrder={sortOrder}
-            onSortOrderChange={handleSortOrderChange}
-            authorId={authorId}
-            onAuthorChange={handleAuthorChange}
-            authors={authors}
-          />
-        </div>
+                            <BlogFilters
+                                searchQuery={searchQuery}
+                                onSearchChange={handleSearchChange}
+                                sortBy={sortBy}
+                                onSortChange={handleSortChange}
+                                sortOrder={sortOrder}
+                                onSortOrderChange={handleSortOrderChange}
+                                authorId={authorId}
+                                onAuthorChange={handleAuthorChange}
+                                authors={authors}
+                            />
+                        </div>
 
         <main>
-          {isLoading ? (
+                        {isLoading ? (
             <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
+                                {[...Array(6)].map((_, i) => (
                 <NewsBlogSkeleton key={i} layout="STANDARD" />
-              ))}
-            </div>
-          ) : error ? (
+                                ))}
+                            </div>
+                        ) : error ? (
             <div className="py-20 text-center">
               <p className="font-bold text-red-700 uppercase tracking-widest">
-                Failed to load blog posts. Please try again.
-              </p>
-            </div>
+                                    Failed to load blog posts. Please try again.
+                                </p>
+                            </div>
           ) : allPosts.length === 0 ? (
             <div className="py-20 text-center">
               <BookOpen className="mx-auto mb-6 h-16 w-16 text-gray-200" />
               <h3 className="mb-2 font-black text-2xl text-gray-900 uppercase">
                 No stories found
-              </h3>
+                                </h3>
               <p className="text-gray-500">
-                {searchQuery
-                  ? "Try adjusting your search or filters."
-                  : "Check back soon for new articles!"}
-              </p>
-            </div>
-          ) : (
-            <>
+                                    {searchQuery
+                                        ? "Try adjusting your search or filters."
+                                        : "Check back soon for new articles!"}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
               <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
                 {feedPosts.map((post) => (
                   <NewsBlogCard
@@ -614,8 +614,8 @@ export default function BlogPage() {
                     blogPost={post}
                     layout="STANDARD"
                   />
-                ))}
-              </div>
+                                    ))}
+                                </div>
 
               {/* Infinite Scroll Trigger */}
               <div
@@ -627,7 +627,7 @@ export default function BlogPage() {
                     <Loader2 className="h-5 w-5 animate-spin text-red-700" />
                     <span className="font-black text-gray-900 text-xs uppercase tracking-[0.3em]">
                       Curating more stories...
-                    </span>
+                                                                    </span>
                   </div>
                 ) : hasNextPage ? (
                   <button
@@ -640,19 +640,19 @@ export default function BlogPage() {
                   <div className="flex flex-col items-center gap-2">
                     <div className="mb-4 h-1 w-12 rounded-full bg-gray-100" />
                     <span className="font-black text-gray-300 text-[10px] uppercase tracking-[0.5em]">
-                      End of Collection
-                    </span>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </main>
-      </div>
+                      That&apos;s all
+                                                                        </span>
+                                                </div>
+                                        )}
+                                    </div>
+                            </>
+                        )}
+                    </main>
+                </div>
       <CreateBlogModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
-    </div>
+            </div>
   );
 }

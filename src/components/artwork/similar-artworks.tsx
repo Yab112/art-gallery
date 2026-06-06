@@ -1,10 +1,12 @@
 import { SectionTitle } from "@/components/section-title"
-import { PaginationControls } from "@/components/ui/pagination-controls"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useSimilarArtworksByCategory } from "@/queries/useSimilarArtworksByCategory"
+import {
+    ArtworkMasonryGrid,
+    ArtworkMasonrySkeleton,
+} from "@/components/ArtMarketplace/artwork-masonry-grid"
+import { useSimilarArtworksByCategoryInfinite } from "@/queries/useSimilarArtworksByCategory"
+import { useAddFavorite } from "@/services/favorites/useAddFavorite"
 import type { Artwork } from "@/types/artwork.types"
-import { useState } from "react"
-import { ArtworkCard } from "../artwork-card"
+import { useEffect, useMemo, useRef } from "react"
 
 interface SimilarArtworksProps {
     artworkId: string
@@ -23,103 +25,111 @@ const formatDimensions = (dimensions: Artwork["dimensions"]): string => {
     return "N/A"
 }
 
+function mapArtworkToMasonryItem(artwork: Artwork) {
+    const firstPhoto = artwork.photos?.[0]
+    const imageUrl =
+        firstPhoto && typeof firstPhoto === "string" && firstPhoto.trim() !== ""
+            ? firstPhoto
+            : ""
+
+    return {
+        id: artwork.id,
+        image: imageUrl || "/placeholder.svg",
+        title: artwork.title || "Untitled",
+        artist: artwork.artist,
+        price: formatPrice(artwork.desiredPrice),
+        year: artwork.yearOfArtwork,
+        medium: artwork.support,
+        dimensions: formatDimensions(artwork.dimensions),
+        physicalWidth: artwork.dimensions?.width,
+        physicalHeight: artwork.dimensions?.height,
+        seller: artwork.user?.name || artwork.artist,
+        status: artwork.status,
+    }
+}
+
 export function SimilarArtworks({ artworkId }: SimilarArtworksProps) {
-    const [page, setPage] = useState(1)
-    const limit = 8 // 2 rows × 4 columns = 8 items per page
+    const loadMoreRef = useRef<HTMLDivElement>(null)
+    const { addFavorite } = useAddFavorite()
 
-    const { data: similarArtworks, isLoading } = useSimilarArtworksByCategory(
-        artworkId,
-        limit,
-        page
-    )
+    const {
+        data: similarPages,
+        isLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useSimilarArtworksByCategoryInfinite(artworkId)
 
-    // Calculate pagination
-    const totalArtworks = similarArtworks?.length || 0
-    const totalPages = Math.ceil(totalArtworks / limit)
-    const hasMore = totalArtworks >= limit
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage()
+                }
+            },
+            { threshold: 0.1 },
+        )
+
+        const target = loadMoreRef.current
+        if (target) {
+            observer.observe(target)
+        }
+
+        return () => observer.disconnect()
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+    const artworks = useMemo(() => {
+        const seen = new Set<string>()
+        const rawArtworks =
+            similarPages?.pages.flatMap((page) => page.artworks ?? []) ?? []
+
+        return rawArtworks
+            .filter((artwork) => {
+                if (artwork.id === artworkId) return false
+                if (seen.has(artwork.id)) return false
+                seen.add(artwork.id)
+                return true
+            })
+            .map(mapArtworkToMasonryItem)
+    }, [similarPages, artworkId])
+
+    const handleFavorite = async (id: string) => {
+        try {
+            await addFavorite(id)
+        } catch (error) {
+            console.error("Failed to toggle favorite:", error)
+        }
+    }
 
     if (isLoading) {
         return (
             <section className="py-16">
                 <SectionTitle title="Similar Artworks" />
-                {/* Grid Layout Skeleton - 4 columns responsive, matches ArtworkCard structure */}
-                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <div key={i} className="group relative space-y-3">
-                            {/* Image Skeleton */}
-                            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-gray-200">
-                                <Skeleton className="h-full w-full" />
-                            </div>
-
-                            {/* Content Skeleton */}
-                            <div className="space-y-2">
-                                {/* Title */}
-                                <Skeleton className="h-5 w-3/4" />
-
-                                {/* Artist */}
-                                <Skeleton className="h-4 w-1/2" />
-
-                                {/* Price and Details */}
-                                <div className="flex items-center justify-between">
-                                    <Skeleton className="h-4 w-20" />
-                                    <Skeleton className="h-4 w-16" />
-                                </div>
-
-                                {/* Year and Medium */}
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-3 w-12" />
-                                    <Skeleton className="h-3 w-16" />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                <div className="mt-8">
+                    <ArtworkMasonrySkeleton />
                 </div>
             </section>
         )
     }
 
-    if (!similarArtworks || similarArtworks.length === 0) {
+    if (artworks.length === 0) {
         return null
     }
-
-    // Get artworks for current page
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedArtworks = similarArtworks.slice(startIndex, endIndex)
 
     return (
         <section className="py-16">
             <SectionTitle title="Similar Artworks" />
-
-            {/* Grid Layout - 4 columns responsive, 2 rows */}
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {paginatedArtworks.map((artwork) => (
-                    <ArtworkCard
-                        key={artwork.id}
-                        id={artwork.id}
-                        image={artwork.photos?.[0] || "/placeholder.svg"}
-                        title={artwork.title || "Untitled"}
-                        artist={artwork.artist}
-                        price={formatPrice(artwork.desiredPrice)}
-                        year={artwork.yearOfArtwork}
-                        medium={artwork.support}
-                        dimensions={formatDimensions(artwork.dimensions)}
-                        seller={artwork.user?.name || artwork.artist}
-                    />
-                ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <PaginationControls
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                    totalItems={totalArtworks}
-                    itemLabel="artworks"
-                    itemLabelSingular="artwork"
+            <div className="mt-8">
+                <ArtworkMasonryGrid
+                    artworks={artworks}
+                    onFavorite={handleFavorite}
+                    infiniteScroll={{
+                        loadMoreRef,
+                        isFetchingNextPage,
+                        hasNextPage: !!hasNextPage,
+                    }}
                 />
-            )}
+            </div>
         </section>
     )
 }
