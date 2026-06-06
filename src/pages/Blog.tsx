@@ -1,26 +1,24 @@
-import { BlogCard } from "@/components/blog/blog-card"
-import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton"
-import { BlogFilters } from "@/components/blog/blog-filters"
-import { CreateBlogModal } from "@/components/blog/create-blog-modal"
-import { PaginationControls } from "@/components/ui/pagination-controls"
-import { Button } from "@/components/ui/button"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/components/ui/select"
-import { useAuth } from "@/hooks/use-auth"
-import { useGetBlogPosts } from "@/services/blog"
-import { BookOpen, Plus, Sparkles, User } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { NewsBlogCard } from "@/components/blog/news-blog-card";
+import { NewsBlogSkeleton } from "@/components/blog/news-blog-skeleton";
+import { BlogFilters } from "@/components/blog/blog-filters";
+import { CreateBlogModal } from "@/components/blog/create-blog-modal";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useGetBlogAuthors, useGetBlogPostsInfinite } from "@/services/blog";
+import { BookOpen, Plus, ArrowRight, Loader2 } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export default function BlogPage() {
-    const [searchParams, setSearchParams] = useSearchParams()
-    const { user } = useAuth()
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Fetch all authors for filtering
+  const { data: authorsData } = useGetBlogAuthors();
+  const authors = authorsData || [];
 
     // Fix for Radix UI Select dropdown page shift issue
     useEffect(() => {
@@ -40,266 +38,581 @@ export default function BlogPage() {
           padding-right: 0 !important;
           padding-left: 0 !important;
         }
-      `
-            document.head.appendChild(styleElement)
-        }
-
-        const interval = setInterval(() => {
-            const body = document.body
-            const html = document.documentElement
-            body.style.setProperty("margin-right", "0", "important")
-            body.style.setProperty("padding-right", "0", "important")
-            html.style.setProperty("margin-right", "0", "important")
-            html.style.setProperty("padding-right", "0", "important")
-        }, 16)
-
-        return () => {
-            clearInterval(interval)
-        }
-    }, [])
-
-    // Get filter values from URL
-    const page = Number.parseInt(searchParams.get("page") || "1", 10)
-    const limit = Number.parseInt(searchParams.get("limit") || "12", 10)
-    const searchQuery = searchParams.get("search") || ""
-    const sortBy = searchParams.get("sortBy") || "createdAt"
-    const sortOrder = searchParams.get("sortOrder") || "desc"
-    const authorId = searchParams.get("authorId") || ""
-
-    // Update URL params
-    const updateParams = (updates: Record<string, string | number | null>) => {
-        const newParams = new URLSearchParams(searchParams)
-        Object.entries(updates).forEach(([key, value]) => {
-            if (value === null || value === "") {
-                newParams.delete(key)
-            } else {
-                newParams.set(key, String(value))
-            }
-        })
-        setSearchParams(newParams, { replace: true })
+      `;
+      document.head.appendChild(styleElement);
     }
 
-    // Fetch blog posts
-    const { data, isLoading, error } = useGetBlogPosts({
-        page,
-        limit,
-        published: true,
-        search: searchQuery || undefined,
-        authorId: authorId || undefined,
-        sortBy: sortBy as any,
-        sortOrder: sortOrder as "asc" | "desc"
-    })
+    const interval = setInterval(() => {
+      const body = document.body;
+      const html = document.documentElement;
+      body.style.setProperty("margin-right", "0", "important");
+      body.style.setProperty("padding-right", "0", "important");
+      html.style.setProperty("margin-right", "0", "important");
+      html.style.setProperty("padding-right", "0", "important");
+    }, 16);
 
-    // Extract unique authors from blog posts
-    const authors = Array.from(
-        new Map(
-            data?.data.filter((post) => post.author).map((post) => [post.author!.id, post.author!])
-        ).values()
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Get filter values from URL
+  const limit = Number.parseInt(searchParams.get("limit") || "30", 10);
+  const searchQuery = searchParams.get("search") || "";
+  const sortBy = searchParams.get("sortBy") || "createdAt";
+  const sortOrder = searchParams.get("sortOrder") || "desc";
+  const authorId = searchParams.get("authorId") || "";
+  const isAdminView = searchParams.get("adminView") === "true";
+  const isAdmin = (user as any)?.role?.toLowerCase() === "admin";
+
+  // Update URL params
+  const updateParams = (updates: Record<string, string | number | null>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(value));
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  };
+
+  // Fetch blog posts using Infinite Query
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useGetBlogPostsInfinite({
+    limit,
+    published: isAdminView ? undefined : true,
+    status: isAdminView ? undefined : "APPROVED",
+    search: searchQuery || undefined,
+    authorId: authorId || undefined,
+    sortBy: sortBy as any,
+    sortOrder: sortOrder as "asc" | "desc",
+  });
+
+  // Intersection Observer for Infinite Scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Flatten all pages of data
+  const allPosts = data?.pages.flatMap((page) => page.data) || [];
+
+  // Identify featured posts using attribute-driven logic - NO FALLBACKS
+  const heroPost = allPosts.find((p) => p.layout === "HERO" || p.isBreaking);
+
+  const compactPosts = allPosts
+    .filter((p) => p.layout === "COMPACT" && p.id !== heroPost?.id)
+    .slice(0, 3);
+
+  const linkOnlyPosts = allPosts
+    .filter(
+      (p) =>
+        p.layout === "LINK_ONLY" &&
+        p.id !== heroPost?.id &&
+        !compactPosts.find((cp) => cp.id === p.id),
     )
+    .slice(0, 6);
 
-    const handleSearchChange = (query: string) => {
-        updateParams({ search: query || null, page: 1 })
-    }
+  const standardHighlights = allPosts
+    .filter(
+      (p) =>
+        (p.category?.name?.toLowerCase().includes("market") ||
+          p.topic?.name?.toLowerCase().includes("market")) &&
+        p.id !== heroPost?.id &&
+        !compactPosts.find((cp) => cp.id === p.id) &&
+        !linkOnlyPosts.find((lp) => lp.id === p.id),
+    )
+    .slice(0, 4);
 
-    const handleSortChange = (value: string) => {
-        updateParams({ sortBy: value, page: 1 })
-    }
+  const analysisPosts = allPosts
+    .filter(
+      (p) =>
+        (p.badge?.toLowerCase() === "analysis" ||
+          p.badge?.toLowerCase() === "opinion") &&
+        p.id !== heroPost?.id &&
+        !compactPosts.find((cp) => cp.id === p.id) &&
+        !linkOnlyPosts.find((lp) => lp.id === p.id) &&
+        !standardHighlights.find((sh) => sh.id === p.id),
+    )
+    .slice(0, 4);
 
-    const handleSortOrderChange = (value: string) => {
-        updateParams({ sortOrder: value, page: 1 })
-    }
+  const overlayPost = allPosts.find(
+    (p) =>
+      (p.layout === "OVERLAY" || !!p.featuredArtistId) &&
+      p.id !== heroPost?.id &&
+      !compactPosts.find((cp) => cp.id === p.id) &&
+      !linkOnlyPosts.find((lp) => lp.id === p.id) &&
+      !standardHighlights.find((sh) => sh.id === p.id) &&
+      !analysisPosts.find((ap) => ap.id === p.id),
+  );
 
-    const handleAuthorChange = (value: string) => {
-        updateParams({ authorId: value || null, page: 1 })
-    }
+  const focusStandardPosts = allPosts
+    .filter(
+      (p) =>
+        p.layout === "STANDARD" &&
+        p.id !== heroPost?.id &&
+        !compactPosts.find((cp) => cp.id === p.id) &&
+        !linkOnlyPosts.find((lp) => lp.id === p.id) &&
+        !standardHighlights.find((sh) => sh.id === p.id) &&
+        !analysisPosts.find((ap) => ap.id === p.id) &&
+        p.id !== overlayPost?.id,
+    )
+    .slice(0, 2);
 
-    const handlePageChange = (newPage: number) => {
-        updateParams({ page: newPage })
-        window.scrollTo({ top: 0, behavior: "smooth" })
-    }
+  const sidebarPosts = allPosts
+    .filter(
+      (p) =>
+        p.layout === "SIDEBAR" &&
+        p.id !== heroPost?.id &&
+        !compactPosts.find((cp) => cp.id === p.id) &&
+        !linkOnlyPosts.find((lp) => lp.id === p.id) &&
+        !standardHighlights.find((sh) => sh.id === p.id) &&
+        !analysisPosts.find((ap) => ap.id === p.id) &&
+        p.id !== overlayPost?.id &&
+        !focusStandardPosts.find((fs) => fs.id === p.id),
+    )
+    .slice(0, 4);
 
-    const handleLimitChange = (newLimit: string) => {
-        updateParams({ limit: Number.parseInt(newLimit, 10), page: 1 })
-        window.scrollTo({ top: 0, behavior: "smooth" })
-    }
+  const featuredIds = new Set(
+    [
+      heroPost?.id,
+      ...compactPosts.map((p) => p.id),
+      ...linkOnlyPosts.map((p) => p.id),
+      ...standardHighlights.map((p) => p.id),
+      ...analysisPosts.map((p) => p.id),
+      overlayPost?.id,
+      ...focusStandardPosts.map((p) => p.id),
+      ...sidebarPosts.map((p) => p.id),
+    ].filter(Boolean),
+  );
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-            {/* Hero Section */}
-            <div className="bg-gradient-to-r from-red-700 via-red-800 to-red-900 py-16 text-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="text-center">
-                        <div className="mb-4 flex items-center justify-center gap-3">
-                            <BookOpen className="h-12 w-12" />
-                            <Sparkles className="h-8 w-8 text-yellow-300" />
-                        </div>
-                        <h1 className="mb-4 font-bold text-5xl">Art & Inspiration Blog</h1>
-                        <p className="mx-auto mb-6 max-w-2xl text-red-100 text-xl">
-                            Discover stories, insights, and inspiration from the world of art.
-                            Explore our curated collection of articles, artist features, and
-                            creative journeys.
-                        </p>
-                        {user && (
-                            <Link to="/blog/my-blogs">
-                                <Button
-                                    variant="secondary"
-                                    size="lg"
-                                    className="bg-white text-red-700 hover:bg-gray-100"
-                                >
-                                    <User className="mr-2 h-5 w-5" />
-                                    My Blogs
-                                </Button>
-                            </Link>
-                        )}
-                    </div>
-                </div>
+  const spotlightVideo =
+    allPosts.find((p) => p.mediaType === "VIDEO" && !featuredIds.has(p.id)) ||
+    allPosts.find((p) => p.mediaType === "VIDEO");
+
+  if (spotlightVideo) {
+    featuredIds.add(spotlightVideo.id);
+  }
+
+  const otherVideos = allPosts.filter(
+    (p) => p.mediaType === "VIDEO" && p.id !== spotlightVideo?.id,
+  );
+
+  // Remaining posts for the main feed
+  const feedPosts =
+    searchQuery || isAdminView
+      ? allPosts
+      : allPosts.filter((post) => !featuredIds.has(post.id));
+
+  const handleSearchChange = (query: string) => {
+    updateParams({ search: query || null });
+  };
+
+  const handleSortChange = (value: string) => {
+    updateParams({ sortBy: value });
+  };
+
+  const handleSortOrderChange = (value: string) => {
+    updateParams({ sortOrder: value });
+  };
+
+  const handleAuthorChange = (value: string) => {
+    updateParams({ authorId: value || null });
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* CNN Style Breaking News Ticker */}
+      <div className="border-gray-200 border-b bg-black py-1">
+        <div className="mx-auto max-w-[1600px] px-4 py-1">
+          <div className="flex h-10 items-center">
+            <div className="flex items-center gap-3 border-white/20 border-r pr-4">
+              <span className="font-black text-[10px] text-white uppercase tracking-[0.2em]">
+                Latest updates
+              </span>
             </div>
-
-            <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                {/* Create Blog Button or Sign in CTA */}
-                {user ? (
-                    <div className="mb-6 flex justify-end">
-                        <Button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-red-700 hover:bg-red-800"
-                        >
-                            <Plus className="mr-2 h-5 w-5" />
-                            Create New Blog Post
-                        </Button>
-                        <CreateBlogModal
-                            isOpen={isCreateModalOpen}
-                            onClose={() => setIsCreateModalOpen(false)}
-                        />
-                    </div>
-                ) : (
-                    <div className="mb-6 flex justify-end">
-                        <Link to={`/login?redirect=${encodeURIComponent("/blog")}`}>
-                            <Button variant="outline" className="rounded-full">
-                                Sign in to create a post
-                            </Button>
-                        </Link>
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-                    {/* Filters Sidebar */}
-                    <aside className="lg:col-span-1">
-                        <div className="sticky top-8">
-                            <BlogFilters
-                                searchQuery={searchQuery}
-                                onSearchChange={handleSearchChange}
-                                sortBy={sortBy}
-                                onSortChange={handleSortChange}
-                                sortOrder={sortOrder}
-                                onSortOrderChange={handleSortOrderChange}
-                                authorId={authorId}
-                                onAuthorChange={handleAuthorChange}
-                                authors={authors}
-                            />
-                        </div>
-                    </aside>
-
-                    {/* Main Content */}
-                    <main className="max-w-4xl lg:col-span-3">
-                        {isLoading ? (
-                            <div className="mb-8 space-y-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
-                                {[...Array(6)].map((_, i) => (
-                                    <BlogCardSkeleton key={i} />
-                                ))}
-                            </div>
-                        ) : error ? (
-                            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-                                <p className="text-red-800">
-                                    Failed to load blog posts. Please try again.
-                                </p>
-                            </div>
-                        ) : !data || data.data.length === 0 ? (
-                            <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
-                                <BookOpen className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-                                <h3 className="mb-2 font-semibold text-gray-900 text-xl">
-                                    No blog posts found
-                                </h3>
-                                <p className="text-gray-600">
-                                    {searchQuery
-                                        ? "Try adjusting your search or filters."
-                                        : "Check back soon for new articles!"}
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* Results Count and Page Size Selector */}
-                                <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                                    <p className="text-gray-600">
-                                        Showing{" "}
-                                        <span className="font-semibold text-gray-900">
-                                            {data.data.length > 0 ? (page - 1) * data.limit + 1 : 0}
-                                        </span>{" "}
-                                        to{" "}
-                                        <span className="font-semibold text-gray-900">
-                                            {Math.min(page * data.limit, data.total)}
-                                        </span>{" "}
-                                        of{" "}
-                                        <span className="font-semibold text-gray-900">
-                                            {data.total}
-                                        </span>{" "}
-                                        posts
-                                        {data.totalPages > 1 && (
-                                            <span className="ml-2 text-gray-500">
-                                                (Page {page} of {data.totalPages})
-                                            </span>
-                                        )}
-                                    </p>
-
-                                    {/* Page Size Selector */}
-                                    <div className="flex items-center gap-2">
-                                        <label
-                                            htmlFor="page-size"
-                                            className="whitespace-nowrap text-gray-600 text-sm"
-                                        >
-                                            Show per page:
-                                        </label>
-                                        <Select
-                                            value={limit.toString()}
-                                            onValueChange={handleLimitChange}
-                                        >
-                                            <SelectTrigger id="page-size" className="w-[100px]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="6">6</SelectItem>
-                                                <SelectItem value="12">12</SelectItem>
-                                                <SelectItem value="24">24</SelectItem>
-                                                <SelectItem value="36">36</SelectItem>
-                                                <SelectItem value="48">48</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {/* Blog Posts List - Medium Style */}
-                                <div className="mb-8 space-y-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
-                                    {data.data.map((post, index) => (
-                                        <BlogCard key={post.id} blogPost={post} />
-                                    ))}
-                                </div>
-
-                                {/* Pagination - Always show if there are posts */}
-                                {data && data.total > 0 && (
-                                    <PaginationControls
-                                        currentPage={page}
-                                        totalPages={data.totalPages}
-                                        onPageChange={handlePageChange}
-                                        totalItems={data.total}
-                                        itemLabel="posts"
-                                        itemLabelSingular="post"
-                                        showSinglePageSummary
-                                    />
-                                )}
-                            </>
-                        )}
-                    </main>
+            <div className="flex flex-1 items-center overflow-hidden px-4">
+              {isLoading ? (
+                <div className="h-3 w-48 animate-pulse rounded bg-gray-800" />
+              ) : allPosts.length > 0 ? (
+                <div className="flex items-center gap-4 overflow-hidden whitespace-nowrap">
+                  {allPosts.slice(0, 3).map((post, idx) => (
+                    <Link
+                      key={post.id}
+                      to={`/blog/${post.slug}`}
+                      className="group flex items-center gap-2 transition-colors hover:text-red-500"
+                    >
+                      {idx > 0 && (
+                        <span className="h-1 w-1 rounded-full bg-gray-600" />
+                      )}
+                      <span className="font-bold text-gray-400 text-xs transition-colors group-hover:text-white">
+                        {post.title}
+                      </span>
+                    </Link>
+                  ))}
                 </div>
+              ) : null}
             </div>
+            <div className="hidden items-center gap-6 border-white/20 border-l pl-4 md:flex">
+              <span className="font-black text-[9px] text-gray-500 uppercase tracking-widest">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+          </div>
         </div>
-    )
+      </div>
+
+      <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-12 flex flex-col items-start justify-between gap-6 border-b border-gray-100 pb-12 md:flex-row md:items-center">
+          <div>
+            <h1 className="mb-2 font-black text-4xl text-gray-900 uppercase tracking-tighter md:text-6xl">
+              The Art Journal
+            </h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            {user && (
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="h-14 rounded-none bg-black px-10 font-black text-white text-sm uppercase tracking-[0.2em] transition-all hover:bg-red-700 shadow-xl"
+              >
+                <Plus className="mr-3 h-5 w-5" />
+                Write a Story
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* CNN Style Top Stories Section */}
+        {isLoading ? (
+          <section className="mb-24">
+            <div className="mb-12 grid grid-cols-1 gap-12 lg:grid-cols-12">
+              <div className="lg:col-span-3 space-y-6">
+                <NewsBlogSkeleton layout="COMPACT" />
+                <NewsBlogSkeleton layout="COMPACT" />
+                <NewsBlogSkeleton layout="COMPACT" />
+              </div>
+              <div className="lg:col-span-6">
+                <NewsBlogSkeleton layout="HERO" />
+              </div>
+              <div className="lg:col-span-3 space-y-4">
+                <NewsBlogSkeleton layout="LINK_ONLY" />
+                <NewsBlogSkeleton layout="LINK_ONLY" />
+                <NewsBlogSkeleton layout="LINK_ONLY" />
+                <NewsBlogSkeleton layout="LINK_ONLY" />
+              </div>
+            </div>
+          </section>
+        ) : (heroPost || compactPosts.length > 0 || linkOnlyPosts.length > 0) &&
+          !searchQuery ? (
+          <section className="mb-24">
+            <div className="mb-12 grid grid-cols-1 gap-12 lg:grid-cols-12">
+              {/* Left Column - Featured Stories List */}
+              <div className="lg:col-span-3">
+                <div className="space-y-0 divide-y divide-gray-100 border-gray-100 border-t lg:border-t-0">
+                  {compactPosts.map((post) => (
+                    <NewsBlogCard
+                      key={post.id}
+                      blogPost={post}
+                      layout="COMPACT"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Middle Column - Main Hero Story */}
+              <div className="lg:col-span-6">
+                {heroPost && <NewsBlogCard blogPost={heroPost} layout="HERO" />}
+              </div>
+
+              {/* Right Column - Secondary Sidebar */}
+              <div className="lg:col-span-3">
+                <div className="border-gray-100 border-l pl-8">
+                  {linkOnlyPosts.length > 0 && (
+                    <>
+                      <h3 className="mb-6 border-red-700 border-l-4 pl-3 font-black text-gray-900 text-[11px] uppercase tracking-[0.2em]">
+                        More from the field
+                      </h3>
+                      <div className="space-y-2">
+                        {linkOnlyPosts.map((post) => (
+                          <NewsBlogCard
+                            key={post.id}
+                            blogPost={post}
+                            layout="LINK_ONLY"
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <Link
+                    to="/blog"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="mt-10 flex items-center gap-2 font-black text-red-700 text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-black"
+                  >
+                    See full coverage <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-hero Horizontal Strip */}
+            {standardHighlights.length > 0 && (
+              <div className="mt-16 border-gray-100 border-t pt-16">
+                <h3 className="mb-10 border-black border-l-4 pl-4 font-black text-gray-900 text-sm uppercase tracking-[0.2em]">
+                  Art Market Highlights
+                </h3>
+                <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+                  {standardHighlights.map((post) => (
+                    <NewsBlogCard
+                      key={post.id}
+                      blogPost={post}
+                      layout="STANDARD"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        ) : null}
+
+        {/* More Stories Section (Image 2 Style) */}
+        {!isLoading &&
+          (analysisPosts.length > 0 ||
+            overlayPost ||
+            focusStandardPosts.length > 0 ||
+            sidebarPosts.length > 0) &&
+          !searchQuery && (
+            <section className="mb-24 border-gray-100 border-t pt-16">
+              <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+                {/* Left: More Top Stories Text List */}
+                <div className="lg:col-span-3">
+                  {analysisPosts.length > 0 && (
+                    <>
+                      <h3 className="mb-8 border-black border-l-4 pl-4 font-black text-gray-900 text-xs uppercase tracking-[0.2em]">
+                        Analysis & Opinion
+                      </h3>
+                      <div className="divide-y divide-gray-100 border-gray-100 border-t">
+                        {analysisPosts.map((post) => (
+                          <NewsBlogCard
+                            key={post.id}
+                            blogPost={post}
+                            layout="TEXT_ONLY"
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Middle: Travel/Featured Section Style */}
+                <div className="lg:col-span-6">
+                  {(overlayPost || focusStandardPosts.length > 0) && (
+                    <>
+                      <h3 className="mb-8 border-black border-l-4 pl-4 font-black text-gray-900 text-xs uppercase tracking-[0.2em]">
+                        Artist in Focus
+                      </h3>
+                      <div className="flex flex-col gap-10">
+                        {overlayPost && (
+                          <NewsBlogCard
+                            blogPost={overlayPost}
+                            layout="OVERLAY"
+                          />
+                        )}
+                        <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
+                          {focusStandardPosts.map((post) => (
+                            <NewsBlogCard
+                              key={post.id}
+                              blogPost={post}
+                              layout="STANDARD"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Right: Sidebar Section Style */}
+                <div className="lg:col-span-3">
+                  {sidebarPosts.length > 0 && (
+                    <div className="rounded-sm bg-gray-50 p-8">
+                      <h3 className="mb-8 border-red-700 border-l-4 pl-4 font-black text-gray-900 text-xs uppercase tracking-[0.2em]">
+                        Art World Events
+                      </h3>
+                      <div className="space-y-8">
+                        {sidebarPosts.map((post) => (
+                          <NewsBlogCard
+                            key={post.id}
+                            blogPost={post}
+                            layout="SIDEBAR"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+        {/* Multimedia Spotlight - Video Section Style */}
+        {!isLoading && spotlightVideo && !searchQuery && (
+          <section className="mb-24 border-gray-100 border-y py-20">
+            <div className="mb-12 flex items-center justify-between">
+              <h3 className="border-red-700 border-l-4 pl-4 font-black text-2xl text-gray-900 uppercase tracking-[0.2em]">
+                Watch: Art in Motion
+              </h3>
+              <Link
+                to="/blog"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="font-black text-red-700 text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-black"
+              >
+                View all videos
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+              <div className="lg:col-span-8">
+                <NewsBlogCard blogPost={spotlightVideo} layout="HERO" />
+              </div>
+              <div className="lg:col-span-4">
+                <div className="space-y-0 divide-y divide-gray-100 border-gray-100 border-t">
+                  {otherVideos.slice(0, 4).map((post) => (
+                    <NewsBlogCard
+                      key={post.id}
+                      blogPost={post}
+                      layout="COMPACT"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Main Feed Section */}
+        <div className="mb-12 border-gray-200 border-y py-16">
+          <div className="mb-10 flex items-center justify-between">
+            <h2 className="font-black text-gray-900 text-2xl uppercase tracking-widest">
+              The Latest Collection
+            </h2>
+          </div>
+
+          <BlogFilters
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            sortOrder={sortOrder}
+            onSortOrderChange={handleSortOrderChange}
+            authorId={authorId}
+            onAuthorChange={handleAuthorChange}
+            authors={authors}
+          />
+        </div>
+
+        <main>
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
+                <NewsBlogSkeleton key={i} layout="STANDARD" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="py-20 text-center">
+              <p className="font-bold text-red-700 uppercase tracking-widest">
+                Failed to load blog posts. Please try again.
+              </p>
+            </div>
+          ) : allPosts.length === 0 ? (
+            <div className="py-20 text-center">
+              <BookOpen className="mx-auto mb-6 h-16 w-16 text-gray-200" />
+              <h3 className="mb-2 font-black text-2xl text-gray-900 uppercase">
+                No stories found
+              </h3>
+              <p className="text-gray-500">
+                {searchQuery
+                  ? "Try adjusting your search or filters."
+                  : "Check back soon for new articles!"}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+                {feedPosts.map((post) => (
+                  <NewsBlogCard
+                    key={post.id}
+                    blogPost={post}
+                    layout="STANDARD"
+                  />
+                ))}
+              </div>
+
+              {/* Infinite Scroll Trigger */}
+              <div
+                ref={loadMoreRef}
+                className="mt-20 flex flex-col items-center justify-center py-12 border-t border-gray-100"
+              >
+                {isFetchingNextPage ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-red-700" />
+                    <span className="font-black text-gray-900 text-xs uppercase tracking-[0.3em]">
+                      Curating more stories...
+                    </span>
+                  </div>
+                ) : hasNextPage ? (
+                  <button
+                    onClick={() => fetchNextPage()}
+                    className="font-black text-gray-400 text-[10px] uppercase tracking-[0.5em] transition-colors hover:text-red-700"
+                  >
+                    Scroll to discover
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-1 w-12 bg-gray-100 rounded-full mb-4" />
+                    <span className="font-black text-gray-300 text-[10px] uppercase tracking-[0.5em]">
+                      End of Collection
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+      <CreateBlogModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+    </div>
+  );
 }
