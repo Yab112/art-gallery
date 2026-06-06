@@ -8,6 +8,9 @@ interface CreateBlogPostDto {
     excerpt?: string
     featuredImage?: string
     published?: boolean
+    mediaType?: "IMAGE" | "VIDEO"
+    videoUrl?: string
+    contentDocument?: any
 }
 
 export const useCreateBlogPost = () => {

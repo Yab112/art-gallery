@@ -1,4 +1,6 @@
 export * from "./useGetBlogPosts"
+export * from "./useGetBlogPostsInfinite"
+export * from "./useGetBlogAuthors"
 export * from "./useGetBlogPost"
 export * from "./useGetBlogComments"
 export * from "./useCreateBlogComment"

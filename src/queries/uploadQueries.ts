@@ -73,3 +73,25 @@ export const useGetPresignedDocumentUploadUrl = () => {
         isPending
     }
 }
+
+export const useGetPresignedVideoUploadUrl = () => {
+    const { mutateAsync, isPending } = useMutationFunc<
+        PresignedUrlResponse,
+        GeneratePresignedUrlDto
+    >({
+        queryKey: uploadKeys.presigned()
+    })
+
+    const getPresignedUrl = async (data: GeneratePresignedUrlDto) => {
+        return mutateAsync({
+            url: "/upload/presigned/video",
+            method: "POST",
+            body: data
+        })
+    }
+
+    return {
+        mutateAsync: getPresignedUrl,
+        isPending
+    }
+}

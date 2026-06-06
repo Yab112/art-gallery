@@ -1,83 +1,57 @@
 import { Button } from "@/components/ui/button"
-import { BookOpen, CheckCircle, Home } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
 
 export default function BlogSuccessPage() {
     const navigate = useNavigate()
     const location = useLocation()
-    const blogTitle = (location.state as any)?.blogTitle
+    const blogTitle = (location.state as any)?.blogTitle || "Your Story"
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 px-4">
-            <div className="w-full max-w-2xl text-center">
-                {/* Success Icon */}
-                <div className="mb-6 flex justify-center">
-                    <div className="rounded-full bg-green-100 p-6">
-                        <CheckCircle className="h-16 w-16 text-green-600" />
-                    </div>
-                </div>
-
-                {/* Success Message */}
-                <div className="mb-8 space-y-4">
-                    <h1 className="font-bold text-4xl text-gray-900">
-                        Blog Post Created Successfully!
+        <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6">
+            <div className="w-full max-w-xl text-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                >
+                    <span className="mb-8 inline-block font-black text-red-700 text-[10px] uppercase tracking-[0.5em]">
+                        Success
+                    </span>
+                    
+                    <h1 className="mb-6 font-black text-4xl text-gray-900 uppercase tracking-tighter md:text-6xl">
+                        Story Submitted.
                     </h1>
-                    {blogTitle && (
-                        <p className="font-medium text-gray-700 text-xl">"{blogTitle}"</p>
-                    )}
-                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 text-left">
-                        <div className="flex items-start gap-3">
-                            <BookOpen className="mt-0.5 h-6 w-6 flex-shrink-0 text-blue-600" />
-                            <div className="space-y-2">
-                                <p className="font-medium text-gray-800">
-                                    Your blog post is now pending admin review.
-                                </p>
-                                <p className="text-gray-600 text-sm leading-relaxed">
-                                    Once an admin approves your post, you'll be able to publish it
-                                    and make it publicly available. You can check the status of your
-                                    blog posts in the "My Blogs" section.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                    <Button
-                        onClick={() => navigate("/blog")}
-                        className="bg-red-700 px-8 py-6 text-lg text-white hover:bg-red-800"
-                        size="lg"
-                    >
-                        <BookOpen className="mr-2 h-5 w-5" />
-                        View All Blogs
-                    </Button>
-                    <Button
-                        onClick={() => navigate("/blog/my-blogs")}
-                        variant="outline"
-                        className="border-2 px-8 py-6 text-lg"
-                        size="lg"
-                    >
-                        My Blogs
-                    </Button>
-                    <Button
-                        onClick={() => navigate("/buyart")}
-                        variant="outline"
-                        className="border-2 px-8 py-6 text-lg"
-                        size="lg"
-                    >
-                        <Home className="mr-2 h-5 w-5" />
-                        Back to Artworks
-                    </Button>
-                </div>
-
-                {/* Additional Info */}
-                <div className="mt-12 border-gray-200 border-t pt-8">
-                    <p className="text-gray-500 text-sm">
-                        You can edit your blog post within 7 days of creation. After that, it will
-                        be locked for editing.
+                    
+                    <p className="mb-12 font-medium text-gray-400 text-sm uppercase tracking-widest italic">
+                        "{blogTitle}"
                     </p>
-                </div>
+
+                    <div className="mb-16 space-y-2">
+                        <p className="font-bold text-gray-900 text-xs uppercase tracking-[0.2em]">
+                            Status: Pending Curation
+                        </p>
+                        <p className="mx-auto max-w-xs text-gray-400 text-[11px] leading-relaxed tracking-wide">
+                            Our editorial team will review your contribution within 48 hours.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center gap-8 md:flex-row">
+                        <button
+                            onClick={() => navigate("/blog")}
+                            className="font-black text-gray-900 text-[11px] uppercase tracking-[0.3em] transition-colors hover:text-red-700"
+                        >
+                            Back to Journal
+                        </button>
+                        <div className="hidden h-1 w-1 rounded-full bg-gray-200 md:block" />
+                        <button
+                            onClick={() => navigate("/buyart")}
+                            className="font-black text-gray-900 text-[11px] uppercase tracking-[0.3em] transition-colors hover:text-red-700"
+                        >
+                            Return to Gallery
+                        </button>
+                    </div>
+                </motion.div>
             </div>
         </div>
     )

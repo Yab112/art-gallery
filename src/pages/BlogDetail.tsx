@@ -1,6 +1,7 @@
-import { BlogCard } from "@/components/blog/blog-card";
-import { BlogCardSkeleton } from "@/components/blog/blog-card-skeleton";
+import { ArtPlaceholder } from "@/components/blog/art-placeholder";
+import { NewsBlogCard } from "@/components/blog/news-blog-card";
 import { BlogDetailSkeleton } from "@/components/blog/blog-detail-skeleton";
+import { ArtVideoPlayer } from "@/components/blog/art-video-player";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,15 +17,16 @@ import {
 } from "@/services/blog";
 import {
   ArrowLeft,
-  BookOpen,
-  Calendar,
-  Eye,
   Loader2,
   MessageSquare,
   Share2,
   ThumbsDown,
   ThumbsUp,
   User,
+  ExternalLink,
+  ShoppingBag,
+  Star,
+  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -41,6 +43,16 @@ export default function BlogDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [commentPage] = useState(1);
+  const [imgError, setImgError] = useState(false);
+  const [authorImgError, setAuthorImgError] = useState(false);
+  const [artistImgError, setArtistImgError] = useState(false);
+  const [artworkImgErrors, setArtworkImgErrors] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleArtworkImgError = (artworkId: string) => {
+    setArtworkImgErrors((prev) => ({ ...prev, [artworkId]: true }));
+  };
 
   // Get return path from location state
   const returnTo = (location.state as any)?.returnTo || "/blog";
@@ -149,295 +161,451 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-gray-200 border-b bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-gray-900"
-            onClick={() => navigate(returnTo, { state: returnState })}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {returnTo === "/blog/my-blogs"
-              ? "Back to My Blogs"
-              : "Back to Blog"}
-          </Button>
+      <div className="sticky top-0 z-10 border-gray-200 border-b bg-white/80 backdrop-blur-md">
+        <div className="mx-auto max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="font-bold text-gray-900 text-xs uppercase tracking-widest hover:bg-gray-100"
+              onClick={() => navigate(returnTo, { state: returnState })}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {returnTo === "/blog/my-blogs" ? "My Blogs" : "Back to News"}
+            </Button>
+            <div className="flex items-center gap-4">
+              <span className="font-black text-red-700 text-[10px] uppercase tracking-[0.2em]">
+                {blogPost.category?.name || "Art News"}
+              </span>
+              <div className="h-4 w-px bg-gray-200" />
+              <button
+                onClick={() => handleShare()}
+                className="text-gray-400 hover:text-gray-900"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Featured Image */}
-        {blogPost.featuredImage && (
-          <div className="mb-8 overflow-hidden rounded-lg shadow-xl">
-            <img
-              src={blogPost.featuredImage}
-              alt={blogPost.title}
-              className="h-[400px] w-full object-cover"
-            />
-          </div>
-        )}
+      <div className="mx-auto max-w-[1600px] px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+          {/* Main Content Column */}
+          <article className="lg:col-span-8">
+            {/* News Header */}
+            <header className="mb-10">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                {blogPost.isBreaking && (
+                  <span className="bg-red-700 px-2 py-1 font-black text-white text-[10px] uppercase tracking-wider">
+                    Breaking News
+                  </span>
+                )}
+                {blogPost.badge && (
+                  <span className="bg-black px-2 py-1 font-black text-white text-[10px] uppercase tracking-wider">
+                    {blogPost.badge}
+                  </span>
+                )}
+                {blogPost.locationTag && (
+                  <span className="font-bold text-gray-500 text-[10px] uppercase tracking-widest">
+                    {blogPost.locationTag}
+                  </span>
+                )}
+              </div>
 
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="mb-4 font-bold text-4xl text-gray-900 leading-tight md:text-5xl">
-            {blogPost.title}
-          </h1>
+              <h1 className="mb-8 font-extrabold text-gray-900 text-3xl leading-[1.1] md:text-5xl lg:text-6xl tracking-tight">
+                {blogPost.title}
+              </h1>
 
-          {/* Meta Info */}
-          <div className="mb-6 flex flex-wrap items-center gap-4 text-gray-600 text-sm">
-            <div className="flex items-center gap-2">
-              {blogPost.author?.image ? (
-                <img
-                  src={blogPost.author.image}
-                  alt={blogPost.author.name}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                  <User className="h-5 w-5 text-gray-500" />
-                </div>
-              )}
-              <span className="font-medium text-gray-800">
-                {blogPost.author?.name || "Anonymous"}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              <span>
-                {formatDate(blogPost.publishedAt || blogPost.createdAt)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye className="h-4 w-4" />
-              <span>{blogPost.views.toLocaleString()} views</span>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-4 border-gray-200 border-t pt-4">
-            {user ? (
-              <>
-                <Button
-                  variant={
-                    userVote?.voteType === "LIKE" ? "default" : "outline"
-                  }
-                  size="sm"
-                  onClick={() => handleVote("LIKE")}
-                  disabled={voteMutation.isPending}
-                  className={
-                    userVote?.voteType === "LIKE"
-                      ? "bg-red-700 hover:bg-red-800"
-                      : ""
-                  }
-                >
-                  <ThumbsUp className="mr-2 h-4 w-4" />
-                  {blogPost.likes}
-                </Button>
-                <Button
-                  variant={
-                    userVote?.voteType === "DISLIKE" ? "default" : "outline"
-                  }
-                  size="sm"
-                  onClick={() => handleVote("DISLIKE")}
-                  disabled={voteMutation.isPending}
-                  className={
-                    userVote?.voteType === "DISLIKE"
-                      ? "bg-red-700 hover:bg-red-800"
-                      : ""
-                  }
-                >
-                  <ThumbsDown className="mr-2 h-4 w-4" />
-                  {blogPost.dislikes}
-                </Button>
-              </>
-            ) : (
-              <Link
-                to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
-              >
-                <Button variant="outline" size="sm">
-                  Sign in to vote
-                </Button>
-              </Link>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleShare()}
-              disabled={shareMutation.isPending}
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Share ({blogPost.shares})
-            </Button>
-
-            {user?.id === blogPost.authorId && (
-              <span
-                className={
-                  blogPost.status !== "APPROVED" || blogPost.published
-                    ? "inline-block cursor-not-allowed"
-                    : "inline-block"
-                }
-                title={
-                  blogPost.published
-                    ? "Blog is live"
-                    : blogPost.status === "PENDING"
-                      ? "Waiting for admin approval"
-                      : blogPost.status === "REJECTED"
-                        ? "This blog was rejected"
-                        : "Publish your blog"
-                }
-              >
-                <Button
-                  variant={blogPost.published ? "secondary" : "default"}
-                  size="sm"
-                  onClick={() => !blogPost.published && handlePublish()}
-                  disabled={
-                    blogPost.status !== "APPROVED" ||
-                    blogPost.published ||
-                    publishMutation.isPending
-                  }
-                  className={
-                    !blogPost.published && blogPost.status === "APPROVED"
-                      ? "bg-green-600 text-white hover:bg-green-700"
-                      : blogPost.published
-                        ? "border-gray-200 bg-gray-100 text-gray-500 opacity-60"
-                        : ""
-                  }
-                >
-                  {publishMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : blogPost.published ? (
-                    "Published"
-                  ) : (
-                    <>
-                      <ThumbsUp className="mr-2 h-4 w-4" />
-                      Publish
-                    </>
-                  )}
-                </Button>
-              </span>
-            )}
-          </div>
-        </header>
-
-        <div className="mb-12 border-gray-100 border-y py-12">
-          <div
-            className="blog-content mx-auto max-w-3xl"
-            style={{
-              fontSize: "1.125rem",
-              lineHeight: "1.85rem",
-            }}
-            dangerouslySetInnerHTML={{ __html: blogPost.content }}
-          />
-        </div>
-
-        {/* Comments Section */}
-        <section className="mt-16 border-gray-200 border-t pt-12">
-          <div className="mb-6 flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-gray-700" />
-            <h2 className="font-bold text-2xl text-gray-900">
-              Comments ({commentsData?.total || 0})
-            </h2>
-          </div>
-
-          {/* Comment Form */}
-          {user ? (
-            <form onSubmit={handleSubmit(onSubmitComment)} className="mb-8">
-              <Textarea
-                placeholder="Write a comment..."
-                className="mb-3 min-h-[100px]"
-                {...register("content", {
-                  required: "Comment is required",
-                  minLength: 1,
-                })}
-              />
-              {errors.content && (
-                <p className="mb-2 text-red-500 text-sm">
-                  {errors.content.message}
+              {blogPost.subtitle && (
+                <p className="mb-10 font-bold text-gray-700 text-2xl md:text-3xl leading-snug">
+                  {blogPost.subtitle}
                 </p>
               )}
-              <Button
-                type="submit"
-                disabled={createComment.isPending}
-                className="bg-red-700 hover:bg-red-800"
-              >
-                {createComment.isPending ? "Posting..." : "Post Comment"}
-              </Button>
-            </form>
-          ) : (
-            <div className="mb-8 rounded-lg bg-gray-50 p-4 text-center">
-              <p className="mb-2 text-gray-600">Sign in to comment</p>
-              <Link
-                to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
-              >
-                <Button size="sm" className="bg-red-700 hover:bg-red-800">
-                  Sign in
-                </Button>
-              </Link>
-            </div>
-          )}
 
-          {/* Comments List */}
-          {isLoadingComments ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-red-700" />
-            </div>
-          ) : commentsData && commentsData.data.length > 0 ? (
-            <div className="space-y-6">
-              {commentsData.data.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="rounded-lg border border-gray-200 bg-white p-6"
-                >
-                  <div className="flex items-start gap-4">
-                    {comment.user.image ? (
+              {/* Author & Meta */}
+              <div className="flex flex-col gap-8 border-gray-100 border-y py-10">
+                <div className="flex flex-wrap items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    {blogPost.author?.image && !authorImgError ? (
                       <img
-                        src={comment.user.image}
-                        alt={comment.user.name}
-                        className="h-10 w-10 rounded-full object-cover"
+                        src={blogPost.author.image}
+                        alt={blogPost.author.name}
+                        onError={() => setAuthorImgError(true)}
+                        className="h-14 w-14 rounded-full object-cover grayscale"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                        <User className="h-5 w-5 text-gray-500" />
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                        <User className="h-7 w-7 text-gray-400" />
                       </div>
                     )}
-                    <div className="flex-1">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="font-semibold text-gray-900">
-                          {comment.user.name}
-                        </span>
-                        <span className="text-gray-500 text-sm">
-                          {formatDate(comment.createdAt)}
+                    <div className="flex flex-col">
+                      <span className="font-black text-gray-900 text-lg uppercase tracking-tight">
+                        By {blogPost.author?.name || "Anonymous"}
+                      </span>
+                      <div className="flex items-center gap-2 font-bold text-gray-500 text-[10px] uppercase tracking-widest">
+                        <span>
+                          Updated{" "}
+                          {formatDate(
+                            blogPost.publishedAt || blogPost.createdAt,
+                          )}
                         </span>
                       </div>
-                      <p className="whitespace-pre-wrap text-gray-700">
-                        {comment.content}
-                      </p>
-                      {comment._count && comment._count.replies > 0 && (
-                        <p className="mt-2 text-gray-500 text-sm">
-                          {comment._count.replies}{" "}
-                          {comment._count.replies === 1 ? "reply" : "replies"}
-                        </p>
-                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-8">
+                    {blogPost.readingTimeMin && (
+                      <div className="flex flex-col items-center border-gray-100 border-r pr-8">
+                        <span className="font-black text-gray-900 text-xl">
+                          {blogPost.readingTimeMin}
+                        </span>
+                        <span className="font-black text-gray-400 text-[9px] uppercase tracking-[0.2em]">
+                          min read
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex flex-col items-center">
+                      <span className="font-black text-gray-900 text-xl">
+                        {blogPost.views.toLocaleString()}
+                      </span>
+                      <span className="font-black text-gray-400 text-[9px] uppercase tracking-[0.2em]">
+                        views
+                      </span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-8 text-center text-gray-500">
-              No comments yet. Be the first to comment!
-            </div>
-          )}
-        </section>
+              </div>
+            </header>
 
-        {/* Related Blogs Section */}
-        <RelatedBlogsSection
-          currentBlogId={blogPost.id}
-          authorId={blogPost.authorId}
-        />
-      </article>
+            {/* Featured Image or Video Player */}
+            {blogPost.mediaType === "VIDEO" && blogPost.videoUrl ? (
+              <ArtVideoPlayer
+                url={blogPost.videoUrl}
+                poster={blogPost.featuredImage}
+                className="mb-12"
+              />
+            ) : blogPost.featuredImage && !imgError ? (
+              <div className="mb-12 overflow-hidden bg-gray-100">
+                <img
+                  src={blogPost.featuredImage}
+                  alt={blogPost.title}
+                  onError={() => setImgError(true)}
+                  className="w-full object-cover"
+                />
+              </div>
+            ) : (
+              <ArtPlaceholder
+                className="mb-12 aspect-video w-full"
+                iconSize={64}
+                text="The Art Journal"
+              />
+            )}
+
+            {/* Content Body */}
+            <div
+              className="prose prose-lg max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:leading-relaxed prose-p:text-gray-800 prose-a:text-red-700 prose-img:rounded-sm"
+              dangerouslySetInnerHTML={{
+                __html: blogPost.contentHtml || blogPost.content,
+              }}
+            />
+
+            {/* Tags Section */}
+            {blogPost.tags && blogPost.tags.length > 0 && (
+              <div className="mt-12 flex flex-wrap gap-2 border-gray-100 border-t pt-8">
+                {blogPost.tags.map(({ tag }) => (
+                  <Link
+                    key={tag.id}
+                    to={`/blog?search=${tag.name}`}
+                    className="bg-gray-50 px-3 py-1.5 font-bold text-gray-500 text-[10px] uppercase tracking-widest transition-colors hover:bg-gray-100 hover:text-red-700"
+                  >
+                    #{tag.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* References Section */}
+            {blogPost.references && blogPost.references.length > 0 && (
+              <div className="mt-12 bg-gray-50 p-8">
+                <h3 className="mb-4 font-black text-gray-900 text-xs uppercase tracking-widest">
+                  Sources & References
+                </h3>
+                <ul className="space-y-3">
+                  {blogPost.references.map((ref) => (
+                    <li key={ref.id}>
+                      <a
+                        href={ref.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 font-bold text-gray-600 text-sm hover:text-red-700"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        {ref.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Engagement Actions */}
+            <div className="mt-12 flex items-center gap-4 border-gray-200 border-t pt-8">
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={
+                      userVote?.voteType === "LIKE" ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => handleVote("LIKE")}
+                    disabled={voteMutation.isPending}
+                    className={`rounded-none font-bold text-[10px] uppercase tracking-widest ${
+                      userVote?.voteType === "LIKE"
+                        ? "bg-red-700 hover:bg-red-800"
+                        : ""
+                    }`}
+                  >
+                    <ThumbsUp className="mr-2 h-4 w-4" />
+                    Agree ({blogPost.likes})
+                  </Button>
+                  <Button
+                    variant={
+                      userVote?.voteType === "DISLIKE" ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => handleVote("DISLIKE")}
+                    disabled={voteMutation.isPending}
+                    className={`rounded-none font-bold text-[10px] uppercase tracking-widest ${
+                      userVote?.voteType === "DISLIKE"
+                        ? "bg-black hover:bg-gray-900 text-white"
+                        : ""
+                    }`}
+                  >
+                    <ThumbsDown className="mr-2 h-4 w-4" />
+                    Disagree ({blogPost.dislikes})
+                  </Button>
+                </div>
+              ) : (
+                <Link
+                  to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-none font-bold text-[10px] uppercase tracking-widest"
+                  >
+                    Sign in to join the conversation
+                  </Button>
+                </Link>
+              )}
+            </div>
+
+            {/* Comments Section */}
+            <section className="mt-16 border-gray-200 border-t pt-12">
+              <div className="mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-6 w-6 text-gray-900" />
+                  <h2 className="font-black text-gray-900 text-xl uppercase tracking-widest">
+                    Discussion ({commentsData?.total || 0})
+                  </h2>
+                </div>
+              </div>
+
+              {/* Comment Form */}
+              {user ? (
+                <form
+                  onSubmit={handleSubmit(onSubmitComment)}
+                  className="mb-12"
+                >
+                  <Textarea
+                    placeholder="Add your perspective..."
+                    className="mb-4 min-h-[120px] rounded-none border-gray-200 focus:border-red-700 focus:ring-red-700"
+                    {...register("content", { required: true, minLength: 1 })}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={createComment.isPending}
+                    className="rounded-none bg-black px-8 font-bold text-white text-xs uppercase tracking-widest transition-all hover:bg-red-700"
+                  >
+                    {createComment.isPending ? "Posting..." : "Post Comment"}
+                  </Button>
+                </form>
+              ) : (
+                <div className="mb-12 border-gray-100 border-2 border-dashed p-8 text-center">
+                  <p className="mb-4 font-bold text-gray-500 text-sm uppercase tracking-widest">
+                    Log in to share your thoughts
+                  </p>
+                  <Link
+                    to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
+                  >
+                    <Button
+                      size="sm"
+                      className="bg-red-700 font-bold uppercase tracking-widest"
+                    >
+                      Log In
+                    </Button>
+                  </Link>
+                </div>
+              )}
+
+              {/* Comments List */}
+              <div className="space-y-8">
+                {isLoadingComments ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-red-700" />
+                  </div>
+                ) : commentsData && commentsData.data.length > 0 ? (
+                  commentsData.data.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="group border-gray-100 border-b pb-8 last:border-0"
+                    >
+                      <div className="flex items-start gap-4">
+                        {comment.user.image ? (
+                          <img
+                            src={comment.user.image}
+                            alt={comment.user.name}
+                            className="h-12 w-12 rounded-full object-cover grayscale"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                            <User className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="font-black text-gray-900 text-xs uppercase tracking-tight">
+                              {comment.user.name}
+                            </span>
+                            <span className="font-bold text-gray-400 text-[10px] uppercase tracking-widest">
+                              {formatDate(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-gray-700 leading-relaxed">
+                            {comment.content}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-12 text-center">
+                    <p className="font-bold text-gray-400 text-xs uppercase tracking-widest italic">
+                      Be the first to comment on this story
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </article>
+
+          {/* Sidebar Column */}
+          <aside className="lg:col-span-4 lg:border-gray-100 lg:border-l lg:pl-12">
+            <div className="sticky top-24 space-y-12">
+              {/* Featured Artist Section */}
+              {blogPost.featuredArtist && (
+                <div className="rounded-sm bg-gray-50 p-6">
+                  <h3 className="mb-6 border-black border-l-4 pl-3 font-black text-gray-900 text-xs uppercase tracking-widest">
+                    Featured Artist
+                  </h3>
+                  <div className="flex items-center gap-4 mb-6">
+                    {blogPost.featuredArtist.image && !artistImgError ? (
+                      <img
+                        src={blogPost.featuredArtist.image}
+                        alt={blogPost.featuredArtist.name}
+                        onError={() => setArtistImgError(true)}
+                        className="h-16 w-16 rounded-full object-cover grayscale"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
+                        <User className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-black text-gray-900 text-sm uppercase tracking-tight">
+                        {blogPost.featuredArtist.name}
+                      </h4>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span className="font-bold text-gray-500 text-[10px] uppercase tracking-widest">
+                          Top Rated Artist
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    to={`/profile/${blogPost.featuredArtist.id}`}
+                    className="flex w-full items-center justify-between bg-black px-4 py-3 font-bold text-white text-[10px] uppercase tracking-[0.15em] transition-all hover:bg-red-700"
+                  >
+                    View Full Profile <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              )}
+
+              {/* Shop the Story Section */}
+              {blogPost.relatedArtworks &&
+                blogPost.relatedArtworks.length > 0 && (
+                  <div>
+                    <h3 className="mb-6 border-red-700 border-l-4 pl-3 font-black text-gray-900 text-xs uppercase tracking-widest">
+                      Shop the Story
+                    </h3>
+                    <div className="space-y-6">
+                      {blogPost.relatedArtworks.map(({ artwork }) => (
+                        <Link
+                          key={artwork.id}
+                          to={`/artwork/${artwork.id}`}
+                          className="group block"
+                        >
+                          <div className="flex gap-4">
+                            <div className="h-20 w-20 flex-shrink-0 overflow-hidden bg-gray-100">
+                              {artwork.photos?.[0] &&
+                              !artworkImgErrors[artwork.id] ? (
+                                <img
+                                  src={artwork.photos[0]}
+                                  alt={artwork.title}
+                                  onError={() =>
+                                    handleArtworkImgError(artwork.id)
+                                  }
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                              ) : (
+                                <ArtPlaceholder
+                                  className="h-full w-full"
+                                  iconSize={24}
+                                />
+                              )}
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <h4 className="line-clamp-2 font-bold text-gray-900 text-xs uppercase tracking-tight group-hover:text-red-700">
+                                {artwork.title}
+                              </h4>
+                              <span className="mt-1 font-black text-red-700 text-sm">
+                                ${artwork.desiredPrice?.toLocaleString() || "0"}
+                              </span>
+                              <div className="mt-2 flex items-center gap-1 font-bold text-gray-400 text-[9px] uppercase tracking-widest">
+                                <ShoppingBag className="h-3 w-3" />
+                                Available for purchase
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* More from this author */}
+              <RelatedBlogsSection
+                currentBlogId={blogPost.id}
+                authorId={blogPost.authorId}
+              />
+            </div>
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }
@@ -461,23 +629,20 @@ function RelatedBlogsSection({
   const filteredBlogs =
     relatedBlogs?.data
       .filter((blog) => blog.id !== currentBlogId)
-      .slice(0, 5) || [];
+      .slice(0, 4) || [];
 
   if (isLoading) {
     return (
-      <section className="mt-16 border-gray-200 border-t pt-12">
-        <div className="mb-6 flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-gray-700" />
-          <h2 className="font-bold text-2xl text-gray-900">
-            More from This Author
-          </h2>
-        </div>
-        <div className="space-y-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div>
+        <h3 className="mb-6 border-gray-200 border-l-4 pl-3 font-black text-gray-900 text-xs uppercase tracking-widest">
+          More from this author
+        </h3>
+        <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <BlogCardSkeleton key={i} />
+            <div key={i} className="h-16 w-full animate-pulse bg-gray-50" />
           ))}
         </div>
-      </section>
+      </div>
     );
   }
 
@@ -486,18 +651,15 @@ function RelatedBlogsSection({
   }
 
   return (
-    <section className="mt-16 border-gray-200 border-t pt-12">
-      <div className="mb-8 flex items-center gap-2">
-        <BookOpen className="h-6 w-6 text-gray-700" />
-        <h2 className="font-bold text-2xl text-gray-900">
-          More from This Author
-        </h2>
-      </div>
-      <div className="divide-y divide-gray-100 border-gray-200 border-t">
+    <div>
+      <h3 className="mb-6 border-gray-200 border-l-4 pl-3 font-black text-gray-900 text-xs uppercase tracking-widest">
+        More from this author
+      </h3>
+      <div className="space-y-4">
         {filteredBlogs.map((post) => (
-          <BlogCard key={post.id} blogPost={post} />
+          <NewsBlogCard key={post.id} blogPost={post} layout="LINK_ONLY" />
         ))}
       </div>
-    </section>
+    </div>
   );
 }
