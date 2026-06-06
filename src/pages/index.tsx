@@ -4,6 +4,7 @@ import { HeroCarousel } from "@/components/landing/hero"
 import { NewArrivals } from "@/components/landing/new-arrival"
 import { TrendingArtists } from "@/components/landing/trending-artists"
 import { TrendingArtworks } from "@/components/landing/trending-artworks"
+import { LatestFromBlog } from "@/components/landing/latest-from-blog"
 
 const LandingPage = () => {
     return (
@@ -14,6 +15,7 @@ const LandingPage = () => {
             <NewArrivals />
             <CollectionCtaSection />
             <TrendingArtists />
+            <LatestFromBlog />
         </div>
     )
 }

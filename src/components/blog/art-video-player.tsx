@@ -15,6 +15,7 @@ interface ArtVideoPlayerProps {
   poster?: string;
   className?: string;
   autoPlay?: boolean;
+  hideControls?: boolean;
 }
 
 export function ArtVideoPlayer({
@@ -22,6 +23,7 @@ export function ArtVideoPlayer({
   poster,
   className,
   autoPlay = false,
+  hideControls = false,
 }: ArtVideoPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -158,13 +160,75 @@ export function ArtVideoPlayer({
     handleReplay,
   ]);
 
-  // Sync state with Video Engine
   useEffect(() => {
     if (isYouTube && iframeRef.current && isLoaded) {
       sendYouTubeCommand(isPlaying ? "playVideo" : "pauseVideo");
       sendYouTubeCommand(isMuted ? "mute" : "unMute");
     }
   }, [isPlaying, isMuted, isYouTube, isLoaded, sendYouTubeCommand]);
+
+  useEffect(() => {
+    if (!isYouTube && !isVimeo && videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.play().catch(() => setIsPlaying(false));
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isPlaying, isYouTube, isVimeo]);
+
+  if (hideControls) {
+    return (
+      <div
+        className={cn(
+          "relative aspect-video w-full overflow-hidden bg-black pointer-events-none",
+          className,
+        )}
+      >
+        {isYouTube || isVimeo ? (
+          <iframe
+            ref={iframeRef}
+            src={`${
+              isYouTube
+                ? `https://www.youtube.com/embed/${
+                    url.includes("v=")
+                      ? url.split("v=")[1].split("&")[0]
+                      : url.split("/").pop()
+                  }?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1`
+                : `https://player.vimeo.com/video/${url
+                    .split("/")
+                    .pop()}?autoplay=1&muted=1&controls=0`
+            }&origin=${window.location.origin}`}
+            className={cn(
+              "absolute top-1/2 left-1/2 h-[135%] w-[135%] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000",
+              isLoaded ? "opacity-100" : "opacity-0",
+            )}
+            onLoad={() => setIsLoaded(true)}
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={url}
+            poster={poster}
+            className={cn(
+              "h-full w-full object-cover transition-opacity duration-1000",
+              isLoaded ? "opacity-100" : "opacity-0",
+            )}
+            onLoadedData={() => setIsLoaded(true)}
+            loop
+            playsInline
+            muted
+            autoPlay
+          />
+        )}
+        {!isLoaded && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-950">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-red-700 border-t-transparent" />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Time Tracking (Simplified for Iframe, real for HTML5)
   useEffect(() => {
@@ -234,6 +298,7 @@ export function ArtVideoPlayer({
       ref={playerContainerRef}
       className={cn(
         "group relative aspect-video w-full overflow-hidden bg-black shadow-2xl",
+        hideControls && "pointer-events-none",
         className,
       )}
       onMouseEnter={() => setIsHovering(true)}
@@ -287,7 +352,7 @@ export function ArtVideoPlayer({
               setIsLoaded(true);
               setDuration(videoRef.current?.duration || 0);
             }}
-            onClick={() => togglePlay()}
+            onClick={(e) => !hideControls && togglePlay(e)}
             loop
             playsInline
             muted={isMuted}
@@ -296,155 +361,154 @@ export function ArtVideoPlayer({
       </div>
 
       {/* Custom UI Overlay */}
-      <div className="absolute inset-0 z-30 flex flex-col justify-between p-4 md:p-6 pointer-events-none">
-        {/* Top Bar */}
-        <div className="flex justify-end items-start gap-2 md:gap-3">
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovering ? 1 : 0 }}
-            onClick={handleReplay}
-            className="pointer-events-auto rounded-full bg-black/60 p-2 md:p-2.5 text-white backdrop-blur-xl hover:bg-red-700 transition-all border border-white/10"
-            title="Replay (R)"
-          >
-            <RotateCcw size={16} className="md:w-[18px] md:h-[18px]" />
-          </motion.button>
-
-          <div
-            className="relative flex items-center pointer-events-auto"
-            onMouseEnter={() => setShowVolumeSlider(true)}
-            onMouseLeave={() => setShowVolumeSlider(false)}
-          >
-            <AnimatePresence>
-              {showVolumeSlider && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 100, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  className="overflow-hidden bg-black/60 backdrop-blur-xl rounded-l-full h-8 md:h-10 flex items-center px-3 md:px-4 border-y border-l border-white/10"
-                >
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={volume}
-                    onChange={(e) =>
-                      handleVolumeChange(parseFloat(e.target.value))
-                    }
-                    className="w-16 md:w-20 accent-red-700 h-1 cursor-pointer"
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <button
-              onClick={toggleMute}
-              className={cn(
-                "rounded-full bg-black/60 p-2 md:p-2.5 text-white backdrop-blur-xl hover:bg-red-700 transition-all border border-white/10",
-                showVolumeSlider && "rounded-l-none",
-              )}
+      {!hideControls && (
+        <div className="absolute inset-0 z-30 flex flex-col justify-between p-4 md:p-6 pointer-events-none">
+          {/* Top Bar */}
+          <div className="flex justify-end items-start gap-2 md:gap-3">
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isHovering ? 1 : 0 }}
+              onClick={handleReplay}
+              className="pointer-events-auto rounded-full bg-black/60 p-2 md:p-2.5 text-white backdrop-blur-xl hover:bg-red-700 transition-all border border-white/10"
+              title="Replay (R)"
             >
-              {isMuted || volume === 0 ? (
-                <VolumeX size={16} className="md:w-[18px] md:h-[18px]" />
-              ) : (
-                <Volume2 size={16} className="md:w-[18px] md:h-[18px]" />
-              )}
-            </button>
-          </div>
-        </div>
+              <RotateCcw size={16} className="md:w-[18px] md:h-[18px]" />
+            </motion.button>
 
-        {/* Center Play Button */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <AnimatePresence>
-            {!isPlaying && (
-              <motion.button
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.1, opacity: 0 }}
-                onClick={() => togglePlay()}
-                className="pointer-events-auto flex h-16 w-16 md:h-24 md:w-24 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition-all hover:bg-red-700 hover:border-red-700 hover:scale-110 shadow-2xl"
-              >
-                <Play
-                  size={28}
-                  fill="currentColor"
-                  className="ml-1 md:ml-1.5 md:w-[36px] md:h-[36px]"
-                />
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Bottom Controls */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{
-            y: isHovering || !isPlaying ? 0 : 20,
-            opacity: isHovering || !isPlaying ? 1 : 0,
-          }}
-          className="pointer-events-auto flex flex-col gap-3 md:gap-4"
-        >
-          {/* Draggable Progress Bar */}
-          <div className="group/progress relative h-1 md:h-1.5 w-full bg-white/10 rounded-full cursor-pointer overflow-visible">
-            <input
-              type="range"
-              min="0"
-              max={duration || 100}
-              value={currentTime}
-              onChange={(e) => handleSeek(parseFloat(e.target.value))}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            />
             <div
-              className="absolute inset-y-0 left-0 bg-red-700 shadow-[0_0_10px_rgba(185,28,28,0.8)] rounded-full transition-all duration-100"
-              style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
-            />
-            {/* Seek handle visual */}
-            <div
-              className="absolute top-1/2 h-3 w-3 md:h-4 md:w-4 bg-white rounded-full shadow-lg transform -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none"
-              style={{ left: `${(currentTime / (duration || 1)) * 100}%` }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 md:gap-6">
+              className="relative flex items-center pointer-events-auto"
+              onMouseEnter={() => setShowVolumeSlider(true)}
+              onMouseLeave={() => setShowVolumeSlider(false)}
+            >
+              <AnimatePresence>
+                {showVolumeSlider && (
+                  <motion.div
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 100, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    className="overflow-hidden bg-black/60 backdrop-blur-xl rounded-l-full h-8 md:h-10 flex items-center px-3 md:px-4 border-y border-l border-white/10"
+                  >
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={volume}
+                      onChange={(e) =>
+                        handleVolumeChange(parseFloat(e.target.value))
+                      }
+                      className="w-16 md:w-20 accent-red-700 h-1 cursor-pointer"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <button
-                onClick={() => togglePlay()}
-                className="text-white hover:text-red-500 transition-all transform hover:scale-110"
+                onClick={toggleMute}
+                className={cn(
+                  "rounded-full bg-black/60 p-2 md:p-2.5 text-white backdrop-blur-xl hover:bg-red-700 transition-all border border-white/10",
+                  showVolumeSlider && "rounded-l-none",
+                )}
               >
-                {isPlaying ? (
-                  <Pause size={18} className="md:w-[22px] md:h-[22px]" />
+                {isMuted || volume === 0 ? (
+                  <VolumeX size={16} className="md:w-[18px] md:h-[18px]" />
                 ) : (
-                  <Play
-                    size={18}
-                    fill="currentColor"
-                    className="md:w-[22px] md:h-[22px]"
-                  />
+                  <Volume2 size={16} className="md:w-[18px] md:h-[18px]" />
                 )}
               </button>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] md:text-[10px] font-black text-white uppercase tracking-[0.2em]">
-                    {isPlaying ? "Currently Viewing" : "Playback Paused"}
-                  </span>
-                  <span className="text-[9px] md:text-[10px] font-mono text-gray-400">
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </span>
-                </div>
-                <span className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                  Art Collection Video
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button
-                onClick={toggleFullscreen}
-                className="text-white/40 hover:text-white transition-colors p-1"
-              >
-                <Maximize size={16} className="md:w-[18px] md:h-[18px]" />
-              </button>
             </div>
           </div>
-        </motion.div>
-      </div>
+
+          {/* Center Play/Pause Button */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <AnimatePresence>
+              {isHovering && !hideControls && (
+                <motion.button
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.1, opacity: 0 }}
+                  onClick={(e) => togglePlay(e)}
+                  className="pointer-events-auto flex h-16 w-16 md:h-24 md:w-24 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all hover:bg-red-700 hover:border-red-700 hover:scale-110 shadow-2xl"
+                >
+                  {isPlaying ? (
+                    <Pause
+                      size={28}
+                      fill="currentColor"
+                      className="md:w-[36px] md:h-[36px]"
+                    />
+                  ) : (
+                    <Play
+                      size={28}
+                      fill="currentColor"
+                      className="ml-1 md:ml-1.5 md:w-[36px] md:h-[36px]"
+                    />
+                  )}
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Bottom Controls */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{
+              y: isHovering || !isPlaying ? 0 : 20,
+              opacity: isHovering || !isPlaying ? 1 : 0,
+            }}
+            className="pointer-events-auto flex flex-col gap-3 md:gap-4"
+          >
+            {/* Draggable Progress Bar */}
+            <div className="group/progress relative h-1 md:h-1.5 w-full bg-white/10 rounded-full cursor-pointer overflow-visible">
+              <input
+                type="range"
+                min="0"
+                max={duration || 100}
+                value={currentTime}
+                onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div
+                className="absolute inset-y-0 left-0 bg-red-700 shadow-[0_0_10px_rgba(185,28,28,0.8)] rounded-full transition-all duration-100"
+                style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+              />
+              {/* Seek handle visual */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 h-3 w-3 md:h-4 md:w-4 bg-white rounded-full border-2 border-red-700 shadow-lg scale-0 group-hover/progress:scale-100 transition-transform"
+                style={{
+                  left: `calc(${(currentTime / (duration || 1)) * 100}% - 8px)`,
+                }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 md:gap-6">
+                <button
+                  onClick={() => togglePlay()}
+                  className="text-white hover:text-red-700 transition-colors"
+                >
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+
+                <div className="flex items-center gap-2 font-mono text-[10px] md:text-xs text-white/90">
+                  <span className="text-white font-bold">
+                    {formatTime(currentTime)}
+                  </span>
+                  <span className="text-white/40">/</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 md:gap-4">
+                <button
+                  onClick={toggleFullscreen}
+                  className="text-white hover:text-red-700 transition-colors"
+                >
+                  <Maximize size={18} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {!isLoaded && (

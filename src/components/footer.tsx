@@ -73,9 +73,9 @@ export function Footer() {
             links: [
                 { label: "Sell Your Art", href: "/sellart" },
                 { label: "Artist Feed", href: "/feed" },
-                { label: "My Artworks", href: "/profile/my-artworks" },
-                { label: "My Blogs", href: "/blog/my-blogs" },
-                { label: "My Collections", href: "/profile/collections" }
+                { label: "My Artworks", href: "/profile?tab=artworks" },
+                { label: "My Blogs", href: "/profile?tab=blogs" },
+                { label: "My Collections", href: "/profile?tab=collections" }
             ]
         },
         {
