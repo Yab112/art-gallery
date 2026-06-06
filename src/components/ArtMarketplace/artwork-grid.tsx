@@ -101,28 +101,24 @@ export function ArtworkGrid({
 
     if (artworks.length === 0) {
         return (
-            <section className="flex min-h-[500px] items-center px-4">
-                <div className="mx-auto w-full max-w-7xl">
-                    <EmptyState
-                        icon={Palette}
-                        title="No Artworks Found"
-                        description="We couldn't find any artworks matching your search. Try adjusting your filters or browse our collections."
-                        actionLabel="Browse Collections"
-                        onAction={() => {
-                            // Navigate to collections or clear filters
-                            window.location.href = "/"
-                        }}
-                    />
-                </div>
-            </section>
+            <div className="flex min-h-[500px] items-center">
+                <EmptyState
+                    icon={Palette}
+                    title="No Artworks Found"
+                    description="We couldn't find any artworks matching your search. Try adjusting your filters or browse our collections."
+                    actionLabel="Browse Collections"
+                    onAction={() => {
+                        window.location.href = "/"
+                    }}
+                />
+            </div>
         )
     }
 
     return (
-        <section className="px-4">
-            <div className="mx-auto max-w-7xl">
-                {viewMode === "list" ? (
-                    <div className="space-y-4">
+        <>
+            {viewMode === "list" ? (
+                <div className="space-y-4">
                         {artworks.map((artwork) => {
                             const statusInfo = artwork.status
                                 ? statusConfig[artwork.status as keyof typeof statusConfig]
@@ -253,7 +249,6 @@ export function ArtworkGrid({
                         infiniteScroll={infiniteScroll}
                     />
                 )}
-            </div>
-        </section>
+        </>
     )
 }

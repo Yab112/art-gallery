@@ -386,7 +386,7 @@ export default function ArtMarketplace() {
     }, [artworksPages])
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen overflow-x-hidden bg-white">
             <MarketplaceHero
                 eyebrow="Art marketplace"
                 title="Explore original art"
@@ -399,7 +399,7 @@ export default function ArtMarketplace() {
                 isLoadingCategories={isLoadingCategories}
             />
 
-            <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4">
+            <div className="mx-auto max-w-[90rem] px-3 py-4">
                 <div className="flex flex-col gap-4 lg:flex-row">
                     <SearchFilters
                         searchQuery={searchQuery}

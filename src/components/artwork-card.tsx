@@ -5,7 +5,7 @@ import { useCheckFavorite } from "@/queries/favoriteQueries"
 import { useAddFavorite } from "@/services/favorites/useAddFavorite"
 import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite"
 import { Heart } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 interface ArtworkCardProps {
@@ -28,6 +28,8 @@ interface ArtworkCardProps {
     disableNavigation?: boolean
     /** Hide favorite button in overlay (e.g. for guests on marketplace) */
     hideFavorite?: boolean
+    /** Pre-calculated width/height ratio for masonry tile sizing */
+    masonryAspectRatio?: number
 }
 
 const statusConfig = {
@@ -57,7 +59,8 @@ export function ArtworkCard({
     onFavorite,
     isMasonry = false,
     disableNavigation = false,
-    hideFavorite = false
+    hideFavorite = false,
+    masonryAspectRatio,
 }: ArtworkCardProps) {
     const isSold = status === "SOLD"
     const statusInfo = status ? statusConfig[status as keyof typeof statusConfig] : null
@@ -91,22 +94,20 @@ export function ArtworkCard({
     // Show favorite unless explicitly hidden (e.g. selection-only contexts)
     const showFavorite = !hideFavorite
 
-    const physicalAspectRatio = useMemo(() => {
-        if (!isMasonry) return null
-        const width = Number.parseFloat(physicalWidth || "")
-        const height = Number.parseFloat(physicalHeight || "")
-        if (!width || !height) return null
-        return width / height
-    }, [isMasonry, physicalWidth, physicalHeight])
-
     const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
+    const [useNaturalImageHeight, setUseNaturalImageHeight] = useState(false)
 
     useEffect(() => {
         setImageAspectRatio(null)
+        setUseNaturalImageHeight(false)
     }, [image])
 
-    // Prefer real artwork dimensions (48×24 vs 12×36) — uploads are often same thumbnail size
-    const masonryAspectRatio = physicalAspectRatio ?? imageAspectRatio
+    const isSquareThumbnail = (ratio: number) => ratio > 0.88 && ratio < 1.12
+
+    // Thumbnails are often uniform squares — keep intentional tile ratios unless the photo is clearly not square
+    const resolvedMasonryRatio = useNaturalImageHeight
+        ? imageAspectRatio
+        : masonryAspectRatio ?? imageAspectRatio
 
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -171,8 +172,8 @@ export function ArtworkCard({
                     isSold && "opacity-75",
                 )}
                 style={
-                    isMasonry && masonryAspectRatio
-                        ? { aspectRatio: masonryAspectRatio }
+                    isMasonry && resolvedMasonryRatio && !useNaturalImageHeight
+                        ? { aspectRatio: resolvedMasonryRatio }
                         : undefined
                 }
                 onMouseEnter={handleMouseEnter}
@@ -183,7 +184,8 @@ export function ArtworkCard({
                     <div
                         className={cn(
                             "flex h-full w-full items-center justify-center bg-gray-200",
-                            isMasonry && !masonryAspectRatio && "min-h-[180px]",
+                            isMasonry && !useNaturalImageHeight && "min-h-[160px]",
+                            isMasonry && useNaturalImageHeight && "min-h-0",
                         )}
                     >
                         <div className="text-center">
@@ -211,7 +213,11 @@ export function ArtworkCard({
                         className={cn(
                             "block w-full",
                             isMasonry
-                                ? "h-full object-cover"
+                                ? useNaturalImageHeight
+                                    ? "h-auto w-full"
+                                    : resolvedMasonryRatio
+                                      ? "h-full w-full object-cover"
+                                      : "h-auto w-full"
                                 : "h-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
                             isSold && "grayscale",
                         )}
@@ -224,10 +230,15 @@ export function ArtworkCard({
                                   }
                         }
                         onLoad={(event) => {
-                            if (!isMasonry || physicalAspectRatio) return
+                            if (!isMasonry) return
                             const img = event.currentTarget
-                            if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                                setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+                            if (img.naturalWidth <= 0 || img.naturalHeight <= 0) return
+
+                            const naturalRatio = img.naturalWidth / img.naturalHeight
+                            setImageAspectRatio(naturalRatio)
+
+                            if (!isSquareThumbnail(naturalRatio)) {
+                                setUseNaturalImageHeight(true)
                             }
                         }}
                         onError={() => setImageError(true)}
