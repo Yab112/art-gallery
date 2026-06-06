@@ -10,7 +10,7 @@ import {
     AccordionTrigger
 } from "@/components/ui/accordion"
 import { Search, SlidersHorizontal, X } from "lucide-react"
-import { useEffect } from "react"
+import { useLockBodyScroll } from "@/hooks/use-lock-body-scroll"
 
 interface SearchFiltersProps {
     searchQuery: string
@@ -54,35 +54,7 @@ export function SearchFilters({
     isOpen = false,
     onClose
 }: SearchFiltersProps) {
-    useEffect(() => {
-        const styleId = "prevent-select-margin"
-        let styleElement = document.getElementById(styleId) as HTMLStyleElement
-
-        if (!styleElement) {
-            styleElement = document.createElement("style")
-            styleElement.id = styleId
-            styleElement.textContent = `
-        body {
-          margin-right: 0 !important;
-          padding-right: 0 !important;
-        }
-        html {
-          margin-right: 0 !important;
-          padding-right: 0 !important;
-        }
-      `
-            document.head.appendChild(styleElement)
-        }
-
-        const interval = setInterval(() => {
-            document.body.style.setProperty("margin-right", "0", "important")
-            document.body.style.setProperty("padding-right", "0", "important")
-            document.documentElement.style.setProperty("margin-right", "0", "important")
-            document.documentElement.style.setProperty("padding-right", "0", "important")
-        }, 16)
-
-        return () => clearInterval(interval)
-    }, [])
+    useLockBodyScroll(isOpen, "(max-width: 1023px)")
 
     const toggleSelection = (
         currentValues: string[],
@@ -125,7 +97,7 @@ export function SearchFilters({
                 onClick={onClose}
             />
 
-            <aside className="fixed inset-y-0 left-0 z-50 flex w-[min(100vw-2rem,18rem)] flex-col border-gray-200 border-r bg-white shadow-xl lg:static lg:z-auto lg:w-56 lg:flex-shrink-0 lg:shadow-none">
+            <aside className="fixed inset-y-0 left-0 z-50 flex w-[min(100vw-2rem,18rem)] flex-col overflow-hidden border-gray-200 border-r bg-white shadow-xl overscroll-contain lg:static lg:z-auto lg:w-56 lg:flex-shrink-0 lg:overflow-visible lg:shadow-none">
                 <div className="flex items-center justify-between border-gray-100 border-b px-4 py-3">
                     <div className="flex items-center gap-2">
                         <SlidersHorizontal className="h-4 w-4 text-gray-500" />

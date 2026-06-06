@@ -70,7 +70,7 @@ export function MarketplaceHero({
     }
 
     return (
-        <section className="border-gray-100 border-b bg-gradient-to-b from-stone-50 to-white px-3 pt-5 pb-6 sm:pt-6 sm:pb-8">
+        <section className="border-gray-100 border-b bg-gradient-to-b from-stone-50 to-white px-2 pt-5 pb-6 sm:px-3 sm:pt-6 sm:pb-8">
             <div className="mx-auto max-w-[90rem]">
                 <div className="mb-4 flex flex-col gap-4 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="max-w-2xl">

@@ -399,7 +399,7 @@ export default function ArtMarketplace() {
                 isLoadingCategories={isLoadingCategories}
             />
 
-            <div className="mx-auto max-w-[90rem] px-3 py-4">
+            <div className="mx-auto w-full max-w-[90rem] px-2 py-4 sm:px-3">
                 <div className="flex flex-col gap-4 lg:flex-row">
                     <SearchFilters
                         searchQuery={searchQuery}

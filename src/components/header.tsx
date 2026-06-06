@@ -22,6 +22,7 @@ import {
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
+import { useLockBodyScroll } from "@/hooks/use-lock-body-scroll"
 import { AuthLayout } from "./auth/auth-layout"
 import { SigninForm } from "./auth/signin-form"
 import { SignupForm } from "./auth/signup-form"
@@ -208,6 +209,8 @@ export default function Header() {
     const [searchQuery, setSearchQuery] = useState("")
     const navigate = useNavigate()
     const { user } = useAuth()
+
+    useLockBodyScroll(isMobileMenuOpen, "(max-width: 767px)")
 
     // Fetch cart summary only when logged in (guests: hide cart, skip API)
     const { data: cartSummary } = useCartSummary({ enabled: !!user })
@@ -402,8 +405,8 @@ export default function Header() {
                         onClick={handleMobileMenuToggle}
                     />
                     {/* Mobile Menu Drawer */}
-                    <div className="fixed inset-y-0 left-0 z-50 w-64 transform bg-white shadow-xl transition-transform duration-300 ease-in-out md:hidden">
-                        <div className="flex h-full flex-col">
+                    <div className="fixed inset-y-0 left-0 z-50 w-64 overflow-hidden overscroll-contain bg-white shadow-xl md:hidden">
+                        <div className="flex h-full flex-col overflow-hidden">
                             {/* Mobile Menu Header */}
                             <div className="flex items-center justify-between border-b p-4">
                                 <Link

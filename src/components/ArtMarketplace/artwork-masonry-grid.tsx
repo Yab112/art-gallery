@@ -31,25 +31,31 @@ interface ArtworkMasonryGridProps {
     }
 }
 
-const COLUMN_GUTTER = 20
-const ITEM_GAP = 24
-const FOOTER_HEIGHT = 92
+const ITEM_GAP = 12
+const FOOTER_HEIGHT = 88
 
 /** width / height — lower = taller tile, higher = wider/shorter tile */
 const MASONRY_FALLBACK_RATIOS = [
     0.52, 1.92, 0.58, 1.75, 0.64, 1.55, 0.7, 1.38, 0.76, 1.22, 0.82, 1.65,
 ]
 
-function useMasonryColumnCount() {
-    const [count, setCount] = useState(2)
+function useMasonryLayout() {
+    const [columnCount, setColumnCount] = useState(2)
+    const [columnGap, setColumnGap] = useState(12)
 
     useEffect(() => {
         const update = () => {
             const width = window.innerWidth
-            if (width >= 1280) setCount(4)
-            else if (width >= 1024) setCount(3)
-            else if (width >= 768) setCount(3)
-            else setCount(2)
+            if (width >= 1280) {
+                setColumnCount(4)
+                setColumnGap(20)
+            } else if (width >= 768) {
+                setColumnCount(3)
+                setColumnGap(16)
+            } else {
+                setColumnCount(2)
+                setColumnGap(12)
+            }
         }
 
         update()
@@ -57,12 +63,12 @@ function useMasonryColumnCount() {
         return () => window.removeEventListener("resize", update)
     }, [])
 
-    return count
+    return { columnCount, columnGap }
 }
 
-function useMasonryColumnWidth(columnCount: number) {
+function useMasonryColumnWidth(columnCount: number, columnGap: number) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const [columnWidth, setColumnWidth] = useState(260)
+    const [columnWidth, setColumnWidth] = useState(170)
 
     useEffect(() => {
         const node = containerRef.current
@@ -70,16 +76,18 @@ function useMasonryColumnWidth(columnCount: number) {
 
         const measure = () => {
             const totalWidth = node.clientWidth
+            if (totalWidth <= 0) return
+
             const nextColumnWidth =
-                (totalWidth - COLUMN_GUTTER * Math.max(columnCount - 1, 0)) / columnCount
-            setColumnWidth(Math.max(nextColumnWidth, 140))
+                (totalWidth - columnGap * Math.max(columnCount - 1, 0)) / columnCount
+            setColumnWidth(Math.max(nextColumnWidth, 120))
         }
 
         measure()
         const observer = new ResizeObserver(measure)
         observer.observe(node)
         return () => observer.disconnect()
-    }, [columnCount])
+    }, [columnCount, columnGap])
 
     return { containerRef, columnWidth }
 }
@@ -91,12 +99,10 @@ export function parsePhysicalAspectRatio(width?: string, height?: string): numbe
     return w / h
 }
 
-function getMasonryAspectRatio(artwork: Artwork, index: number): number {
+export function getMasonryAspectRatio(artwork: Artwork, index: number): number {
     const fallback = MASONRY_FALLBACK_RATIOS[index % MASONRY_FALLBACK_RATIOS.length]
     const physical = parsePhysicalAspectRatio(artwork.physicalWidth, artwork.physicalHeight)
 
-    // Standard canvas sizes cluster around the same ratio — use intentional variety instead.
-    // Only honor physical dims when they are clearly tall or wide.
     if (physical && (physical <= 0.72 || physical >= 1.35)) {
         return physical
     }
@@ -158,6 +164,68 @@ function distributeHeightsToShortestColumn(
     return columns.map((column) => column.items)
 }
 
+interface MasonryTileProps {
+    artwork: Artwork
+    aspectRatio: number
+    onFavorite: (id: string) => void
+    isSelectionMode?: boolean
+    selectedArtworkIds?: Set<string>
+    onToggleSelection?: (id: string) => void
+    hideFavorite?: boolean
+}
+
+function MasonryTile({
+    artwork,
+    aspectRatio,
+    onFavorite,
+    isSelectionMode = false,
+    selectedArtworkIds = new Set(),
+    onToggleSelection,
+    hideFavorite = false,
+}: MasonryTileProps) {
+    return (
+        <div className="relative mb-3 md:mb-5">
+            {isSelectionMode && (
+                <button
+                    type="button"
+                    onClick={() => onToggleSelection?.(artwork.id)}
+                    className="absolute top-2 left-2 z-20 rounded-md bg-white p-1.5 shadow-md transition-colors hover:bg-gray-50"
+                >
+                    {selectedArtworkIds.has(artwork.id) ? (
+                        <CheckSquare className="h-5 w-5 text-blue-600" />
+                    ) : (
+                        <Square className="h-5 w-5 text-gray-400" />
+                    )}
+                </button>
+            )}
+
+            <div
+                className={
+                    isSelectionMode && selectedArtworkIds.has(artwork.id)
+                        ? "rounded-xl ring-2 ring-blue-500"
+                        : undefined
+                }
+                onClick={(e) => {
+                    if (isSelectionMode) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onToggleSelection?.(artwork.id)
+                    }
+                }}
+            >
+                <ArtworkCard
+                    {...artwork}
+                    onFavorite={onFavorite}
+                    isMasonry
+                    masonryAspectRatio={aspectRatio}
+                    disableNavigation={isSelectionMode}
+                    hideFavorite={hideFavorite}
+                />
+            </div>
+        </div>
+    )
+}
+
 export function ArtworkMasonryGrid({
     artworks,
     onFavorite,
@@ -167,13 +235,8 @@ export function ArtworkMasonryGrid({
     hideFavorite = false,
     infiniteScroll,
 }: ArtworkMasonryGridProps) {
-    const columnCount = useMasonryColumnCount()
-    const { containerRef, columnWidth } = useMasonryColumnWidth(columnCount)
-
-    const columns = useMemo(
-        () => distributeToShortestColumn(artworks, columnCount, columnWidth),
-        [artworks, columnCount, columnWidth],
-    )
+    const { columnCount, columnGap } = useMasonryLayout()
+    const { containerRef, columnWidth } = useMasonryColumnWidth(columnCount, columnGap)
 
     const aspectRatioById = useMemo(() => {
         const map = new Map<string, number>()
@@ -183,56 +246,32 @@ export function ArtworkMasonryGrid({
         return map
     }, [artworks])
 
+    const columns = useMemo(
+        () => distributeToShortestColumn(artworks, columnCount, columnWidth),
+        [artworks, columnCount, columnWidth],
+    )
+
+    const tileProps = {
+        onFavorite,
+        isSelectionMode,
+        selectedArtworkIds,
+        onToggleSelection,
+        hideFavorite,
+    }
+
     return (
         <>
-            <div ref={containerRef} className="w-full overflow-hidden">
-                <div className="-ml-5 flex w-auto">
+            <div ref={containerRef} className="w-full">
+                <div className="flex items-start" style={{ gap: columnGap }}>
                     {columns.map((columnArtworks, columnIndex) => (
-                        <div
-                            key={`masonry-col-${columnIndex}`}
-                            className="box-border w-full min-w-0 bg-clip-padding pl-5"
-                            style={{ flex: 1 }}
-                        >
+                        <div key={`masonry-col-${columnIndex}`} className="min-w-0 flex-1">
                             {columnArtworks.map((artwork) => (
-                                <div key={artwork.id} className="relative mb-6">
-                                    {isSelectionMode && (
-                                        <button
-                                            type="button"
-                                            onClick={() => onToggleSelection?.(artwork.id)}
-                                            className="absolute top-2 left-2 z-20 rounded-md bg-white p-1.5 shadow-md transition-colors hover:bg-gray-50"
-                                        >
-                                            {selectedArtworkIds.has(artwork.id) ? (
-                                                <CheckSquare className="h-5 w-5 text-blue-600" />
-                                            ) : (
-                                                <Square className="h-5 w-5 text-gray-400" />
-                                            )}
-                                        </button>
-                                    )}
-
-                                    <div
-                                        className={
-                                            isSelectionMode && selectedArtworkIds.has(artwork.id)
-                                                ? "rounded-xl ring-2 ring-blue-500"
-                                                : undefined
-                                        }
-                                        onClick={(e) => {
-                                            if (isSelectionMode) {
-                                                e.preventDefault()
-                                                e.stopPropagation()
-                                                onToggleSelection?.(artwork.id)
-                                            }
-                                        }}
-                                    >
-                                        <ArtworkCard
-                                            {...artwork}
-                                            onFavorite={onFavorite}
-                                            isMasonry
-                                            masonryAspectRatio={aspectRatioById.get(artwork.id)}
-                                            disableNavigation={isSelectionMode}
-                                            hideFavorite={hideFavorite}
-                                        />
-                                    </div>
-                                </div>
+                                <MasonryTile
+                                    key={artwork.id}
+                                    artwork={artwork}
+                                    aspectRatio={aspectRatioById.get(artwork.id) ?? 1}
+                                    {...tileProps}
+                                />
                             ))}
                         </div>
                     ))}
@@ -267,8 +306,8 @@ export function ArtworkMasonryGrid({
 }
 
 export function ArtworkMasonrySkeleton() {
-    const columnCount = useMasonryColumnCount()
-    const { containerRef, columnWidth } = useMasonryColumnWidth(columnCount)
+    const { columnCount, columnGap } = useMasonryLayout()
+    const { containerRef, columnWidth } = useMasonryColumnWidth(columnCount, columnGap)
     const heights = [180, 420, 260, 520, 220, 380, 290, 480, 200, 360, 310, 440]
     const skeletonItems = heights.map((height, i) => ({ id: i, height }))
 
@@ -278,16 +317,12 @@ export function ArtworkMasonrySkeleton() {
     )
 
     return (
-        <div ref={containerRef} className="w-full overflow-hidden">
-            <div className="-ml-5 flex w-auto">
+        <div ref={containerRef} className="w-full">
+            <div className="flex items-start" style={{ gap: columnGap }}>
                 {columns.map((columnItems, columnIndex) => (
-                    <div
-                        key={`skeleton-col-${columnIndex}`}
-                        className="box-border w-full min-w-0 bg-clip-padding pl-5"
-                        style={{ flex: 1 }}
-                    >
+                    <div key={`skeleton-col-${columnIndex}`} className="min-w-0 flex-1">
                         {columnItems.map((item) => (
-                            <div key={item.id} className="mb-6 animate-pulse">
+                            <div key={item.id} className="mb-3 animate-pulse md:mb-5">
                                 <div
                                     className="rounded-xl bg-gray-100"
                                     style={{ height: `${item.height}px` }}

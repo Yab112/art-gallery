@@ -94,21 +94,6 @@ export function ArtworkCard({
     // Show favorite unless explicitly hidden (e.g. selection-only contexts)
     const showFavorite = !hideFavorite
 
-    const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
-    const [useNaturalImageHeight, setUseNaturalImageHeight] = useState(false)
-
-    useEffect(() => {
-        setImageAspectRatio(null)
-        setUseNaturalImageHeight(false)
-    }, [image])
-
-    const isSquareThumbnail = (ratio: number) => ratio > 0.88 && ratio < 1.12
-
-    // Thumbnails are often uniform squares — keep intentional tile ratios unless the photo is clearly not square
-    const resolvedMasonryRatio = useNaturalImageHeight
-        ? imageAspectRatio
-        : masonryAspectRatio ?? imageAspectRatio
-
     const handleFavorite = async (e: React.MouseEvent) => {
         e.stopPropagation()
 
@@ -172,8 +157,8 @@ export function ArtworkCard({
                     isSold && "opacity-75",
                 )}
                 style={
-                    isMasonry && resolvedMasonryRatio && !useNaturalImageHeight
-                        ? { aspectRatio: resolvedMasonryRatio }
+                    isMasonry && masonryAspectRatio
+                        ? { aspectRatio: masonryAspectRatio }
                         : undefined
                 }
                 onMouseEnter={handleMouseEnter}
@@ -184,8 +169,7 @@ export function ArtworkCard({
                     <div
                         className={cn(
                             "flex h-full w-full items-center justify-center bg-gray-200",
-                            isMasonry && !useNaturalImageHeight && "min-h-[160px]",
-                            isMasonry && useNaturalImageHeight && "min-h-0",
+                            isMasonry && "min-h-[140px]",
                         )}
                     >
                         <div className="text-center">
@@ -213,11 +197,9 @@ export function ArtworkCard({
                         className={cn(
                             "block w-full",
                             isMasonry
-                                ? useNaturalImageHeight
-                                    ? "h-auto w-full"
-                                    : resolvedMasonryRatio
-                                      ? "h-full w-full object-cover"
-                                      : "h-auto w-full"
+                                ? masonryAspectRatio
+                                    ? "h-full w-full object-cover"
+                                    : "h-auto w-full"
                                 : "h-full object-cover text-transparent transition-transform duration-300 ease-in-out transform-gpu",
                             isSold && "grayscale",
                         )}
@@ -229,18 +211,6 @@ export function ArtworkCard({
                                       transform: isHovered && !isSold ? "scale(1.2)" : "scale(1)",
                                   }
                         }
-                        onLoad={(event) => {
-                            if (!isMasonry) return
-                            const img = event.currentTarget
-                            if (img.naturalWidth <= 0 || img.naturalHeight <= 0) return
-
-                            const naturalRatio = img.naturalWidth / img.naturalHeight
-                            setImageAspectRatio(naturalRatio)
-
-                            if (!isSquareThumbnail(naturalRatio)) {
-                                setUseNaturalImageHeight(true)
-                            }
-                        }}
                         onError={() => setImageError(true)}
                     />
                 )}

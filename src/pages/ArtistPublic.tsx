@@ -8,6 +8,7 @@ import { SimilarArtists } from "@/components/artist/similar-artists";
 import { ArtistBlogPreview } from "@/components/blog/artist-blog-preview";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useArtworks } from "@/queries/artworkQueries";
 import { useUser } from "@/queries/userQueries";
 import { useGetBlogPosts } from "@/services/blog";
