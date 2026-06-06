@@ -8,7 +8,6 @@ import { useGetBlogAuthors, useGetBlogPostsInfinite } from "@/services/blog";
 import { BookOpen, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 export default function BlogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,15 +19,15 @@ export default function BlogPage() {
   const { data: authorsData } = useGetBlogAuthors();
   const authors = authorsData || [];
 
-    // Fix for Radix UI Select dropdown page shift issue
-    useEffect(() => {
-        const styleId = "prevent-select-margin-blog-page"
-        let styleElement = document.getElementById(styleId) as HTMLStyleElement
+  // Fix for Radix UI Select dropdown page shift issue
+  useEffect(() => {
+    const styleId = "prevent-select-margin-blog-page";
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
 
-        if (!styleElement) {
-            styleElement = document.createElement("style")
-            styleElement.id = styleId
-            styleElement.textContent = `
+    if (!styleElement) {
+      styleElement = document.createElement("style");
+      styleElement.id = styleId;
+      styleElement.textContent = `
         body[data-scroll-locked],
         html[data-scroll-locked],
         body[data-radix-scroll-lock],
@@ -118,10 +117,18 @@ export default function BlogPage() {
   const allPosts = data?.pages.flatMap((page) => page.data) || [];
 
   // Identify featured posts using attribute-driven logic - NO FALLBACKS
-  const heroPost = allPosts.find((p) => p.layout === "HERO" || p.isBreaking);
+  // EXCLUDE videos from standard image sections to keep them for the Watch section
+  const heroPost = allPosts.find(
+    (p) => (p.layout === "HERO" || p.isBreaking) && p.mediaType !== "VIDEO",
+  );
 
   const compactPosts = allPosts
-    .filter((p) => p.layout === "COMPACT" && p.id !== heroPost?.id)
+    .filter(
+      (p) =>
+        p.layout === "COMPACT" &&
+        p.id !== heroPost?.id &&
+        p.mediaType !== "VIDEO",
+    )
     .slice(0, 3);
 
   const linkOnlyPosts = allPosts
@@ -129,6 +136,7 @@ export default function BlogPage() {
       (p) =>
         p.layout === "LINK_ONLY" &&
         p.id !== heroPost?.id &&
+        p.mediaType !== "VIDEO" &&
         !compactPosts.find((cp) => cp.id === p.id),
     )
     .slice(0, 6);
@@ -139,6 +147,7 @@ export default function BlogPage() {
         (p.category?.name?.toLowerCase().includes("market") ||
           p.topic?.name?.toLowerCase().includes("market")) &&
         p.id !== heroPost?.id &&
+        p.mediaType !== "VIDEO" &&
         !compactPosts.find((cp) => cp.id === p.id) &&
         !linkOnlyPosts.find((lp) => lp.id === p.id),
     )
@@ -150,6 +159,7 @@ export default function BlogPage() {
         (p.badge?.toLowerCase() === "analysis" ||
           p.badge?.toLowerCase() === "opinion") &&
         p.id !== heroPost?.id &&
+        p.mediaType !== "VIDEO" &&
         !compactPosts.find((cp) => cp.id === p.id) &&
         !linkOnlyPosts.find((lp) => lp.id === p.id) &&
         !standardHighlights.find((sh) => sh.id === p.id),
@@ -160,6 +170,7 @@ export default function BlogPage() {
     (p) =>
       (p.layout === "OVERLAY" || !!p.featuredArtistId) &&
       p.id !== heroPost?.id &&
+      p.mediaType !== "VIDEO" &&
       !compactPosts.find((cp) => cp.id === p.id) &&
       !linkOnlyPosts.find((lp) => lp.id === p.id) &&
       !standardHighlights.find((sh) => sh.id === p.id) &&
@@ -171,6 +182,7 @@ export default function BlogPage() {
       (p) =>
         p.layout === "STANDARD" &&
         p.id !== heroPost?.id &&
+        p.mediaType !== "VIDEO" &&
         !compactPosts.find((cp) => cp.id === p.id) &&
         !linkOnlyPosts.find((lp) => lp.id === p.id) &&
         !standardHighlights.find((sh) => sh.id === p.id) &&
@@ -184,6 +196,7 @@ export default function BlogPage() {
       (p) =>
         p.layout === "SIDEBAR" &&
         p.id !== heroPost?.id &&
+        p.mediaType !== "VIDEO" &&
         !compactPosts.find((cp) => cp.id === p.id) &&
         !linkOnlyPosts.find((lp) => lp.id === p.id) &&
         !standardHighlights.find((sh) => sh.id === p.id) &&
@@ -206,9 +219,7 @@ export default function BlogPage() {
     ].filter(Boolean),
   );
 
-  const spotlightVideo =
-    allPosts.find((p) => p.mediaType === "VIDEO" && !featuredIds.has(p.id)) ||
-    allPosts.find((p) => p.mediaType === "VIDEO");
+  const spotlightVideo = allPosts.find((p) => p.mediaType === "VIDEO");
 
   if (spotlightVideo) {
     featuredIds.add(spotlightVideo.id);
@@ -217,6 +228,14 @@ export default function BlogPage() {
   const otherVideos = allPosts.filter(
     (p) => p.mediaType === "VIDEO" && p.id !== spotlightVideo?.id,
   );
+
+  // Add other videos to featuredIds to avoid duplicates in the main feed
+  otherVideos.forEach((p) => featuredIds.add(p.id));
+
+  // Trending stories for the ranked list
+  const trendingPosts = [...allPosts]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 9);
 
   // Remaining posts for the main feed
   const feedPosts =
@@ -335,11 +354,9 @@ export default function BlogPage() {
               <div className="lg:col-span-3">
                 <div className="space-y-0 divide-y divide-gray-100 border-gray-100 border-t lg:border-t-0">
                   {compactPosts.map((post) => (
-                    <NewsBlogCard
-                      key={post.id}
-                      blogPost={post}
-                      layout="COMPACT"
-                    />
+                    <div key={post.id} className="first:pt-0 last:pb-0">
+                      <NewsBlogCard blogPost={post} layout="COMPACT" />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -359,25 +376,25 @@ export default function BlogPage() {
                       </h3>
                       <div className="space-y-2">
                         {linkOnlyPosts.map((post) => (
-                          <NewsBlogCard
-                            key={post.id}
-                            blogPost={post}
-                            layout="LINK_ONLY"
-                          />
+                          <div key={post.id} className="last:border-0">
+                            <NewsBlogCard blogPost={post} layout="LINK_ONLY" />
+                          </div>
                         ))}
                       </div>
                     </>
                   )}
-                  <Link
-                    to="/blog"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                  <button
+                    onClick={() => {
+                      const feedSection =
+                        document.getElementById("main-feed-section");
+                      if (feedSection) {
+                        feedSection.scrollIntoView({ behavior: "smooth" });
+                      }
                     }}
                     className="mt-10 flex items-center gap-2 font-black text-red-700 text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-black"
                   >
                     See full coverage <ArrowRight className="h-3 w-3" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
@@ -420,11 +437,9 @@ export default function BlogPage() {
                       </h3>
                       <div className="divide-y divide-gray-100 border-gray-100 border-t">
                         {analysisPosts.map((post) => (
-                          <NewsBlogCard
-                            key={post.id}
-                            blogPost={post}
-                            layout="TEXT_ONLY"
-                          />
+                          <div key={post.id} className="last:border-0">
+                            <NewsBlogCard blogPost={post} layout="TEXT_ONLY" />
+                          </div>
                         ))}
                       </div>
                     </>
@@ -468,11 +483,9 @@ export default function BlogPage() {
                       </h3>
                       <div className="space-y-8">
                         {sidebarPosts.map((post) => (
-                          <NewsBlogCard
-                            key={post.id}
-                            blogPost={post}
-                            layout="SIDEBAR"
-                          />
+                          <div key={post.id} className="first:pt-0 last:pb-0">
+                            <NewsBlogCard blogPost={post} layout="SIDEBAR" />
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -484,21 +497,26 @@ export default function BlogPage() {
 
         {/* Multimedia Spotlight - Video Section Style */}
         {!isLoading && spotlightVideo && !searchQuery && (
-          <section className="mb-24 border-gray-100 border-y py-20">
+          <section
+            id="watch-section"
+            className="mb-24 border-gray-100 border-y py-20"
+          >
             <div className="mb-12 flex items-center justify-between">
               <h3 className="border-red-700 border-l-4 pl-4 font-black text-2xl text-gray-900 uppercase tracking-[0.2em]">
                 Watch: Art in Motion
               </h3>
-              <Link
-                to="/blog"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+              <button
+                onClick={() => {
+                  const feedSection =
+                    document.getElementById("main-feed-section");
+                  if (feedSection) {
+                    feedSection.scrollIntoView({ behavior: "smooth" });
+                  }
                 }}
                 className="font-black text-red-700 text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-black"
               >
-                View all videos
-              </Link>
+                View all stories
+              </button>
             </div>
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
               <div className="lg:col-span-8">
@@ -519,10 +537,32 @@ export default function BlogPage() {
           </section>
         )}
 
+        {/* Most Read Section - Before Main Feed */}
+        {!isLoading && !searchQuery && trendingPosts.length > 0 && (
+          <section className="mb-24 border-gray-100 border-t pt-16">
+            <h3 className="mb-10 border-red-700 border-l-4 pl-4 font-bold text-gray-900 text-sm uppercase tracking-[0.2em]">
+              Most Read Stories
+            </h3>
+            <div className="grid grid-cols-1 gap-x-12 gap-y-2 md:grid-cols-2 lg:grid-cols-3">
+              {trendingPosts.map((post, index) => (
+                <NewsBlogCard
+                  key={post.id}
+                  blogPost={post}
+                  layout="RANKED"
+                  rank={index + 1}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Main Feed Section */}
-        <div className="mb-12 border-gray-200 border-y py-16">
+        <div
+          id="main-feed-section"
+          className="mb-12 border-gray-200 border-y py-16"
+        >
           <div className="mb-10 flex items-center justify-between">
-            <h2 className="font-black text-gray-900 text-2xl uppercase tracking-widest">
+            <h2 className="font-bold text-gray-900 text-2xl uppercase tracking-widest">
               The Latest Collection
             </h2>
           </div>
@@ -580,7 +620,7 @@ export default function BlogPage() {
               {/* Infinite Scroll Trigger */}
               <div
                 ref={loadMoreRef}
-                className="mt-20 flex flex-col items-center justify-center py-12 border-t border-gray-100"
+                className="mt-20 flex flex-col items-center justify-center border-gray-100 border-t py-12"
               >
                 {isFetchingNextPage ? (
                   <div className="flex items-center gap-3">
@@ -598,7 +638,7 @@ export default function BlogPage() {
                   </button>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
-                    <div className="h-1 w-12 bg-gray-100 rounded-full mb-4" />
+                    <div className="mb-4 h-1 w-12 rounded-full bg-gray-100" />
                     <span className="font-black text-gray-300 text-[10px] uppercase tracking-[0.5em]">
                       End of Collection
                     </span>
