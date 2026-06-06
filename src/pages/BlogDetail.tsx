@@ -166,15 +166,13 @@ export default function BlogDetailPage() {
       <div className="sticky top-0 z-10 border-gray-200 border-b bg-white/80 backdrop-blur-md">
         <div className="mx-auto max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="font-bold text-gray-900 text-xs uppercase tracking-widest hover:bg-gray-100"
+            <button
+              className="group flex items-center font-bold text-gray-900 text-xs uppercase tracking-widest transition-colors hover:text-red-700"
               onClick={() => navigate(returnTo, { state: returnState })}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {returnTo === "/blog/my-blogs" ? "My Blogs" : "Back to News"}
-            </Button>
+              <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              {returnTo.includes("/profile") ? "My Blogs" : "Back to News"}
+            </button>
             <div className="flex items-center gap-4">
               <span className="font-black text-red-700 text-[10px] uppercase tracking-[0.2em]">
                 {blogPost.category?.name || "Art News"}
@@ -242,7 +240,7 @@ export default function BlogDetailPage() {
                       </div>
                     )}
                     <div className="flex flex-col">
-                      <span className="font-black text-gray-900 text-lg uppercase tracking-tight">
+                      <span className="font-bold text-gray-900 text-lg uppercase tracking-tight">
                         By {blogPost.author?.name || "Anonymous"}
                       </span>
                       <div className="flex items-center gap-2 font-bold text-gray-500 text-[10px] uppercase tracking-widest">
@@ -301,6 +299,13 @@ export default function BlogDetailPage() {
                 className="mb-12 aspect-video w-full"
                 iconSize={64}
                 text="The Art Journal"
+                type={
+                  blogPost.mediaType === "VIDEO"
+                    ? blogPost.isBreaking
+                      ? "BREAKING_VIDEO"
+                      : "VIDEO"
+                    : "IMAGE"
+                }
               />
             )}
 
@@ -602,9 +607,63 @@ export default function BlogDetailPage() {
                 currentBlogId={blogPost.id}
                 authorId={blogPost.authorId}
               />
+
+              {/* Most Read Section */}
+              <MostReadSection currentBlogId={blogPost.id} />
             </div>
           </aside>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MostReadSection({ currentBlogId }: { currentBlogId: string }) {
+  const { data: trendingBlogs, isLoading } = useGetBlogPosts({
+    published: true,
+    limit: 6,
+    sortBy: "views",
+    sortOrder: "desc",
+  });
+
+  const filteredBlogs =
+    trendingBlogs?.data
+      .filter((blog) => blog.id !== currentBlogId)
+      .slice(0, 5) || [];
+
+  if (isLoading) {
+    return (
+      <div className="pt-8">
+        <h3 className="mb-6 border-red-700 border-l-4 pl-3 font-black text-gray-900 text-xs uppercase tracking-widest">
+          Most Read Stories
+        </h3>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-16 w-full animate-pulse bg-gray-50" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (filteredBlogs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="pt-8 border-gray-100 border-t">
+      <h3 className="mb-6 border-red-700 border-l-4 pl-3 font-bold text-gray-900 text-xs uppercase tracking-widest">
+        Most Read Stories
+      </h3>
+      <div className="divide-y divide-gray-100">
+        {filteredBlogs.map((post, index) => (
+          <NewsBlogCard
+            key={post.id}
+            blogPost={post}
+            layout="RANKED"
+            rank={index + 1}
+          />
+        ))}
       </div>
     </div>
   );
@@ -652,12 +711,14 @@ function RelatedBlogsSection({
 
   return (
     <div>
-      <h3 className="mb-6 border-gray-200 border-l-4 pl-3 font-black text-gray-900 text-xs uppercase tracking-widest">
+      <h3 className="mb-6 border-gray-200 border-l-4 pl-3 font-bold text-gray-900 text-xs uppercase tracking-widest">
         More from this author
       </h3>
       <div className="space-y-4">
         {filteredBlogs.map((post) => (
-          <NewsBlogCard key={post.id} blogPost={post} layout="LINK_ONLY" />
+          <div key={post.id} className="last:border-0">
+            <NewsBlogCard blogPost={post} layout="LINK_ONLY" />
+          </div>
         ))}
       </div>
     </div>
