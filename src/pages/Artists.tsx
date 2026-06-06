@@ -2,6 +2,7 @@ import { ArtistCard } from "@/components/artist/artist-circle-card"
 import { ArtistsPageSkeleton } from "@/components/artist/artists-page-skeleton"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { Input } from "@/components/ui/input"
 import {
     Select,
@@ -523,37 +524,14 @@ export default function ArtistsPage() {
 
                             {/* Pagination */}
                             {allArtistsData?.pagination && allArtistsData.pagination.total > 0 && (
-                                <div className="mt-8 flex items-center justify-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => updateSearchParams({ page: page - 1 })}
-                                        disabled={
-                                            page === 1 || allArtistsData.pagination.pages <= 1
-                                        }
-                                    >
-                                        Previous
-                                    </Button>
-                                    <span className="text-gray-600 text-sm">
-                                        Page {page} of {allArtistsData.pagination.pages} (
-                                        {allArtistsData.pagination.total}{" "}
-                                        {allArtistsData.pagination.total === 1
-                                            ? "artist"
-                                            : "artists"}
-                                        )
-                                    </span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => updateSearchParams({ page: page + 1 })}
-                                        disabled={
-                                            page >= allArtistsData.pagination.pages ||
-                                            allArtistsData.pagination.pages <= 1
-                                        }
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
+                                <PaginationControls
+                                    currentPage={page}
+                                    totalPages={allArtistsData.pagination.pages}
+                                    onPageChange={(nextPage) => updateSearchParams({ page: nextPage })}
+                                    totalItems={allArtistsData.pagination.total}
+                                    itemLabel="artists"
+                                    itemLabelSingular="artist"
+                                />
                             )}
                         </>
                     )}

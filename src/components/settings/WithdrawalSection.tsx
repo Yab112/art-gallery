@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import {
     Dialog,
     DialogContent,
@@ -36,37 +37,6 @@ import {
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-
-// Simple pagination component
-const Pagination = ({
-    currentPage,
-    totalPages,
-    onPageChange
-}: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => (
-    <div className="flex items-center justify-center gap-2">
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-7 px-3 text-xs"
-        >
-            Previous
-        </Button>
-        <span className="text-gray-600 text-xs">
-            Page {currentPage} of {totalPages}
-        </span>
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-7 px-3 text-xs"
-        >
-            Next
-        </Button>
-    </div>
-)
 
 interface Withdrawal {
     id: string
@@ -770,19 +740,19 @@ export function WithdrawalSection() {
                         </div>
                         {/* Pagination - Show if there are withdrawals */}
                         {withdrawals.length > 0 && (
-                            <div className="mt-4 flex justify-center">
-                                <Pagination
-                                    currentPage={pagination.page || page}
-                                    totalPages={Math.max(
-                                        pagination.pages ||
-                                        Math.ceil(
-                                            (pagination.total || withdrawals.length) / limit
-                                        ),
-                                        1
-                                    )}
-                                    onPageChange={handlePageChange}
-                                />
-                            </div>
+                            <PaginationControls
+                                currentPage={pagination.page || page}
+                                totalPages={Math.max(
+                                    pagination.pages ||
+                                        Math.ceil((pagination.total || withdrawals.length) / limit),
+                                    1
+                                )}
+                                onPageChange={handlePageChange}
+                                totalItems={pagination.total || withdrawals.length}
+                                itemLabel="withdrawals"
+                                itemLabelSingular="withdrawal"
+                                showSinglePageSummary
+                            />
                         )}
                     </>
                 )}

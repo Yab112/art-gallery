@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useGetTransactions } from "@/services/transactions/useGetTransactions"
 import {
     BarChart3,
@@ -13,41 +14,6 @@ import {
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { TransactionGraphs } from "./TransactionGraphs"
-
-// Simple pagination component
-const Pagination = ({
-    currentPage,
-    totalPages,
-    onPageChange
-}: {
-    currentPage: number
-    totalPages: number
-    onPageChange: (page: number) => void
-}) => (
-    <div className="flex items-center justify-center gap-2">
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-7 px-3 text-xs"
-        >
-            Previous
-        </Button>
-        <span className="text-gray-600 text-xs">
-            Page {currentPage} of {totalPages}
-        </span>
-        <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-7 px-3 text-xs"
-        >
-            Next
-        </Button>
-    </div>
-)
 
 const formatCurrency = (amount: number | string, currency: string | null) => {
     const isETB = currency?.toUpperCase() === "ETB"
@@ -567,13 +533,14 @@ export function TransactionsSection() {
 
                             {/* Pagination */}
                             {pagination.pages > 1 && (
-                                <div className="pt-4">
-                                    <Pagination
-                                        currentPage={pagination.page}
-                                        totalPages={pagination.pages}
-                                        onPageChange={handlePageChange}
-                                    />
-                                </div>
+                                <PaginationControls
+                                    currentPage={pagination.page}
+                                    totalPages={pagination.pages}
+                                    onPageChange={handlePageChange}
+                                    totalItems={pagination.total}
+                                    itemLabel="transactions"
+                                    itemLabelSingular="transaction"
+                                />
                             )}
                         </div>
                     )}

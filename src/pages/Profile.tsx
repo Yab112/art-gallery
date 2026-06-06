@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MinimalButton } from "@/components/ui/minimal-button"
@@ -760,25 +761,11 @@ export default function ProfilePage() {
 
                                         {/* Pagination */}
                                         {artworksData.pages > 1 && (
-                                            <div className="flex items-center justify-center gap-4 py-8">
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                                    disabled={page === 1}
-                                                >
-                                                    Previous
-                                                </Button>
-                                                <span className="text-gray-600">
-                                                    Page {page} of {artworksData.pages}
-                                                </span>
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => setPage((p) => Math.min(artworksData.pages, p + 1))}
-                                                    disabled={page >= artworksData.pages}
-                                                >
-                                                    Next
-                                                </Button>
-                                            </div>
+                                            <PaginationControls
+                                                currentPage={page}
+                                                totalPages={artworksData.pages}
+                                                onPageChange={setPage}
+                                            />
                                         )}
                                     </div>
                                 ) : (

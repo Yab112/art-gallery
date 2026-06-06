@@ -336,19 +336,7 @@ export default function CollectionDetailPage() {
                                 <FolderOpen className="h-16 w-16 text-gray-400 md:h-24 md:w-24" />
                             </div>
                         )}
-                        {/* Visibility Badge Overlay */}
-                        <div className="absolute top-3 right-3">
-                            <span
-                                className={`rounded-full px-2 py-1 font-medium text-xs backdrop-blur-sm ${collection.visibility === "public"
-                                    ? "bg-green-500/90 text-white"
-                                    : collection.visibility === "unlisted"
-                                        ? "bg-yellow-500/90 text-white"
-                                        : "bg-gray-500/90 text-white"
-                                    }`}
-                            >
-                                {collection.visibility}
-                            </span>
-                        </div>
+                        
                         {/* Back Button Overlay */}
                         <div className="absolute top-3 left-3">
                             <Button

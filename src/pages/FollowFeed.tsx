@@ -2,6 +2,7 @@ import { ArtworkCard } from "@/components/artwork-card"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import {
     Select,
     SelectContent,
@@ -202,27 +203,12 @@ export default function FollowFeedPage() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="mt-6 flex items-center justify-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                    >
-                                        Previous
-                                    </Button>
-                                    <span className="text-gray-600 text-sm">
-                                        Page {page} of {totalPages}
-                                    </span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                        disabled={page === totalPages}
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
+                                <PaginationControls
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    onPageChange={setPage}
+                                    className="mt-6"
+                                />
                             )}
                         </div>
                     )}

@@ -20,15 +20,15 @@ export default function BlogPage() {
   const { data: authorsData } = useGetBlogAuthors();
   const authors = authorsData || [];
 
-  // Fix for Radix UI Select dropdown page shift issue
-  useEffect(() => {
-    const styleId = "prevent-select-margin-blog-page";
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+    // Fix for Radix UI Select dropdown page shift issue
+    useEffect(() => {
+        const styleId = "prevent-select-margin-blog-page"
+        let styleElement = document.getElementById(styleId) as HTMLStyleElement
 
-    if (!styleElement) {
-      styleElement = document.createElement("style");
-      styleElement.id = styleId;
-      styleElement.textContent = `
+        if (!styleElement) {
+            styleElement = document.createElement("style")
+            styleElement.id = styleId
+            styleElement.textContent = `
         body[data-scroll-locked],
         html[data-scroll-locked],
         body[data-radix-scroll-lock],

@@ -2,6 +2,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import { FavoritesSkeleton } from "@/components/skeletons/favorites-skeleton"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useFavorites } from "@/queries/favoriteQueries"
 import { favoriteKeys } from "@/queries/queryKeys"
 import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite"
@@ -194,27 +195,14 @@ export default function FavoritesPage() {
 
                             {/* Pagination */}
                             {pagination.pages > 1 && (
-                                <div className="flex items-center justify-center gap-2 pt-6">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={page === 1}
-                                        onClick={() => setPage(page - 1)}
-                                    >
-                                        Previous
-                                    </Button>
-                                    <span className="text-gray-600 text-sm">
-                                        Page {pagination.page} of {pagination.pages}
-                                    </span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={page >= pagination.pages}
-                                        onClick={() => setPage(page + 1)}
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
+                                <PaginationControls
+                                    currentPage={pagination.page}
+                                    totalPages={pagination.pages}
+                                    onPageChange={setPage}
+                                    totalItems={pagination.total}
+                                    itemLabel="artworks"
+                                    itemLabelSingular="artwork"
+                                />
                             )}
                         </div>
                     )}

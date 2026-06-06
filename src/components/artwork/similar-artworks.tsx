@@ -1,9 +1,8 @@
 import { SectionTitle } from "@/components/section-title"
-import { Button } from "@/components/ui/button"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSimilarArtworksByCategory } from "@/queries/useSimilarArtworksByCategory"
 import type { Artwork } from "@/types/artwork.types"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { ArtworkCard } from "../artwork-card"
 
@@ -112,33 +111,14 @@ export function SimilarArtworks({ artworkId }: SimilarArtworksProps) {
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                        disabled={page === 1}
-                        className="flex items-center gap-2"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                    </Button>
-
-                    <span className="text-gray-600 text-sm">
-                        Page {page} of {totalPages} ({totalArtworks} artworks)
-                    </span>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((prev) => prev + 1)}
-                        disabled={page >= totalPages}
-                        className="flex items-center gap-2"
-                    >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
+                <PaginationControls
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    totalItems={totalArtworks}
+                    itemLabel="artworks"
+                    itemLabelSingular="artwork"
+                />
             )}
         </section>
     )
