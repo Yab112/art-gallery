@@ -25,13 +25,27 @@ interface FilterControlsProps {
 export function FilterControls({
   sortBy = "recommended",
   onSortChange,
+  medium,
   onMediumChange,
+  status,
   onStatusChange,
   openMenu: externalOpenMenu,
   onOpenChange: externalOnOpenChange,
   extraAction,
 }: FilterControlsProps) {
   const [internalOpenMenu, setInternalOpenMenu] = useState<string | null>(null);
+
+  const getStatusLabel = (value?: string) => {
+    if (value === "APPROVED") return "Available";
+    if (value === "SOLD") return "Sold";
+    if (value === "ALL" || value === "") return "All";
+    return "All";
+  };
+
+  const getMediumLabel = (value?: string) => {
+    if (!value || value === "all" || value === "") return "All";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  };
 
   const openMenu =
     externalOpenMenu !== undefined ? externalOpenMenu : internalOpenMenu;
@@ -103,7 +117,7 @@ export function FilterControls({
               variant="outline"
               className="gap-2 rounded-full bg-transparent"
             >
-              Medium
+              Medium: {getMediumLabel(medium)}
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -135,7 +149,7 @@ export function FilterControls({
               variant="outline"
               className="gap-2 rounded-full bg-transparent"
             >
-              Availability
+              Availability: {getStatusLabel(status)}
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -146,7 +160,7 @@ export function FilterControls({
             <DropdownMenuItem onClick={() => onStatusChange?.("SOLD")}>
               Sold
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange?.("APPROVED")}>
+            <DropdownMenuItem onClick={() => onStatusChange?.("ALL")}>
               All
             </DropdownMenuItem>
           </DropdownMenuContent>

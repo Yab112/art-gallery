@@ -20,8 +20,6 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
     const navigate = useNavigate()
     const isLoggedIn = isAuthenticated
     const [isOpen, setIsOpen] = useState(false)
-    const [showAuth, setShowAuth] = useState(false)
-    const [authView, setAuthView] = useState<"signin" | "signup">("signin")
     const [imageError, setImageError] = useState(false)
 
     // Reset image error when user or image changes
@@ -31,21 +29,6 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
         }
     }, [user?.image, user?.id])
 
-    const handleAuthSwitch = (view: "signin" | "signup") => {
-        setAuthView(view)
-    }
-
-    const handleCloseAuth = () => {
-        setShowAuth(false)
-        setIsOpen(false)
-    }
-
-    const handleLogin = () => {
-        onLogin?.()
-        setShowAuth(false)
-        setIsOpen(false)
-    }
-
     const handleLogout = async () => {
         try {
             await logout()
@@ -54,25 +37,6 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
         } catch (error) {
             console.error("Failed to sign out:", error)
         }
-    }
-
-    if (showAuth) {
-        return (
-            <AuthLayout onClose={handleCloseAuth}>
-                {authView === "signin" ? (
-                    <SigninForm
-                        onSwitchToSignup={() => handleAuthSwitch("signup")}
-                        onForgotPassword={() => {
-                            setShowAuth(false)
-                            setIsOpen(false)
-                            navigate("/forgot-password", { replace: true })
-                        }}
-                    />
-                ) : (
-                    <SignupForm onSwitchToSignin={() => handleAuthSwitch("signin")} />
-                )}
-            </AuthLayout>
-        )
     }
 
     return (
@@ -213,9 +177,8 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                                     <button
                                         className="flex w-full items-center px-4 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-100"
                                         onClick={() => {
-                                            setAuthView("signin")
-                                            setShowAuth(true)
                                             setIsOpen(false)
+                                            navigate("/login")
                                         }}
                                     >
                                         <LogIn className="mr-3 h-4 w-4 text-gray-500" />
@@ -224,9 +187,8 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                                     <button
                                         className="flex w-full items-center px-4 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-100"
                                         onClick={() => {
-                                            setAuthView("signup")
-                                            setShowAuth(true)
                                             setIsOpen(false)
+                                            navigate("/signup")
                                         }}
                                     >
                                         <UserPlus className="mr-3 h-4 w-4 text-gray-500" />
