@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react"
-import { getApiBaseUrl, getFrontendUrl } from "./api-config"
+import { getApiBaseUrl, getBackendOrigin, getFrontendUrl } from "./api-config"
 import {
     captureAuthTokenFromResponse,
     clearBearerToken,
@@ -23,9 +23,10 @@ export const authClient = createAuthClient({
         onSuccess: (ctx) => {
             captureAuthTokenFromResponse(ctx.response)
         },
+        // Only attach bearer when we have a token — empty Bearer breaks cookie auth
         auth: {
             type: "Bearer",
-            token: () => getBearerToken() || "",
+            token: () => getBearerToken() ?? "",
         },
     },
 })
@@ -43,12 +44,22 @@ export const signOut = async (
 // Helper functions for social authentication
 export const signInWithGoogle = async () => {
     try {
-        // Use full frontend URL for callback to ensure proper redirect after OAuth
-        // This ensures Better Auth redirects to the frontend, not the backend
         const frontendUrl = getFrontendUrl()
+        const callbackPath = `${frontendUrl}/auth/callback`
+
+        // Production: Google OAuth hits Render, oauth-handoff redirects back with ?token=
+        // Local dev: same flow when backend has oauth-handoff; otherwise falls back to frontend callback
+        const useOAuthHandoff =
+            import.meta.env.PROD ||
+            import.meta.env.VITE_USE_OAUTH_HANDOFF === "true"
+
+        const callbackURL = useOAuthHandoff
+            ? `${getBackendOrigin()}/api/auth/oauth-handoff?redirect=${encodeURIComponent(callbackPath)}`
+            : callbackPath
+
         await authClient.signIn.social({
             provider: "google",
-            callbackURL: `${frontendUrl}/` // Full frontend URL for proper redirect
+            callbackURL,
         })
     } catch (error) {
         console.error("Google sign-in error:", error)

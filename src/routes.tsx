@@ -19,6 +19,7 @@ import FollowersPage from "./pages/Followers";
 import FollowingPage from "./pages/Following";
 import ForgotPasswordPage from "./pages/ForgotPassword";
 import HowItWorksPage from "./pages/HowItWorks";
+import AuthCallbackPage from "./pages/AuthCallback";
 import LoginPage from "./pages/Login";
 import MyArtworksPage from "./pages/MyArtworks";
 import NoMatch from "./pages/NoMatch";
@@ -167,6 +168,10 @@ export const router = createBrowserRouter([
   {
     path: "/verify-email",
     element: <VerifyEmailPage />,
+  },
+  {
+    path: "/auth/callback",
+    element: <AuthCallbackPage />,
   },
   {
     path: "*",

@@ -1,6 +1,7 @@
 import { AuthLayout } from "@/components/auth/auth-layout"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { authClient } from "@/lib/auth"
+import { captureAuthTokenFromResponse } from "@/lib/bearer-token"
 import { ArrowLeft, CheckCircle, Loader2, Mail } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
@@ -96,6 +97,7 @@ export default function VerifyEmailPage() {
                 // If HTML response, check status code
                 const text = await response.text().catch(() => "")
                 if (response.ok) {
+                    captureAuthTokenFromResponse(response)
                     // Success - better-auth might redirect or return HTML
                     setSuccess(true)
                     setTimeout(() => {
@@ -116,6 +118,8 @@ export default function VerifyEmailPage() {
                 )
                 return
             }
+
+            captureAuthTokenFromResponse(response)
 
             // Success
             setSuccess(true)

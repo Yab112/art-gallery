@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signIn, signInWithGoogle } from "@/lib/auth"
+import { captureAuthTokenFromResponse } from "@/lib/bearer-token"
 import {
     completeAuthRedirect,
     storeAuthRedirect,
@@ -78,7 +79,8 @@ export function SigninForm({
                     rememberMe: data.rememberMe
                 },
                 {
-                    onSuccess: async () => {
+                    onSuccess: async (ctx) => {
+                        captureAuthTokenFromResponse(ctx.response)
                         reset()
                         await completeAuthRedirect(redirectTo)
                     },

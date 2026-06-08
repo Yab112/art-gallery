@@ -60,6 +60,24 @@ export const getServerBaseUrl = (): string => {
 }
 
 /**
+ * Direct backend origin — used ONLY for Google OAuth handoff (browser redirects to Render).
+ * Normal API/auth traffic must go through the frontend origin (Vercel/Vite proxy).
+ */
+export const getBackendOrigin = (): string => {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL
+
+    if (backendUrl && typeof backendUrl === "string" && backendUrl.trim() !== "") {
+        return backendUrl.replace(/\/api\/?$/, "").replace(/\/$/, "")
+    }
+
+    if (import.meta.env.DEV) {
+        return "http://localhost:3000"
+    }
+
+    return "https://art-store-backend-x1bi.onrender.com"
+}
+
+/**
  * Gets the frontend URL for OAuth callbacks
  */
 export const getFrontendUrl = (): string => {

@@ -20,6 +20,7 @@ if (import.meta.env.DEV) {
 /** Paths viewable by guests. Don't redirect to login on 401 here (e.g. shared artwork links). */
 function isPublicPath(pathname: string): boolean {
     if (!pathname || pathname === "/") return true
+    if (/^\/auth\/callback(\/|$)/.test(pathname)) return true
     if (/^\/login(\/|$)/.test(pathname)) return true
     if (/^\/signup(\/|$)/.test(pathname)) return true
     if (/^\/forgot-password(\/|$)/.test(pathname)) return true

@@ -31,37 +31,30 @@ export default defineConfig(({ mode }) => {
           },
           // CRITICAL: Log incoming cookies to verify they're being received
           configure: (proxy, _options) => {
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              // Log the cookie header being sent to backend
-              const cookieHeader = req.headers.cookie;
-              console.log('🔀 [Proxy] Request:', req.method, req.url);
-              console.log('🍪 [Proxy] Cookies being sent:', cookieHeader || 'NONE');
+            const proxyDebug = env.VITE_PROXY_DEBUG === 'true'
 
-              // Ensure cookie header is forwarded
-              if (cookieHeader) {
-                proxyReq.setHeader('Cookie', cookieHeader);
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              if (proxyDebug) {
+                const cookieHeader = req.headers.cookie as string | undefined
+                const hasBetterAuth = cookieHeader?.includes('better-auth.session_token')
+                console.log('🔀 [Proxy] Request:', req.method, req.url, hasBetterAuth ? '(session ✓)' : '(no session)')
               }
-            });
+            })
 
             proxy.on('proxyRes', (proxyRes, req, _res) => {
-              console.log('🔀 [Proxy] Response:', proxyRes.statusCode, req.url);
+              if (proxyDebug) {
+                console.log('🔀 [Proxy] Response:', proxyRes.statusCode, req.url)
+              }
 
-              // Log cookie headers being set by backend
-              const setCookie = proxyRes.headers['set-cookie'];
+              const setCookie = proxyRes.headers['set-cookie']
               if (setCookie) {
-                console.log('🍪 [Proxy] Cookies received from backend:', setCookie);
-
-                // Rewrite cookie domain to localhost for browser
                 if (Array.isArray(setCookie)) {
-                  proxyRes.headers['set-cookie'] = setCookie.map(cookie => {
-                    // Remove domain attribute or set to localhost
-                    return cookie
-                      .replace(/domain=[^;]+;?/gi, '')
-                      .replace(/;(\s*)$/, '$1');
-                  });
+                  proxyRes.headers['set-cookie'] = setCookie.map((cookie) =>
+                    cookie.replace(/domain=[^;]+;?/gi, '').replace(/;(\s*)$/, '$1'),
+                  )
                 }
               }
-            });
+            })
           },
         },
       },
