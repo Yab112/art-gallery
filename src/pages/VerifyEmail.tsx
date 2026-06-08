@@ -171,7 +171,7 @@ export default function VerifyEmailPage() {
 
     if ((success && token) || isVerified) {
         return (
-            <AuthLayout>
+            <AuthLayout variant="page">
                 <div className="w-full space-y-6 text-center">
                     <div className="flex justify-center">
                         <div className="rounded-full bg-green-100 p-3">
@@ -194,7 +194,7 @@ export default function VerifyEmailPage() {
     // Show loading state while verifying with token
     if (isLoading && token) {
         return (
-            <AuthLayout>
+            <AuthLayout variant="page">
                 <div className="w-full space-y-6 text-center">
                     <div className="flex justify-center">
                         <Loader2 className="h-12 w-12 animate-spin text-red-600" />
@@ -211,7 +211,7 @@ export default function VerifyEmailPage() {
     }
 
     return (
-        <AuthLayout>
+        <AuthLayout variant="page">
             <div className="w-full space-y-6">
                 <button
                     onClick={() => navigate("/signup", { replace: true })}

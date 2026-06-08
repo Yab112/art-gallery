@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import { Footer } from "../footer"
 import Header from "../header"
+import { AuthRedirectHandler } from "../auth/auth-redirect-handler"
 
 export function AppLayout() {
     return (
@@ -9,6 +10,7 @@ export function AppLayout() {
             <div className="overflow-x-hidden font-poppins">
                 <ScrollToTop />
                 <ScrollToHash />
+                <AuthRedirectHandler />
                 <Header />
                 <Outlet />
                 <Footer />

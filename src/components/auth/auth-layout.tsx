@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,17 +10,24 @@ import { useEffect, useState } from "react";
 interface AuthLayoutProps {
   children: ReactNode;
   onClose?: () => void;
+  variant?: "page" | "overlay";
 }
 
-export function AuthLayout({ children, onClose }: AuthLayoutProps) {
+export function AuthLayout({
+  children,
+  onClose,
+  variant = "page",
+}: AuthLayoutProps) {
   const navigate = useNavigate();
   const { data } = useArtworks({ limit: 30, isApproved: true });
   const [column1, setColumn1] = useState<any[]>([]);
   const [column2, setColumn2] = useState<any[]>([]);
   const [column3, setColumn3] = useState<any[]>([]);
 
-  // Lock body scroll when auth layout is mounted
+  // Lock body scroll only for overlay modal variant
   useEffect(() => {
+    if (variant !== "overlay") return;
+
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
@@ -28,7 +36,7 @@ export function AuthLayout({ children, onClose }: AuthLayoutProps) {
       document.body.style.overflow = originalStyle;
       document.documentElement.style.overflow = originalStyle;
     };
-  }, []);
+  }, [variant]);
 
   useEffect(() => {
     if (data?.artworks && data.artworks.length > 0) {
@@ -52,7 +60,13 @@ export function AuthLayout({ children, onClose }: AuthLayoutProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] h-svh w-screen overflow-hidden bg-white lg:flex overscroll-none">
+    <div
+      className={cn(
+        "h-svh w-full overflow-hidden bg-white lg:flex overscroll-none",
+        variant === "overlay" && "fixed inset-0 z-[9999]",
+        variant === "page" && "relative min-h-svh",
+      )}
+    >
       {/* Left side - Wider Artistic Animated Artwork Display (62% width) */}
       <div className="relative hidden h-full w-[62%] flex-col justify-between overflow-hidden bg-[#f3f2ef] lg:flex">
         {/* ... animated gallery content ... */}

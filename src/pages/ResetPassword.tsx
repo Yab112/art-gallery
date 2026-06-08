@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
 
     if (success) {
         return (
-            <AuthLayout>
+            <AuthLayout variant="page">
                 <div className="w-full space-y-6 text-center">
                     <div className="flex justify-center">
                         <div className="rounded-full bg-green-100 p-3">
@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
     }
 
     return (
-        <AuthLayout>
+        <AuthLayout variant="page">
             <div className="w-full space-y-6">
                 <div className="space-y-2">
                     <h1 className="font-bold text-3xl text-gray-900">Reset Password</h1>

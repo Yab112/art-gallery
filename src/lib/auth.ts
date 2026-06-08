@@ -1,5 +1,10 @@
 import { createAuthClient } from "better-auth/react"
 import { getApiBaseUrl, getFrontendUrl } from "./api-config"
+import {
+    captureAuthTokenFromResponse,
+    clearBearerToken,
+    getBearerToken,
+} from "./bearer-token"
 
 // Better Auth client configuration
 // Note: baseURL should be the server origin only, not including /api/auth
@@ -13,14 +18,27 @@ if (import.meta.env.DEV) {
 
 export const authClient = createAuthClient({
     baseURL: betterAuthBaseURL,
-    // Enable credentials for cookies (required for cross-origin requests)
     fetchOptions: {
-        credentials: "include"
-    }
+        credentials: "include",
+        onSuccess: (ctx) => {
+            captureAuthTokenFromResponse(ctx.response)
+        },
+        auth: {
+            type: "Bearer",
+            token: () => getBearerToken() || "",
+        },
+    },
 })
 
 // Export auth methods for easy access
-export const { signIn, signUp, signOut, useSession, getSession, changePassword } = authClient
+export const { signIn, signUp, useSession, getSession, changePassword } = authClient
+
+export const signOut = async (
+    options?: Parameters<typeof authClient.signOut>[0],
+) => {
+    clearBearerToken()
+    return authClient.signOut(options)
+}
 
 // Helper functions for social authentication
 export const signInWithGoogle = async () => {

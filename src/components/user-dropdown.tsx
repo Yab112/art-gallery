@@ -3,9 +3,6 @@ import { Heart, LogIn, LogOut, Settings, ShoppingBag, User, UserPlus } from "luc
 import { usePlatformSettings } from "@/queries/settingsQueries"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { AuthLayout } from "./auth/auth-layout"
-import { SigninForm } from "./auth/signin-form"
-import { SignupForm } from "./auth/signup-form"
 import { Button } from "./ui/button"
 
 interface UserDropdownProps {

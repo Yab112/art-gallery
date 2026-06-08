@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider } from "react-router-dom"
 import { Toaster } from "sonner"
+import { BearerTokenBootstrap } from "./components/auth/bearer-token-bootstrap"
 import { DataPrefetcher } from "./components/data-prefetcher"
 import { router } from "./routes"
 
@@ -19,6 +20,7 @@ export default function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <DataPrefetcher />
+            <BearerTokenBootstrap />
             {/* <DefaultMetadata /> */}
             <RouterProvider router={router} />
             <Toaster position="top-right" richColors />

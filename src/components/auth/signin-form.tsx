@@ -4,6 +4,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signIn, signInWithGoogle } from "@/lib/auth"
+import {
+    completeAuthRedirect,
+    storeAuthRedirect,
+} from "@/lib/auth-redirect"
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -18,9 +22,14 @@ interface SigninFormData {
 interface AuthNavigationProps {
     onSwitchToSignup: () => void
     onForgotPassword: () => void
+    redirectTo?: string
 }
 
-export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigationProps) {
+export function SigninForm({
+    onSwitchToSignup,
+    onForgotPassword,
+    redirectTo = "/",
+}: AuthNavigationProps) {
     const [showPassword, setShowPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [isSocialLoading, setIsSocialLoading] = useState(false)
@@ -48,6 +57,7 @@ export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigatio
         setIsSocialLoading(true)
         setError(null)
         try {
+            storeAuthRedirect(redirectTo)
             await signInWithGoogle()
         } catch (err: any) {
             setError(err?.message || "Failed to sign in with Google")
@@ -68,11 +78,9 @@ export function SigninForm({ onSwitchToSignup, onForgotPassword }: AuthNavigatio
                     rememberMe: data.rememberMe
                 },
                 {
-                    onSuccess: () => {
-                        // Success - use window.location for full page reload to ensure cookies are included
-                        // This prevents race condition where session cookie isn't available yet
+                    onSuccess: async () => {
                         reset()
-                        window.location.href = "/"
+                        await completeAuthRedirect(redirectTo)
                     },
                     onError: (ctx) => {
                         // Check if error is due to unverified email (status 403)

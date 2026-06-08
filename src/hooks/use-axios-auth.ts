@@ -1,4 +1,6 @@
 import { getServerBaseUrl } from "@/lib/api-config"
+import { clearBearerToken, getBearerToken } from "@/lib/bearer-token"
+import { isWithinAuthGracePeriod } from "@/lib/auth-redirect"
 import { useSession } from "@/lib/auth"
 import axios, { type AxiosInstance } from "axios"
 import { useEffect } from "react"
@@ -42,23 +44,35 @@ const useAxiosAuth = () => {
     useEffect(() => {
         const requestIntercept = api.interceptors.request.use(
             (config) => {
+                const token = getBearerToken()
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`
+                }
                 return config
             },
-            (error) => Promise.reject(error)
+            (error) => Promise.reject(error),
         )
 
         const responseIntercept = api.interceptors.response.use(
             (response) => response,
             async (error) => {
                 if (error.response?.status === 401) {
-                    if (isPending) return Promise.reject(error)
+                    if (isPending || isWithinAuthGracePeriod()) {
+                        return Promise.reject(error)
+                    }
                     if (session?.user) return Promise.reject(error)
 
                     const currentPath = window.location.pathname
                     if (isPublicPath(currentPath)) {
                         return Promise.reject(error)
                     }
-                    navigate("/login", { replace: true })
+
+                    clearBearerToken()
+
+                    const returnPath = encodeURIComponent(
+                        window.location.pathname + window.location.search,
+                    )
+                    navigate(`/login?redirect=${returnPath}`, { replace: true })
                 }
                 return Promise.reject(error)
             }

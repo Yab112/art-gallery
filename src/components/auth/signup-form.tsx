@@ -7,6 +7,7 @@ import {
   isPasswordValid,
 } from "@/components/ui/password-strength-indicator";
 import { signInWithGoogle, signUp } from "@/lib/auth";
+import { storeAuthRedirect } from "@/lib/auth-redirect";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,9 +23,13 @@ interface SignupFormData {
 
 interface AuthNavigationProps {
   onSwitchToSignin: () => void;
+  redirectTo?: string;
 }
 
-export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
+export function SignupForm({
+  onSwitchToSignin,
+  redirectTo = "/",
+}: AuthNavigationProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +43,7 @@ export function SignupForm({ onSwitchToSignin }: AuthNavigationProps) {
     setIsSocialLoading(true);
     setError(null);
     try {
+      storeAuthRedirect(redirectTo);
       await signInWithGoogle();
     } catch (err: any) {
       setError(err?.message || "Failed to sign up with Google");

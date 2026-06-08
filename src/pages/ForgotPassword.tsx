@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <AuthLayout>
+        <AuthLayout variant="page">
             <div className="w-full space-y-6">
                 <div className="space-y-2">
                     <button

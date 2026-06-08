@@ -2,32 +2,40 @@ import { AuthLayout } from "@/components/auth/auth-layout"
 import { SigninForm } from "@/components/auth/signin-form"
 import { AuthSkeleton } from "@/components/skeletons/auth-skeleton"
 import { useAuth } from "@/hooks/use-auth"
+import { getSafeRedirectPath } from "@/lib/auth-redirect"
 import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 export default function LoginPage() {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const redirectTo = getSafeRedirectPath(searchParams)
     const { isAuthenticated, isLoading } = useAuth()
 
     useEffect(() => {
-        // Redirect if already authenticated
         if (!isLoading && isAuthenticated) {
-            navigate("/", { replace: true })
+            navigate(redirectTo, { replace: true })
         }
-    }, [isAuthenticated, isLoading, navigate])
+    }, [isAuthenticated, isLoading, navigate, redirectTo])
 
     if (isLoading) {
         return <AuthSkeleton />
     }
 
     if (isAuthenticated) {
-        return null // Will redirect
+        return null
     }
 
+    const signupPath =
+        redirectTo === "/"
+            ? "/signup"
+            : `/signup?redirect=${encodeURIComponent(redirectTo)}`
+
     return (
-        <AuthLayout>
+        <AuthLayout variant="page">
             <SigninForm
-                onSwitchToSignup={() => navigate("/signup", { replace: true })}
+                redirectTo={redirectTo}
+                onSwitchToSignup={() => navigate(signupPath, { replace: true })}
                 onForgotPassword={() => navigate("/forgot-password", { replace: true })}
             />
         </AuthLayout>
