@@ -2,7 +2,7 @@ import { AuthSkeleton } from "@/components/skeletons/auth-skeleton"
 import { consumeAuthRedirect } from "@/lib/auth-redirect"
 import { setBearerToken } from "@/lib/bearer-token"
 import { useEffect } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 /**
  * Google OAuth handoff lands here with ?token= from backend oauth-handoff route.
@@ -10,10 +10,9 @@ import { useNavigate, useSearchParams } from "react-router-dom"
  */
 export default function AuthCallbackPage() {
     const navigate = useNavigate()
-    const [searchParams] = useSearchParams()
 
     useEffect(() => {
-        const token = searchParams.get("token")
+        const token = new URLSearchParams(window.location.search).get("token")
 
         if (!token) {
             navigate("/login", { replace: true })
@@ -21,11 +20,12 @@ export default function AuthCallbackPage() {
         }
 
         setBearerToken(token)
+        window.history.replaceState({}, "", window.location.pathname)
         sessionStorage.setItem("authJustCompleted", Date.now().toString())
 
         const redirectTo = consumeAuthRedirect("/")
         navigate(redirectTo, { replace: true })
-    }, [navigate, searchParams])
+    }, [navigate])
 
     return <AuthSkeleton />
 }
