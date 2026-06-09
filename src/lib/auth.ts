@@ -26,7 +26,7 @@ export const authClient = createAuthClient({
         // Only attach bearer when we have a token — empty Bearer breaks cookie auth
         auth: {
             type: "Bearer",
-            token: () => getBearerToken() ?? "",
+            token: () => getBearerToken() ?? undefined,
         },
     },
 })
@@ -37,8 +37,26 @@ export const { signIn, signUp, useSession, getSession, changePassword } = authCl
 export const signOut = async (
     options?: Parameters<typeof authClient.signOut>[0],
 ) => {
+    try {
+        await Promise.race([
+            authClient.signOut(options),
+            new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+        ])
+    } catch (error) {
+        console.warn("Sign out request failed:", error)
+    }
+}
+
+/** Wipe local auth state and force a full page reload (SPA-safe). */
+export function completeLogout() {
     clearBearerToken()
-    return authClient.signOut(options)
+    sessionStorage.removeItem("authJustCompleted")
+    sessionStorage.removeItem("authRedirect")
+
+    const url = new URL(window.location.origin)
+    url.pathname = "/"
+    url.search = `?logout=${Date.now()}`
+    window.location.replace(url.toString())
 }
 
 // Helper functions for social authentication
