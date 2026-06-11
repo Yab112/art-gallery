@@ -1,5 +1,5 @@
 import { getServerBaseUrl } from "@/lib/api-config"
-import { clearBearerToken, getBearerToken } from "@/lib/bearer-token"
+import { clearBearerToken, getBearerToken, setBearerToken } from "@/lib/bearer-token"
 import { isWithinAuthGracePeriod } from "@/lib/auth-redirect"
 import { useSession } from "@/lib/auth"
 import axios, { type AxiosInstance } from "axios"
@@ -47,15 +47,13 @@ const useAxiosAuth = () => {
         const params = new URLSearchParams(window.location.search)
         const urlToken = params.get("token")
         if (urlToken) {
-            localStorage.setItem("better-auth_session_token", urlToken)
-            // Remove token from URL to keep it clean
+            setBearerToken(urlToken)
             window.history.replaceState({}, document.title, window.location.pathname)
         }
 
         const requestIntercept = api.interceptors.request.use(
             (config) => {
-                // Read the bearer token stored by the bearerClient plugin
-                const token = localStorage.getItem("better-auth_session_token") || localStorage.getItem("better-auth.session_token")
+                const token = getBearerToken()
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`
                 }
@@ -65,7 +63,13 @@ const useAxiosAuth = () => {
         )
 
         const responseIntercept = api.interceptors.response.use(
-            (response) => response,
+            (response) => {
+                // Capture the bearer token from the set-auth-token header if present
+                if (response.headers["set-auth-token"]) {
+                    setBearerToken(response.headers["set-auth-token"])
+                }
+                return response
+            },
             async (error) => {
                 if (error.response?.status === 401) {
                     if (isPending || isWithinAuthGracePeriod()) {
