@@ -43,9 +43,19 @@ const useAxiosAuth = () => {
     const { data: session, isPending } = useSession()
 
     useEffect(() => {
+        // Capture token from URL if it exists (for OAuth redirects)
+        const params = new URLSearchParams(window.location.search)
+        const urlToken = params.get("token")
+        if (urlToken) {
+            localStorage.setItem("better-auth_session_token", urlToken)
+            // Remove token from URL to keep it clean
+            window.history.replaceState({}, document.title, window.location.pathname)
+        }
+
         const requestIntercept = api.interceptors.request.use(
             (config) => {
-                const token = getBearerToken()
+                // Read the bearer token stored by the bearerClient plugin
+                const token = localStorage.getItem("better-auth_session_token") || localStorage.getItem("better-auth.session_token")
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`
                 }
