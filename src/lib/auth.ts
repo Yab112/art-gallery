@@ -1,10 +1,6 @@
 import { createAuthClient } from "better-auth/react"
 import { getApiBaseUrl, getBackendOrigin, getFrontendUrl } from "./api-config"
-import {
-    captureAuthTokenFromResponse,
-    clearBearerToken,
-    getBearerToken,
-} from "./bearer-token"
+import { captureAuthTokenFromResponse } from "./bearer-token"
 
 // Better Auth client configuration
 // Note: baseURL should be the server origin only, not including /api/auth
@@ -18,17 +14,10 @@ if (import.meta.env.DEV) {
 
 export const authClient = createAuthClient({
     baseURL: betterAuthBaseURL,
-
     fetchOptions: {
         credentials: "include",
-
         onSuccess: (ctx) => {
             captureAuthTokenFromResponse(ctx.response)
-        },
-        // Only attach bearer when we have a token — empty Bearer breaks cookie auth
-        auth: {
-            type: "Bearer",
-            token: () => getBearerToken() ?? undefined,
         },
     },
 })
