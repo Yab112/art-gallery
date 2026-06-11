@@ -1,5 +1,5 @@
 import { getServerBaseUrl } from "@/lib/api-config"
-import { clearBearerToken, getBearerToken, setBearerToken } from "@/lib/bearer-token"
+import { clearBearerToken, getBearerToken } from "@/lib/bearer-token"
 import { isWithinAuthGracePeriod } from "@/lib/auth-redirect"
 import { useSession } from "@/lib/auth"
 import axios, { type AxiosInstance } from "axios"
@@ -43,17 +43,19 @@ const useAxiosAuth = () => {
     const { data: session, isPending } = useSession()
 
     useEffect(() => {
-        // Capture token from URL if it exists (for OAuth redirects)
-        const params = new URLSearchParams(window.location.search)
-        const urlToken = params.get("token")
-        if (urlToken) {
-            setBearerToken(urlToken)
-            window.history.replaceState({}, document.title, window.location.pathname)
-        }
+
+
+
+
+
+
+
+
 
         const requestIntercept = api.interceptors.request.use(
             (config) => {
                 const token = getBearerToken()
+
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`
                 }
@@ -63,13 +65,7 @@ const useAxiosAuth = () => {
         )
 
         const responseIntercept = api.interceptors.response.use(
-            (response) => {
-                // Capture the bearer token from the set-auth-token header if present
-                if (response.headers["set-auth-token"]) {
-                    setBearerToken(response.headers["set-auth-token"])
-                }
-                return response
-            },
+            (response) => response,
             async (error) => {
                 if (error.response?.status === 401) {
                     if (isPending || isWithinAuthGracePeriod()) {
@@ -102,4 +98,4 @@ const useAxiosAuth = () => {
     return api
 }
 
-export default useAxiosAuth
+export default useAxiosAuth;
