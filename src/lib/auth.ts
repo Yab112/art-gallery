@@ -18,9 +18,19 @@ if (import.meta.env.DEV) {
 
 export const authClient = createAuthClient({
     baseURL: betterAuthBaseURL,
+
     fetchOptions: {
-        credentials: "include"
-    }
+        credentials: "include",
+
+        onSuccess: (ctx) => {
+            captureAuthTokenFromResponse(ctx.response)
+        },
+        // Only attach bearer when we have a token — empty Bearer breaks cookie auth
+        auth: {
+            type: "Bearer",
+            token: () => getBearerToken() ?? undefined,
+        },
+    },
 })
 
 // Export auth methods for easy access
@@ -79,4 +89,4 @@ export const signInWithGoogle = async () => {
 
 // Export types
 export type Session = typeof authClient.$Infer.Session
-export type User = Session["user"]
+export type User = Session["user"];
