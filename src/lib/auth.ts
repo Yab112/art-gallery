@@ -18,17 +18,16 @@ if (import.meta.env.DEV) {
 
 export const authClient = createAuthClient({
     baseURL: betterAuthBaseURL,
+    // Enable credentials for cookies (fallback for same-origin or local dev)
     fetchOptions: {
         credentials: "include",
+        // Extract token manually since we don't have the bearerClient plugin in this version
         onSuccess: (ctx) => {
-            captureAuthTokenFromResponse(ctx.response)
-        },
-        // Only attach bearer when we have a token — empty Bearer breaks cookie auth
-        auth: {
-            type: "Bearer",
-            token: () => getBearerToken() ?? undefined,
-        },
-    },
+            if (ctx.data && typeof ctx.data === 'object' && 'token' in ctx.data && typeof ctx.data.token === 'string') {
+                localStorage.setItem("better-auth_session_token", ctx.data.token);
+            }
+        }
+    }
 })
 
 // Export auth methods for easy access
