@@ -9,6 +9,7 @@ export interface OrderItem {
     price: number
     artwork?: {
         id: string
+        userId?: string
         title?: string
         artist?: string
         photos?: string[]
@@ -21,11 +22,46 @@ export interface OrderItem {
     }
 }
 
+export interface ShipmentEvent {
+    id: string
+    shipmentId: string
+    status: string
+    description: string
+    location?: string | null
+    timestamp: string
+    createdAt: string
+}
+
+export interface OrderShipment {
+    id: string
+    orderId: string
+    artistId: string
+    trackingNumber?: string | null
+    masterTrackingId?: string | null
+    labelUrl?: string | null
+    serviceType: string
+    status: string
+    failureReason?: string | null
+    estimatedDelivery?: string | null
+    createdAt: string
+    updatedAt: string
+    events?: ShipmentEvent[]
+}
+
+export interface DeliveryConfirmationSummary {
+    id: string
+    orderId: string
+    hasDispute: boolean
+    disputeReason?: string | null
+    disputeNote?: string | null
+    confirmedAt: string
+}
+
 export interface Order {
     id: string
     buyerEmail: string
     totalAmount: number | string
-    status: "PENDING" | "PAID" | "CANCELLED" | "REFUNDED"
+    status: "PENDING" | "PAID" | "COMPLETED" | "CANCELLED" | "REFUNDED" | "DISPUTED"
     createdAt: string
     updatedAt: string
     items: OrderItem[]
@@ -35,6 +71,9 @@ export interface Order {
         amount: number | string
         metadata?: any
     }
+    shipments?: OrderShipment[]
+    deliveryConfirmation?: DeliveryConfirmationSummary | null
+    dispute?: any
 }
 
 export interface OrdersResponse {
@@ -108,5 +147,37 @@ export const useUserOrders = () => {
         refetchOnMount: true, // Refetch when component mounts
         refetchOnWindowFocus: true, // Refetch when window regains focus
         retry: 2
+    })
+}
+
+export const useOrder = (id?: string) => {
+    const axiosAuth = useAxiosAuth()
+
+    return useQuery<Order>({
+        queryKey: ["order", id],
+        queryFn: async () => {
+            if (!id) throw new Error("Order ID is required")
+            
+            // Re-using the my-orders endpoint and finding it locally
+            // since we don't have a single order endpoint yet in the controller,
+            // or if we do, we can call it. Let's assume we can call my-orders and filter.
+            const response = await axiosAuth.get<Order[]>("orders/my-orders")
+            
+            let orders: Order[] = []
+            if (Array.isArray(response.data)) {
+                orders = response.data
+            } else if (response.data && typeof response.data === "object" && "data" in response.data) {
+                orders = (response.data as any).data
+            } else if (response.data && typeof response.data === "object" && "orders" in response.data) {
+                orders = (response.data as any).orders
+            }
+
+            const order = orders.find(o => o.id === id)
+            if (!order) {
+                throw new Error("Order not found")
+            }
+            return order
+        },
+        enabled: !!id,
     })
 }

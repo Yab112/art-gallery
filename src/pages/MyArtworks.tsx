@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { PaginationControls } from "@/components/ui/pagination-controls"
+import { getArtworkPhotoUrl } from "@/lib/utils/artwork-photo"
 import { useMyArtworks } from "@/queries/artworkQueries"
 import { artworkKeys } from "@/queries/queryKeys"
 import { useDeleteArtwork } from "@/services/artwork/useDeleteArtwork"
@@ -121,7 +122,7 @@ export default function MyArtworksPage() {
                                     <div key={artwork.id} className="group relative">
                                         <ArtworkCard
                                             id={artwork.id}
-                                            image={artwork.photos?.[0] || "/placeholder.svg"}
+                                            image={getArtworkPhotoUrl(artwork.photos)}
                                             title={artwork.title || "Untitled"}
                                             artist={artwork.artist}
                                             price={`$${artwork.desiredPrice?.toLocaleString() || "0"}`}

@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
+import { useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 
 interface SettingsFormData {
@@ -44,6 +45,7 @@ export default function SettingsPage() {
     const { user: sessionUser } = useAuth()
     const { data: profileData, isLoading, error } = useMyProfile()
     const { updateProfile, isUpdating } = useUpdateProfile()
+    const [searchParams] = useSearchParams()
     const [activeTab, setActiveTab] = useState<
         | "profile"
         | "security"
@@ -58,6 +60,22 @@ export default function SettingsPage() {
     const [showNewPassword, setShowNewPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordError, setPasswordError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const tab = searchParams.get("tab")
+        const allowed = new Set([
+            "profile",
+            "security",
+            "earnings",
+            "withdrawals",
+            "billing-payments",
+            "payment-method",
+            "transactions",
+        ])
+        if (tab && allowed.has(tab)) {
+            setActiveTab(tab as typeof activeTab)
+        }
+    }, [searchParams])
 
     const profile = profileData?.profile || sessionUser
 

@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { MinimalButton } from "@/components/ui/minimal-button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
+import { getArtworkPhotoUrl } from "@/lib/utils/artwork-photo";
 import { useMyArtworks } from "@/queries/artworkQueries";
 import { useMyCollections } from "@/queries/collectionQueries";
 import { useFollowing } from "@/queries/followQueries";
@@ -67,6 +68,7 @@ import {
   Images,
   MapPin,
   Mountain,
+  Package,
   Phone,
   Plus,
   Share2,
@@ -76,8 +78,11 @@ import {
   User,
   X,
   ChevronDown,
+  Palette,
+  Users,
 } from "lucide-react";
-import { Palette, Users } from "lucide-react";
+import { ShippingAddressForm } from "@/components/profile/ShippingAddressForm";
+import { ShipmentsTab } from "@/components/profile/shipments-tab";
 import { useRef, useState, useEffect } from "react";
 import {
   Link,
@@ -127,7 +132,6 @@ export default function ProfilePage() {
   };
   const [sortBy, setSortBy] = useState("newest");
   const [medium, setMedium] = useState("");
-  const [artworkStatus, setArtworkStatus] = useState("APPROVED");
   const [page, setPage] = useState(1);
 
   // Blog Edit Sheet State
@@ -162,7 +166,7 @@ export default function ProfilePage() {
   } = useMyArtworks({
     page: activeTab === "artworks" ? page : 1,
     limit: 12,
-    status: artworkStatus === "ALL" ? undefined : artworkStatus,
+    status: isViewingOtherProfile ? "APPROVED" : undefined,
     technique: medium || undefined,
     sortBy:
       sortBy === "price-low" || sortBy === "price-high"
@@ -642,12 +646,15 @@ export default function ProfilePage() {
                                 alt={user.name || "User"}
                                 className="h-8 min-h-[2rem] w-8 min-w-[2rem] rounded-full border-2 border-white bg-gray-200 object-cover transition-transform hover:scale-110"
                                 onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = getAvatarUrl(
+                                  const target = e.target as HTMLImageElement
+                                  const fallback = getAvatarUrl(
                                     null,
                                     user.name || "User",
                                     40,
-                                  );
+                                  )
+                                  if (target.src !== fallback) {
+                                    target.src = fallback
+                                  }
                                 }}
                                 loading="lazy"
                               />
@@ -734,6 +741,7 @@ export default function ProfilePage() {
                     { id: "collections", label: "Collections" },
                     { id: "blogs", label: "Blogs" },
                     { id: "about", label: "About" },
+                    { id: "shipments", label: "Shipments" },
                     { id: "settings", label: "Settings" },
                   ]
                 : [
@@ -780,7 +788,8 @@ export default function ProfilePage() {
                           <Link to={`/artwork/${artwork.id}`} className="block">
                             <ArtworkCard
                               id={artwork.id}
-                              image={artwork.photos?.[0] || "/placeholder.svg"}
+                              disableNavigation
+                              image={getArtworkPhotoUrl(artwork.photos)}
                               title={artwork.title || "Untitled"}
                               artist={artwork.artist || "Unknown"}
                               price={`$${artwork.desiredPrice?.toLocaleString() || "0"}`}
@@ -1537,6 +1546,20 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  {/* Shipping Address */}
+                  {searchParams.get("from") === "checkout" && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p>
+                        You came here from checkout. Update your saved shipping address,
+                        then return to continue your order.
+                      </p>
+                      <Button size="sm" className="bg-amber-700 hover:bg-amber-800 text-white shrink-0" asChild>
+                        <Link to="/checkout">Return to checkout</Link>
+                      </Button>
+                    </div>
+                  )}
+                  <ShippingAddressForm profile={profile} />
+
                   {/* Preferences */}
                   <div className="rounded-md border border-gray-100 bg-white p-6">
                     <h2 className="mb-6 font-medium text-gray-900 text-lg">
@@ -1592,6 +1615,11 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* SHIPMENTS TAB */}
+            {activeTab === "shipments" && !isViewingOtherProfile && (
+              <ShipmentsTab />
             )}
           </div>
         </div>

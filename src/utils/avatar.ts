@@ -1,11 +1,7 @@
 /**
- * Generates a placeholder avatar URL using UI Avatars service
- * @param name - The name to use for generating the avatar
- * @param size - The size of the avatar (default: 200)
- * @returns URL string for the placeholder avatar
+ * Generates a placeholder avatar as an inline SVG data URI (no network request).
  */
 export function getPlaceholderAvatar(name = "User", size = 200): string {
-    // Clean the name and get initials
     const initials =
         name
             .split(" ")
@@ -14,16 +10,15 @@ export function getPlaceholderAvatar(name = "User", size = 200): string {
             .toUpperCase()
             .slice(0, 2) || "U"
 
-    // Use UI Avatars service with a stable background color based on name
-    // This prevents flickering from random background changes
-    const encodedName = encodeURIComponent(name)
-    // Generate a consistent color based on the name hash
     const hash = name.split("").reduce((acc, char) => {
         return char.charCodeAt(0) + ((acc << 5) - acc)
     }, 0)
-    const color = Math.abs(hash % 360) // Use hue value for consistent color
+    const hue = Math.abs(hash % 360)
+    const fontSize = Math.round(size * 0.38)
 
-    return `https://ui-avatars.com/api/?name=${encodedName}&size=${size}&background=${color}&color=fff&bold=true&format=png`
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="hsl(${hue},65%,45%)"/><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="${fontSize}" font-weight="600">${initials}</text></svg>`
+
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
 
 /**

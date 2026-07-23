@@ -81,6 +81,10 @@ export function ArtworkCard({
         setLocalIsFavorited(serverIsFavorited)
     }, [serverIsFavorited])
 
+    useEffect(() => {
+        setImageError(false)
+    }, [image])
+
     // Use local state for immediate UI feedback, fallback to server state
     const isFavorited = localIsFavorited
 

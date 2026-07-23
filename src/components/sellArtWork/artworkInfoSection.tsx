@@ -207,6 +207,7 @@ export function ArtworkInfoSection({ control, errors }: ArtworkInfoSectionProps)
                         description={
                             errors.dimensions?.height?.message ||
                             errors.dimensions?.width?.message ||
+                            errors.dimensions?.depth?.message ||
                             (errors.dimensions as any)?.message
                         }
                     >
@@ -238,7 +239,7 @@ export function ArtworkInfoSection({ control, errors }: ArtworkInfoSectionProps)
                                 control={control}
                                 render={({ field }) => (
                                     <Input
-                                        placeholder="Depth"
+                                        placeholder="Depth*"
                                         value={field.value || ""}
                                         onChange={field.onChange}
                                     />

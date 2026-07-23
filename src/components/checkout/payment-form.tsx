@@ -1,214 +1,283 @@
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { useCheckout } from "@/contexts/CheckoutContext"
-import { useGetPaymentMethodPreference } from "@/services/settings/usePaymentMethodPreference"
-import { Lock } from "lucide-react"
-import { useEffect, useState } from "react"
-// import { StripePayment } from "./stripe-payment";
+import { groupCartItemsBySeller } from "@/lib/checkout-sellers"
+import { useCartItems } from "@/queries/cartQueries"
+import {
+    type CheckoutPaymentMethod,
+    useAvailableCheckoutMethods,
+} from "@/services/checkout/useAvailableCheckoutMethods"
+import { useMyProfile } from "@/queries/userQueries"
+import { motion } from "framer-motion"
+import { ArrowRight, Lock, MapPin, Plane } from "lucide-react"
+import { useEffect, useMemo } from "react"
+import { Link } from "react-router-dom"
 
 interface PaymentFormProps {
     onNext: () => void
-    onPrevious: () => void
 }
 
-export function PaymentForm({ onNext, onPrevious }: PaymentFormProps) {
-    const { paymentData, setPaymentData } = useCheckout()
-    const { data: preference } = useGetPaymentMethodPreference()
+const SETTINGS_BILLING_PATH =
+    "/settings?tab=billing-payments&from=checkout"
 
-    // Use user's preferred payment method as default, fallback to paymentData or 'paypal'
-    const defaultMethod = preference?.paymentMethodPreference || paymentData?.provider || "paypal"
-    const [paymentMethod, setPaymentMethod] = useState<"chapa" | "paypal">(
-        defaultMethod as "chapa" | "paypal"
-    )
+const METHOD_COPY = {
+    chapa: {
+        id: "chapa" as const,
+        title: "Chapa",
+        currency: "ETB",
+        subtitle: "Pay in Ethiopian Birr (USD total converted at checkout)",
+        icon: MapPin,
+        ring: "ring-emerald-700/40",
+        accent: "from-emerald-800/90 to-stone-900",
+    },
+    paypal: {
+        id: "paypal" as const,
+        title: "PayPal",
+        currency: "USD",
+        subtitle: "Pay in US Dollars",
+        icon: Plane,
+        ring: "ring-red-700/35",
+        accent: "from-slate-800 to-stone-900",
+    },
+}
 
-    // Update payment method when preference loads
+function SellerPaymentSection({
+    sellerId,
+    sellerName,
+    artworkIds,
+    country,
+}: {
+    sellerId: string
+    sellerName: string
+    artworkIds: string[]
+    country?: string | null
+}) {
+    const {
+        sellerCheckouts,
+        setSellerPaymentMethod,
+        ensureSellerCheckout,
+    } = useCheckout()
+
+    const { data: resolved, isLoading, isError, isFetching } =
+        useAvailableCheckoutMethods(artworkIds, country)
+
     useEffect(() => {
-        if (preference?.paymentMethodPreference && !paymentData?.provider) {
-            setPaymentMethod(preference.paymentMethodPreference as "chapa" | "paypal")
+        ensureSellerCheckout(sellerId)
+    }, [sellerId, ensureSellerCheckout])
+
+    const available = resolved?.availableMethods || []
+    const selected = sellerCheckouts[sellerId]?.paymentMethod || null
+
+    useEffect(() => {
+        if (!available.length) {
+            if (selected) setSellerPaymentMethod(sellerId, null)
+            return
         }
-    }, [preference, paymentData])
+        if (selected && available.includes(selected)) return
+        setSellerPaymentMethod(sellerId, available[0])
+    }, [available.join(","), selected, sellerId, setSellerPaymentMethod])
 
+    const sellerMethodsForListing = useMemo(() => {
+        if (!resolved) return [] as CheckoutPaymentMethod[]
+        // Listing is always USD; any connected seller payout rail can apply
+        return (resolved.sellerCapabilities || []) as CheckoutPaymentMethod[]
+    }, [resolved])
 
+    const incompatibleCopy = useMemo(() => {
+        const methods = sellerMethodsForListing
+        if (methods.length === 0) {
+            return {
+                body: "This seller has no payout method connected yet.",
+                cta: "Go to Billing & Payments",
+            }
+        }
+        if (methods.length === 1) {
+            const name = methods[0] === "paypal" ? "PayPal" : "Chapa"
+            return {
+                body: `This seller accepts ${name}. They need ${name} connected to receive payment.`,
+                cta: "Go to Billing & Payments",
+            }
+        }
+        return {
+            body: "This seller accepts PayPal or Chapa, but none match your available payment methods for this checkout.",
+            cta: "Go to Billing & Payments",
+        }
+    }, [sellerMethodsForListing])
 
+    const showLoading = (isLoading || isFetching) && !resolved
+    const showIncompatible = Boolean(resolved && !resolved.compatible)
+    const showHardError = isError && !resolved
 
+    return (
+        <section className="border border-stone-200/90 bg-white/70 p-4 sm:p-5">
+            <div className="flex items-baseline justify-between gap-3">
+                <div>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-stone-500">
+                        Seller
+                    </p>
+                    <h3 className="mt-1 font-lexend text-lg font-semibold text-stone-900">
+                        {sellerName}
+                    </h3>
+                </div>
+                {resolved?.listingCurrency && (
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-red-800">
+                        {resolved.listingCurrency}
+                    </span>
+                )}
+            </div>
 
+            {showLoading && (
+                <p className="mt-4 text-sm text-stone-500">Resolving methods…</p>
+            )}
+            {showHardError && (
+                <p className="mt-4 text-sm text-red-700">
+                    Payment methods unavailable. Refresh and try again.
+                </p>
+            )}
+            {showIncompatible && (
+                <div className="mt-4 border border-amber-200 bg-amber-50/80 px-3 py-3 text-sm text-amber-950">
+                    <p className="font-lexend font-semibold">
+                        No matching payment method
+                    </p>
+                    <p className="mt-1 text-amber-900/90">{incompatibleCopy.body}</p>
+                    <Button
+                        asChild
+                        size="sm"
+                        className="mt-3 rounded-sm bg-stone-900 text-white hover:bg-stone-800"
+                    >
+                        <Link to={SETTINGS_BILLING_PATH}>
+                            {incompatibleCopy.cta}
+                        </Link>
+                    </Button>
+                </div>
+            )}
+
+            {available.length > 0 && (
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {available.map((id) => {
+                        const method = METHOD_COPY[id]
+                        const isSelected = selected === method.id
+                        const Icon = method.icon
+                        return (
+                            <button
+                                key={method.id}
+                                type="button"
+                                onClick={() =>
+                                    setSellerPaymentMethod(sellerId, method.id)
+                                }
+                                className={`relative overflow-hidden rounded-md border px-3 py-4 text-left transition ${
+                                    isSelected
+                                        ? `border-stone-900 bg-stone-950 text-white ring-2 ${method.ring}`
+                                        : "border-stone-200 bg-white text-stone-900 hover:border-stone-400"
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                        <p className="font-lexend text-base font-semibold">
+                                            {method.title}
+                                        </p>
+                                        <p
+                                            className={`mt-0.5 text-xs ${
+                                                isSelected
+                                                    ? "text-stone-300"
+                                                    : "text-stone-500"
+                                            }`}
+                                        >
+                                            {method.subtitle}
+                                        </p>
+                                    </div>
+                                    <Icon className="h-4 w-4 shrink-0 opacity-80" />
+                                </div>
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
+        </section>
+    )
+}
+
+export function PaymentForm({ onNext }: PaymentFormProps) {
+    const { shippingData, selectedCartItemIds, sellerCheckouts } = useCheckout()
+    const { data: cartData } = useCartItems(1, 50)
+    const { data: profileResponse } = useMyProfile()
+
+    const buyerCountry =
+        shippingData?.country ||
+        profileResponse?.profile?.addressCountry ||
+        null
+
+    const sellerGroups = useMemo(() => {
+        const items = (cartData?.items || []).filter((i) =>
+            selectedCartItemIds.has(i.id),
+        )
+        return groupCartItemsBySeller(items)
+    }, [cartData?.items, selectedCartItemIds])
+
+    const allReady =
+        sellerGroups.length > 0 &&
+        sellerGroups.every((g) => {
+            const method = sellerCheckouts[g.sellerId]?.paymentMethod
+            return Boolean(method)
+        })
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        // Save payment data to context
-        setPaymentData({
-            provider: paymentMethod as "chapa" | "paypal",
-        })
+        if (!allReady) return
         onNext()
     }
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="mb-2 font-bold text-2xl text-gray-900">Payment Information</h2>
-                <p className="text-gray-600">
-                    Choose your preferred payment method and enter your details.
+        <div className="font-poppins">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-red-800/80">
+                    Step 1 · How you pay
                 </p>
-            </div>
+                <h2 className="mt-2 font-lexend text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
+                    Choose your path
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-stone-600">
+                    Each seller is paid separately. Pick a payment method for every
+                    seller below — USD listings; Chapa charges ETB via a locked quote.
+                </p>
+            </motion.div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Payment Method Selection */}
-                <div>
-                    <Label className="font-medium text-base">Payment Method</Label>
-                    <div className="mt-3 space-y-3">
-                        <div className="flex items-center space-x-3">
-                            <input
-                                type="radio"
-                                id="chapa"
-                                name="paymentMethod"
-                                value="chapa"
-                                checked={paymentMethod === "chapa"}
-                                onChange={(e) =>
-                                    setPaymentMethod(e.target.value as "chapa" | "paypal")
-                                }
-                                className="h-4 w-4 flex-shrink-0 border-gray-300 text-red-600 focus:ring-red-500"
-                            />
-                            <Label
-                                htmlFor="chapa"
-                                className="flex cursor-pointer items-start gap-2 leading-tight"
-                            >
-                                <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="#00A86B">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-                                </svg>
-                                <span>Chapa (Mobile Money, Bank Transfer)</span>
-                            </Label>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <input
-                                type="radio"
-                                id="paypal"
-                                name="paymentMethod"
-                                value="paypal"
-                                checked={paymentMethod === "paypal"}
-                                onChange={(e) =>
-                                    setPaymentMethod(e.target.value as "chapa" | "paypal")
-                                }
-                                className="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500"
-                            />
-                            <Label htmlFor="paypal" className="cursor-pointer">
-                                PayPal (International)
-                            </Label>
-                        </div>
+            {sellerGroups.length === 0 ? (
+                <p className="mt-8 text-sm text-stone-500">
+                    Select items in your bag to continue.
+                </p>
+            ) : (
+                <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+                    {sellerGroups.map((g) => (
+                        <SellerPaymentSection
+                            key={g.sellerId}
+                            sellerId={g.sellerId}
+                            sellerName={g.sellerName}
+                            artworkIds={g.artworkIds}
+                            country={buyerCountry}
+                        />
+                    ))}
 
+                    <div className="flex flex-col gap-4 border-t border-stone-200/80 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="flex items-center gap-2 text-xs text-stone-500">
+                            <Lock className="h-3.5 w-3.5 text-stone-400" />
+                            Encrypted checkout · we never store card details
+                        </p>
+                        <Button
+                            type="submit"
+                            size="sm"
+                            disabled={!allReady}
+                            className="group h-9 rounded-sm bg-red-700 px-4 text-sm font-medium text-white transition hover:bg-red-800 disabled:opacity-50"
+                        >
+                            Continue to shipping
+                            <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                        </Button>
                     </div>
-                </div>
-
-                {paymentMethod === "chapa" && (
-                    <div className="space-y-4">
-                        <div className="rounded-lg border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6">
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-full bg-green-100 p-2">
-                                    <svg
-                                        className="h-6 w-6 text-green-600"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                    >
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="mb-2 font-semibold text-green-900">
-                                        Pay with Chapa - Ethiopia's Payment Gateway
-                                    </h3>
-                                    <p className="mb-3 text-green-700 text-sm">
-                                        You'll be redirected to Chapa's secure checkout to complete
-                                        your payment using:
-                                    </p>
-                                    <ul className="ml-4 list-disc space-y-1 text-green-700 text-sm">
-                                        <li>Telebirr</li>
-                                        <li>CBE Birr</li>
-                                        <li>Local Bank Accounts</li>
-                                        <li>International Cards (Visa, Mastercard)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-
-
-
-                {paymentMethod === "paypal" && (
-                    <div className="space-y-4">
-                        <div className="rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="rounded-full bg-white p-2 shadow-sm">
-                                    <svg
-                                        className="h-8 w-8"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <path
-                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
-                                            fill="#003087"
-                                        />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="mb-2 font-semibold text-blue-900 text-lg">
-                                        International Payment via PayPal
-                                    </h3>
-                                    <p className="mb-4 text-blue-700 text-sm leading-relaxed">
-                                        You've selected PayPal for your international transaction.
-                                        Here's what will happen:
-                                    </p>
-                                    <ul className="mb-4 ml-4 list-disc space-y-2 text-blue-700 text-sm">
-                                        <li>Securely login to your PayPal account</li>
-                                        <li>
-                                            Choose your preferred funding source (Balance, Bank, or
-                                            Card)
-                                        </li>
-                                        <li>Review the currency conversion and total amount</li>
-                                        <li>Instant verification and order processing</li>
-                                    </ul>
-                                    <p className="text-blue-600 text-xs italic">
-                                        Note: You will be redirected to PayPal's secure portal after
-                                        clicking "Continue to Review" and proceeding to the final
-                                        step.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-center">
-                            <p className="mb-4 flex items-center justify-center gap-2 text-gray-500 text-sm">
-                                <img src="/paypal.png" alt="PayPal" className="h-4 w-auto" />
-                                Trusted by millions worldwide
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Security Notice */}
-                <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-4 text-gray-600 text-sm">
-                    <Lock className="h-4 w-4 text-green-600" />
-                    <span>
-                        Your payment information is encrypted and secure. We never store your card
-                        details.
-                    </span>
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex gap-4 pt-6">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onPrevious}
-                        className="flex-1 bg-white"
-                    >
-                        Previous
-                    </Button>
-                    <Button type="submit" className="flex-1 bg-red-700 text-white hover:bg-red-800">
-                        Continue to Review
-                    </Button>
-                </div>
-            </form>
+                </form>
+            )}
         </div>
     )
 }

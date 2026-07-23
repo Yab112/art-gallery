@@ -33,6 +33,8 @@ import SignupPage from "./pages/Signup";
 import VerifyEmailPage from "./pages/VerifyEmail";
 import SellArtPage from "./pages/sellArt";
 import ProfilePage from "./pages/Profile";
+import DeliveryConfirmPage from "./pages/DeliveryConfirm";
+import ConfirmReturnPage from "./pages/ConfirmReturn";
 
 export const router = createBrowserRouter([
   {
@@ -130,6 +132,14 @@ export const router = createBrowserRouter([
       {
         path: "orders",
         element: <OrdersPage />,
+      },
+      {
+        path: "delivery-confirm/:orderId",
+        element: <DeliveryConfirmPage />,
+      },
+      {
+        path: "confirm-return/:disputeId",
+        element: <ConfirmReturnPage />,
       },
       {
         path: "settings",

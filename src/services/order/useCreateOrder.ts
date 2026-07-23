@@ -1,6 +1,7 @@
 import { getApiBaseUrl } from "@/lib/api-config"
 import { useMutation } from "@tanstack/react-query"
 import axios from "axios"
+import { ShippingOption } from "@/contexts/CheckoutContext"
 
 export interface OrderItem {
     artworkId: string
@@ -22,7 +23,10 @@ export interface CreateOrderParams {
     buyerEmail: string
     shippingAddress: ShippingAddress
     paymentMethod: "chapa" | "paypal" | "card"
+    /** Explicit charge currency — required; never infer from provider alone. */
+    currency: "USD" | "ETB"
     items: OrderItem[]
+    shippingOption?: ShippingOption | null
 }
 
 export interface CreateOrderResponse {

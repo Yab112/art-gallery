@@ -5,7 +5,7 @@ import axios from "axios"
 export interface InitializePaymentParams {
     provider: "chapa" | "paypal" | "card"
     amount: number
-    currency?: "ETB" | "USD"
+    currency: "ETB" | "USD"
     email: string
     firstName?: string
     lastName?: string

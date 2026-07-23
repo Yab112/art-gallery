@@ -304,12 +304,15 @@ export function ArtistProfileEnhanced({
                                                                 onError={(e) => {
                                                                     const target =
                                                                         e.target as HTMLImageElement
-                                                                    target.src = getAvatarUrl(
+                                                                    const fallback = getAvatarUrl(
                                                                         null,
                                                                         followingUser.name ||
-                                                                        "User",
-                                                                        40
+                                                                            "User",
+                                                                        40,
                                                                     )
+                                                                    if (target.src !== fallback) {
+                                                                        target.src = fallback
+                                                                    }
                                                                 }}
                                                                 loading="lazy"
                                                             />

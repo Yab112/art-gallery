@@ -1,4 +1,5 @@
 import type { Artwork } from "@/types/artwork.types"
+import { getArtworkPhotoUrl } from "@/lib/utils/artwork-photo"
 
 export interface ArtworkCardProps {
     id: string
@@ -18,8 +19,7 @@ export interface ArtworkCardProps {
  */
 export function mapArtworkToCardProps(artwork: Artwork): ArtworkCardProps {
     // Get the first photo as the main image, or use a placeholder
-    const image =
-        artwork.photos && artwork.photos.length > 0 ? artwork.photos[0] : "/placeholder.svg"
+    const image = getArtworkPhotoUrl(artwork.photos)
 
     // Format price with currency
     const price = artwork.desiredPrice
