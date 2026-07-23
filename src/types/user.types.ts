@@ -9,6 +9,16 @@ export interface User {
     location?: string
     website?: string
     phone?: string
+
+    // Shipping Address
+    addressLine1?: string
+    addressLine2?: string
+    addressCity?: string
+    addressState?: string
+    addressZipCode?: string
+    addressCountry?: string
+    addressPhone?: string
+
     role: string
     score: number
     emailVerified: boolean

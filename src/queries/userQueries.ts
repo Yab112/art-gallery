@@ -15,7 +15,7 @@ export const useUser = (id: string) => {
 
 export const useMyProfile = () => {
     return useFetchData<{ success: boolean; profile: UserProfile }>(userKeys.me(), "profile", {
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 0, // Always refetch on mount so address changes are reflected immediately
         refetchOnWindowFocus: false, // Prevent refetch on window focus
         refetchOnMount: true, // Always refetch on mount to get latest data
         retry: 2 // Retry twice on failure

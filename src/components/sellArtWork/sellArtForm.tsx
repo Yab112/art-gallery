@@ -10,14 +10,16 @@ import {
   useGetPresignedDocumentUploadUrl,
   useGetPresignedMultipleImageUploadUrls,
 } from "@/queries/uploadQueries";
+import { useMyProfile } from "@/queries/userQueries";
 import { useCreateArtwork } from "@/services/artwork/useCreateArtwork";
 import { uploadFileToS3 } from "@/services/upload";
 import type { CreateArtworkDto } from "@/types/artwork.types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, MapPin } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { hasCompleteShippingAddress } from "@/lib/shipping-address";
 import { Card } from "../ui/card";
 import { ArtworkInfoSection } from "./artworkInfoSection";
 import { BankingSection } from "./bankingSection";
@@ -62,6 +64,20 @@ const getDefaultValues = (userName?: string): ArtworkFormData => ({
 export function SellArtForm() {
   const { user } = useAuth();
   const userName = user?.name || "";
+
+  // Gate: artist must have a complete shippable origin before submitting.
+  // Same rules as FedEx rates + automatic label creation.
+  const { data: profileData, isLoading: isLoadingProfile } = useMyProfile();
+  const profile = profileData?.profile;
+  const hasShippingAddress = hasCompleteShippingAddress({
+    name: profile?.name || user?.name || "Artist",
+    addressLine1: profile?.addressLine1,
+    addressCity: profile?.addressCity,
+    addressState: profile?.addressState,
+    addressZipCode: profile?.addressZipCode,
+    addressCountry: profile?.addressCountry,
+    addressPhone: profile?.addressPhone,
+  });
 
   const {
     control,
@@ -172,7 +188,7 @@ export function SellArtForm() {
         dimensions: {
           height: data.dimensions.height,
           width: data.dimensions.width,
-          depth: data.dimensions.depth || undefined,
+          depth: data.dimensions.depth,
         },
         isFramed: data.isFramed === "yes",
         weight: data.weight,
@@ -210,49 +226,86 @@ export function SellArtForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      <Alert className="border-none bg-white">
-        <InfoIcon className="h-4 w-4" />
-        <AlertDescription>
-          Tips for filling out the artwork sales form. All required fields are
-          marked with an asterisk (*).
-        </AlertDescription>
-      </Alert>
-
-      <Card className="space-y-8 p-6">
-        <ArtworkInfoSection control={control} errors={errors} />
-
-        <ProofOfOriginSection
-          control={control}
-          errors={errors}
-          setValue={setValue}
-        />
-
-        <DescriptionSection control={control} errors={errors} />
-
-        <PhotosSection
-          control={control}
-          errors={errors}
-          setValue={setValue}
-          formData={formData}
-        />
-
-        <PriceSection control={control} errors={errors} formData={formData} />
-
-        <BankingSection control={control} errors={errors} formData={formData} />
-
-        <div className="flex justify-end pt-6">
-          <Button
-            type="submit"
-            size="lg"
-            disabled={isSubmitting || isCreating}
-            className="bg-red-700 text-white hover:bg-red-800"
-          >
-            {isSubmitting || isCreating
-              ? "Submitting..."
-              : "Submit your artwork"}
-          </Button>
+      {/* Shipping address gate — blocks form when address is missing */}
+      {!isLoadingProfile && !hasShippingAddress && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+              <MapPin className="h-5 w-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-amber-900">
+                Shipping address required before submitting an artwork
+              </p>
+              <p className="mt-1 text-amber-700 text-sm">
+                Add a complete shipping origin in Settings (address, city,
+                postal code, country, phone, and state for US/CA). This is
+                required for accurate FedEx rates and automatic labels when
+                your artwork sells.
+              </p>
+              <Button
+                type="button"
+                className="mt-4 bg-amber-600 hover:bg-amber-700 text-white"
+                asChild
+              >
+                <Link to="/profile?tab=settings">
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Add Shipping Address
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
-      </Card>
+      )}
+
+      {/* Only render the full form once address is confirmed */}
+      {(isLoadingProfile || hasShippingAddress) && (
+        <>
+          <Alert className="border-none bg-white">
+            <InfoIcon className="h-4 w-4" />
+            <AlertDescription>
+              Tips for filling out the artwork sales form. All required fields
+              are marked with an asterisk (*).
+            </AlertDescription>
+          </Alert>
+
+          <Card className="space-y-8 p-6">
+            <ArtworkInfoSection control={control} errors={errors} />
+
+            <ProofOfOriginSection
+              control={control}
+              errors={errors}
+              setValue={setValue}
+            />
+
+            <DescriptionSection control={control} errors={errors} />
+
+            <PhotosSection
+              control={control}
+              errors={errors}
+              setValue={setValue}
+              formData={formData}
+            />
+
+            <PriceSection control={control} errors={errors} formData={formData} />
+
+            <BankingSection control={control} errors={errors} formData={formData} />
+
+            <div className="flex justify-end pt-6">
+              <Button
+                type="submit"
+                size="lg"
+                disabled={isSubmitting || isCreating}
+                className="bg-red-700 text-white hover:bg-red-800"
+              >
+                {isSubmitting || isCreating
+                  ? "Submitting..."
+                  : "Submit your artwork"}
+              </Button>
+            </div>
+          </Card>
+        </>
+      )}
     </form>
   );
 }

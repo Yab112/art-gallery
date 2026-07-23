@@ -15,7 +15,7 @@ export const artworkFormSchema = z.object({
     dimensions: z.object({
         height: z.string().min(1, "Height is required"),
         width: z.string().min(1, "Width is required"),
-        depth: z.string().optional()
+        depth: z.string().min(1, "Depth is required"),
     }),
     isFramed: z.string().min(1, "Framed status is required"),
     weight: z.string().min(1, "Weight is required"),

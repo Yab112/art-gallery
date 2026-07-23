@@ -1,5 +1,6 @@
 import useMutationFunc from "@/hooks/use-mutation"
 import { userKeys } from "@/queries/queryKeys"
+import { useQueryClient } from "@tanstack/react-query"
 import { AxiosError } from "axios"
 import { toast } from "sonner"
 
@@ -16,6 +17,15 @@ export interface UpdateProfileDto {
     website?: string
     phone?: string
     coverImage?: string // S3 URL
+    
+    // Shipping Address
+    addressLine1?: string
+    addressLine2?: string
+    addressCity?: string
+    addressState?: string
+    addressZipCode?: string
+    addressCountry?: string
+    addressPhone?: string
 }
 
 interface BackendErrorResponse {
@@ -27,8 +37,29 @@ interface BackendErrorResponse {
 }
 
 export const useUpdateProfile = () => {
+    const queryClient = useQueryClient()
+
     const { mutateAsync, isPending } = useMutationFunc<UpdateProfileResponse, UpdateProfileDto>({
-        onSuccess: () => {
+        onSuccess: (data) => {
+            // Instantly merge returned profile into cache so Settings/Ship address UI updates now.
+            if (data?.profile) {
+                queryClient.setQueryData(userKeys.me(), (old: any) => {
+                    if (!old || typeof old !== "object") {
+                        return { success: true, profile: data.profile }
+                    }
+                    return {
+                        ...old,
+                        profile: {
+                            ...(old.profile || {}),
+                            ...data.profile,
+                        },
+                    }
+                })
+            }
+            // Buyer country drives Chapa eligibility — refresh checkout resolve
+            void queryClient.invalidateQueries({
+                queryKey: ["checkout-available-methods"],
+            })
             toast.success("Profile updated successfully")
         },
         onError: (error: any) => {

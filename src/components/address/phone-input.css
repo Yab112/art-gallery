@@ -1,0 +1,107 @@
+/* Match StructuredAddressFields / shadcn Input (white + gray-200) */
+
+.PhoneInputArt {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 2.5rem;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 0.375rem; /* rounded-md */
+  background-color: #ffffff !important;
+  color: #111827; /* gray-900 */
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.PhoneInputArt:focus-within {
+  border-color: #d1d5db; /* gray-300 */
+}
+
+.PhoneInputArt.PhoneInput--disabled {
+  opacity: 1;
+  background-color: #f9fafb !important; /* gray-50 */
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.PhoneInputArt .PhoneInputCountry {
+  position: relative;
+  align-self: stretch;
+  margin: 0;
+  padding: 0 0.75rem;
+  border-right: 1px solid #e5e7eb;
+  background-color: #f9fafb; /* gray-50 */
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.PhoneInputArt .PhoneInputCountryIcon {
+  width: 1.4rem;
+  height: 1rem;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: transparent !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.PhoneInputArt .PhoneInputCountryIcon--border {
+  background-color: transparent !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.PhoneInputArt .PhoneInputCountrySelectArrow {
+  display: none;
+}
+
+.PhoneInputArt .PhoneInputCountrySelect {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  cursor: default;
+  pointer-events: none;
+}
+
+.PhoneInputArt .PhoneInputCountryIconImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.PhoneInputArt .PhoneInputArt-input,
+.PhoneInputArt .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  color: inherit;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.PhoneInputArt .PhoneInputArt-input::placeholder,
+.PhoneInputArt .PhoneInputInput::placeholder {
+  color: #9ca3af; /* gray-400 */
+}
+
+.PhoneInputArt .PhoneInputArt-input:focus,
+.PhoneInputArt .PhoneInputInput:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.PhoneInputArt .PhoneInputArt-input:disabled,
+.PhoneInputArt .PhoneInputInput:disabled {
+  cursor: not-allowed;
+  background: transparent !important;
+}

@@ -182,7 +182,7 @@ export function EditArtworkForm({ artwork }: EditArtworkFormProps) {
         dimensions: {
           height: data.dimensions.height,
           width: data.dimensions.width,
-          depth: data.dimensions.depth || undefined,
+          depth: data.dimensions.depth,
         },
         isFramed: data.isFramed === "yes",
         weight: data.weight,
