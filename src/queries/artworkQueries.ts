@@ -1,3 +1,4 @@
+import { useSession } from "@/lib/auth"
 import useAxiosAuth, { publicApi } from "@/hooks/use-axios-auth"
 import { useFetchData } from "@/hooks/use-query"
 import type { Artwork, ArtworkListResponse, ArtworkQueryParams } from "@/types/artwork.types"
@@ -158,6 +159,36 @@ export const useArtwork = (id: string) => {
             enabled: !!id
         }
     )
+}
+
+/**
+ * Artwork detail for the public page. Everyone gets the CDN-cached anonymous
+ * view immediately; logged-in users additionally fetch the personalised view
+ * (isLiked, owner data, disputed artworks they may see), which takes over once
+ * it arrives. EditArtwork keeps using useArtwork (always personalised).
+ */
+export const useArtworkDetail = (id: string) => {
+    const { data: session, isPending: sessionPending } = useSession()
+    const loggedIn = !!session?.user
+
+    const publicQuery = useQuery<{ success: boolean; artwork: Artwork }>({
+        queryKey: [...artworkKeys.detail(id), "public"],
+        queryFn: async ({ signal }) =>
+            (await publicApi.get<{ success: boolean; artwork: Artwork }>(`/artworks/${id}/public`, { signal })).data,
+        enabled: !!id,
+        retry: false
+    })
+
+    const fullQuery = useFetchData<{ success: boolean; artwork: Artwork }>(artworkKeys.detail(id), `artworks/${id}`, {
+        enabled: !!id && !sessionPending && loggedIn
+    })
+
+    const data = (loggedIn && fullQuery.data) || publicQuery.data || fullQuery.data
+    const waitingForFull = loggedIn && fullQuery.isLoading
+    const isLoading = !data && (publicQuery.isLoading || waitingForFull || (sessionPending && !!publicQuery.error))
+    const error = data || isLoading ? null : loggedIn ? (fullQuery.error ?? publicQuery.error) : publicQuery.error
+
+    return { data, isLoading, error }
 }
 
 export const useMyArtworks = (params?: {

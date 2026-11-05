@@ -14,7 +14,7 @@ import { CreateBlogModal } from "@/components/blog/create-blog-modal"
 import { ArtworkDetailSkeleton } from "@/components/skeletons/artwork-detail-skeleton"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
-import { useArtwork } from "@/queries/artworkQueries"
+import { useArtworkDetail } from "@/queries/artworkQueries"
 import { useCartItems } from "@/queries/cartQueries"
 import { useCheckFavorite } from "@/queries/favoriteQueries"
 import { useAddToCart } from "@/services/cart/useAddToCart"
@@ -37,7 +37,7 @@ export default function ArtworkDetailPage() {
     const isGuest = !user
 
     // Fetch artwork data
-    const { data: artworkResponse, isLoading, error } = useArtwork(id || "")
+    const { data: artworkResponse, isLoading, error } = useArtworkDetail(id || "")
 
     // Debug: Log the response to see what we're getting
     useEffect(() => {
