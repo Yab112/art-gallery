@@ -1,4 +1,4 @@
-import useAxiosAuth from "@/hooks/use-axios-auth"
+import { publicApi } from "@/hooks/use-axios-auth"
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query"
 
 export interface TalentType {
@@ -40,7 +40,6 @@ export const useGetAllArtists = (
     email?: string,
     options?: Partial<UseQueryOptions<GetAllArtistsResponse>>
 ) => {
-    const axiosAuth = useAxiosAuth()
 
     return useQuery<GetAllArtistsResponse>({
         queryKey: ["all-artists", page, limit, search, country, talentTypeId, email],
@@ -63,7 +62,7 @@ export const useGetAllArtists = (
                     params.append("email", email)
                 }
                 const url = `artist/all?${params.toString()}`
-                const response = await axiosAuth.get<GetAllArtistsResponse>(url)
+                const response = await publicApi.get<GetAllArtistsResponse>(url)
                 return response.data
             } catch (error: any) {
                 console.error("Error fetching all artists:", error)

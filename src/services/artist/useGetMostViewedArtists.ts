@@ -1,4 +1,4 @@
-import useAxiosAuth from "@/hooks/use-axios-auth"
+import { publicApi } from "@/hooks/use-axios-auth"
 import { useQuery } from "@tanstack/react-query"
 
 export interface MostViewedArtist {
@@ -17,14 +17,13 @@ interface MostViewedArtistsResponse {
 }
 
 export const useGetMostViewedArtists = (limit = 10) => {
-    const axiosAuth = useAxiosAuth()
 
     return useQuery<MostViewedArtistsResponse>({
         queryKey: ["most-viewed-artists", limit],
         queryFn: async () => {
             try {
                 const url = `artist/most-viewed?limit=${limit}`
-                const response = await axiosAuth.get<MostViewedArtistsResponse>(url)
+                const response = await publicApi.get<MostViewedArtistsResponse>(url)
                 return response.data
             } catch (error: any) {
                 console.error("Error fetching most viewed artists:", error)

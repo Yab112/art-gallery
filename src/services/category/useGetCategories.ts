@@ -1,4 +1,4 @@
-import { api } from "@/hooks/use-axios-auth"
+import { publicApi as api } from "@/hooks/use-axios-auth"
 import { useQuery } from "@tanstack/react-query"
 
 export interface Category {

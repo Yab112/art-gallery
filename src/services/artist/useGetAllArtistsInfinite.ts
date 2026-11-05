@@ -1,4 +1,4 @@
-import useAxiosAuth from "@/hooks/use-axios-auth"
+import { publicApi } from "@/hooks/use-axios-auth"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import type { Artist } from "./useGetAllArtists"
 
@@ -14,7 +14,6 @@ interface GetAllArtistsPageResponse {
 }
 
 export const useGetAllArtistsInfinite = (limit = 12) => {
-    const axiosAuth = useAxiosAuth()
 
     return useInfiniteQuery<GetAllArtistsPageResponse>({
         queryKey: ["all-artists-infinite", limit],
@@ -23,7 +22,7 @@ export const useGetAllArtistsInfinite = (limit = 12) => {
                 page: String(pageParam),
                 limit: limit.toString(),
             })
-            const response = await axiosAuth.get<GetAllArtistsPageResponse>(
+            const response = await publicApi.get<GetAllArtistsPageResponse>(
                 `artist/all?${params.toString()}`,
             )
             return (

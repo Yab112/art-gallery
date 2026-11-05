@@ -12,6 +12,18 @@ export const api: AxiosInstance = axios.create({
   withCredentials: true, // Important for Better Auth cookies - cookies are sent automatically
 });
 
+/**
+ * Client for public, user-independent reads (listings, categories, settings).
+ * In production it goes through the same-origin /api rewrite with no
+ * Authorization header, so Vercel's CDN can serve cached responses instead of
+ * waiting on the backend (cold starts, cross-region DB latency).
+ */
+export const publicApi: AxiosInstance = axios.create({
+  baseURL: import.meta.env.PROD ? "/api" : getServerBaseUrl(),
+  timeout: 30000,
+  withCredentials: false,
+});
+
 // Log API base URL only in development
 if (import.meta.env.DEV) {
   console.log("API base URL:", api.defaults.baseURL);

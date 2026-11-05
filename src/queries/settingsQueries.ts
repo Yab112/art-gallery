@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query"
+import { publicApi } from "@/hooks/use-axios-auth"
 import { useFetchData } from "@/hooks/use-query"
 
 interface PlatformSettings {
@@ -49,7 +51,10 @@ interface CollectionSettingsResponse {
 }
 
 export const usePlatformSettings = () => {
-    return useFetchData<PlatformSettingsResponse>(["settings", "platform"], "settings/platform", {
+    // Public and identical for every visitor, so fetched via the CDN-cacheable client.
+    return useQuery<PlatformSettingsResponse>({
+        queryKey: ["settings", "platform"],
+        queryFn: async ({ signal }) => (await publicApi.get<PlatformSettingsResponse>("/settings/platform", { signal })).data,
         staleTime: 30 * 60 * 1000, // 30 minutes
         refetchOnWindowFocus: false
     })

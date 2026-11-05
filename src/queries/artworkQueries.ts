@@ -1,4 +1,4 @@
-import useAxiosAuth from "@/hooks/use-axios-auth"
+import useAxiosAuth, { publicApi } from "@/hooks/use-axios-auth"
 import { useFetchData } from "@/hooks/use-query"
 import type { Artwork, ArtworkListResponse, ArtworkQueryParams } from "@/types/artwork.types"
 import {
@@ -33,12 +33,11 @@ export const useArtworks = (
         })()
         : ""
 
-    const axiosAuth = useAxiosAuth()
 
     return useQuery<ArtworkListResponse>({
         queryKey: artworkKeys.list(params),
         queryFn: async () => {
-            const response = await axiosAuth.get<{
+            const response = await publicApi.get<{
                 artworks: any[]
                 pagination?: {
                     page: number
@@ -98,7 +97,6 @@ const buildArtworkQueryString = (params?: ArtworkQueryParams) => {
 }
 
 export const useArtworksInfinite = (params?: ArtworkQueryParams) => {
-    const axiosAuth = useAxiosAuth()
     const limit = params?.limit ?? 12
 
     return useInfiniteQuery<ArtworkListResponse>({
@@ -109,7 +107,7 @@ export const useArtworksInfinite = (params?: ArtworkQueryParams) => {
                 ? `${queryString}&page=${pageParam}`
                 : `page=${pageParam}&limit=${limit}`
 
-            const response = await axiosAuth.get<{
+            const response = await publicApi.get<{
                 artworks: any[]
                 pagination?: {
                     page: number
