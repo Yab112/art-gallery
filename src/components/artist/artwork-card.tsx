@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import type React from "react"
 import { useState } from "react"
+import { Img } from "@/components/ui/img"
 
 interface Artwork {
     id: number
@@ -80,7 +81,7 @@ export function ArtworkCard({ artwork, onImageClick }: ArtworkCardProps) {
                         </div>
                     </div>
                 ) : (
-                    <img
+                    <Img
                         src={artwork.image}
                         alt={artwork.title}
                         className="zoom-image h-full w-full object-cover transition-transform duration-300"

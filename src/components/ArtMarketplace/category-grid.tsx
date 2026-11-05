@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useRef, useState } from "react"
+import { Img } from "@/components/ui/img"
 
 interface Category {
     id: string
@@ -135,7 +136,7 @@ export function CategoryGrid({
                                         }}
                                     >
                                         <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-lg">
-                                            <img
+                                            <Img
                                                 src={category.image || "/placeholder.svg"}
                                                 alt={category.name}
                                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"

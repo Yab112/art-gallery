@@ -91,6 +91,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { toast } from "sonner";
+import { Img } from "@/components/ui/img"
 
 export default function ProfilePage() {
   const { user: sessionUser } = useAuth();
@@ -341,13 +342,13 @@ export default function ProfilePage() {
             }}
           >
             {profileCoverImagePreview ? (
-              <img
+              <Img
                 src={profileCoverImagePreview}
                 alt="Cover preview"
                 className="h-full w-full object-cover"
               />
             ) : (profile as any).coverImage ? (
-              <img
+              <Img
                 src={(profile as any).coverImage}
                 alt="Cover"
                 className="h-full w-full object-cover"
@@ -465,14 +466,14 @@ export default function ProfilePage() {
                   }}
                 >
                   {avatarPreview ? (
-                    <img
+                    <Img
                       src={avatarPreview}
                       alt={profile.name || "User"}
                       className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
                       style={{ borderColor: "#FFFFFF" }}
                     />
                   ) : profile.image ? (
-                    <img
+                    <Img
                       src={profile.image}
                       alt={profile.name || "User"}
                       className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
@@ -637,7 +638,7 @@ export default function ProfilePage() {
                               className="relative block flex-shrink-0"
                               style={{ zIndex: 4 - index }}
                             >
-                              <img
+                              <Img
                                 src={getAvatarUrl(
                                   user.image,
                                   user.name || "User",
@@ -1212,7 +1213,7 @@ export default function ProfilePage() {
                           <div className="space-y-2">
                             {coverImagePreview ? (
                               <div className="relative">
-                                <img
+                                <Img
                                   src={coverImagePreview}
                                   alt="Cover preview"
                                   className="h-48 w-full rounded-lg border border-gray-200 object-cover"
@@ -1397,7 +1398,7 @@ export default function ProfilePage() {
                             <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
                               {collection.coverImage &&
                               !collectionImageErrors[collection.id] ? (
-                                <img
+                                <Img
                                   src={collection.coverImage}
                                   alt={collection.name}
                                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"

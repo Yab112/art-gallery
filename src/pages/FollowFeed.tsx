@@ -15,6 +15,7 @@ import { getAvatarUrl } from "@/utils/avatar"
 import { Eye, Heart, Loader2, Users } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 export default function FollowFeedPage() {
     const [page, setPage] = useState(1)
@@ -98,7 +99,7 @@ export default function FollowFeedPage() {
                                         <div>
                                             <div className="mb-4 flex items-center gap-3">
                                                 <Link to={`/profile/${item.artwork.user.id}`}>
-                                                    <img
+                                                    <Img
                                                         src={getAvatarUrl(
                                                             item.artwork.user.image,
                                                             item.artwork.user.name,
@@ -143,7 +144,7 @@ export default function FollowFeedPage() {
                                         <div>
                                             <div className="mb-4 flex items-center gap-3">
                                                 <Link to={`/profile/${item.blogPost.author.id}`}>
-                                                    <img
+                                                    <Img
                                                         src={getAvatarUrl(
                                                             item.blogPost.author.image,
                                                             item.blogPost.author.name,
@@ -168,7 +169,7 @@ export default function FollowFeedPage() {
                                             <Link to={`/blog/${item.blogPost.slug}`}>
                                                 <div className="overflow-hidden rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
                                                     {item.blogPost.featuredImage && (
-                                                        <img
+                                                        <Img
                                                             src={item.blogPost.featuredImage}
                                                             alt={item.blogPost.title}
                                                             className="h-48 w-full object-cover"

@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Img } from "@/components/ui/img"
 
 interface CreateBlogFormData {
   title: string;
@@ -494,7 +495,7 @@ export function CreateBlogModal({
             <Label htmlFor="featuredImage">Featured Image (Optional)</Label>
             {featuredImagePreview ? (
               <div className="relative">
-                <img
+                <Img
                   src={featuredImagePreview}
                   alt="Featured preview"
                   className="h-48 w-full rounded-lg border border-gray-200 object-cover"

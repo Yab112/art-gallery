@@ -4,6 +4,7 @@ import { usePlatformSettings } from "@/queries/settingsQueries"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "./ui/button"
+import { Img } from "@/components/ui/img"
 
 interface UserDropdownProps {
     onLogin?: () => void
@@ -49,7 +50,7 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                 {isLoading ? (
                     <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
                 ) : isLoggedIn && user?.image && user.image.trim() !== "" && !imageError ? (
-                    <img
+                    <Img
                         src={user.image}
                         alt=""
                         className="h-8 h-full w-8 w-full rounded-full border-2 border-gray-200 object-cover"
@@ -76,7 +77,7 @@ export function UserDropdown({ onLogin, onLogout }: UserDropdownProps) {
                                 <div className="border-gray-100 border-b px-4 py-3">
                                     <div className="flex items-center space-x-3">
                                         {user?.image && !imageError ? (
-                                            <img
+                                            <Img
                                                 src={user.image}
                                                 alt={user.name || "User"}
                                                 className="aspect-square h-8 w-8 rounded-full border-2 border-white object-cover object-center"

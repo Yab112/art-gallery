@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { TransactionGraphs } from "./TransactionGraphs"
+import { Img } from "@/components/ui/img"
 
 const formatCurrency = (amount: number | string, currency: string | null) => {
     const isETB = currency?.toUpperCase() === "ETB"
@@ -433,7 +434,7 @@ export function TransactionsSection() {
                                                                             {item.artwork.photos &&
                                                                                 item.artwork
                                                                                     .photos[0] && (
-                                                                                    <img
+                                                                                    <Img
                                                                                         src={
                                                                                             item
                                                                                                 .artwork

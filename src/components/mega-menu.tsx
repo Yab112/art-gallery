@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 interface MegaMenuProps {
     type: "artwork" | "artist"
@@ -321,7 +322,7 @@ export function MegaMenu({
                                                 )}
                                             >
                                                 {hasValidImage ? (
-                                                    <img
+                                                    <Img
                                                         src={item.image || item.icon}
                                                         alt={item.name}
                                                         onError={() => handleImageError(item.id)}

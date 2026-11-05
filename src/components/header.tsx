@@ -28,6 +28,7 @@ import { Button } from "./ui/button";
 import { UserDropdown } from "./user-dropdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLockBodyScroll } from "@/hooks/use-lock-body-scroll";
+import { Img } from "@/components/ui/img"
 
 function Logo() {
   const [imageError, setImageError] = useState(false);
@@ -43,7 +44,7 @@ function Logo() {
   }
 
   return (
-    <img
+    <Img
       src="/mainlogo.png"
       alt="Logo"
       className="h-6 w-auto md:h-8"
@@ -80,7 +81,7 @@ function MobileUserMenu({ onItemClick }: { onItemClick: () => void }) {
         {/* User Info */}
         <div className="flex items-center space-x-4 px-2">
           {user.image ? (
-            <img
+            <Img
               src={user.image}
               alt={user.name || "User"}
               className="h-12 w-12 rounded-full border border-gray-100 object-cover shadow-sm"
@@ -641,7 +642,7 @@ export default function Header() {
                       >
                         <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                           {artwork.photos?.[0] ? (
-                            <img
+                            <Img
                               src={artwork.photos[0]}
                               alt={artwork.title}
                               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -690,7 +691,7 @@ export default function Header() {
                       >
                         <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-gray-100 bg-gray-100">
                           {artist.avatar ? (
-                            <img
+                            <Img
                               src={artist.avatar}
                               alt={artist.name}
                               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -739,7 +740,7 @@ export default function Header() {
                       >
                         <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-gray-100 shadow-sm">
                           {collection.coverImage ? (
-                            <img
+                            <Img
                               src={collection.coverImage}
                               alt={collection.name}
                               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"

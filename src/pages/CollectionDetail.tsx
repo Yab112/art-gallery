@@ -68,6 +68,7 @@ import {
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 export default function CollectionDetailPage() {
     const { id } = useParams<{ id: string }>()
@@ -325,7 +326,7 @@ export default function CollectionDetailPage() {
                 <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
                     <div className="relative h-48 w-full overflow-hidden bg-gray-100 md:h-64">
                         {collection.coverImage && !imageError ? (
-                            <img
+                            <Img
                                 src={collection.coverImage}
                                 alt={collection.name}
                                 className="h-full w-full object-cover"
@@ -624,7 +625,7 @@ export default function CollectionDetailPage() {
                                 <div className="mt-2 space-y-2">
                                     {coverImagePreview || collection.coverImage ? (
                                         <div className="relative h-32 w-full overflow-hidden rounded-md border border-gray-200">
-                                            <img
+                                            <Img
                                                 src={coverImagePreview || collection.coverImage}
                                                 alt="Cover preview"
                                                 className="h-full w-full object-cover"

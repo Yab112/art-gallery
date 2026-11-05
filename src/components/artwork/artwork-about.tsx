@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import type { Artwork } from "@/types/artwork.types"
 import { useNavigate } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 interface ArtworkAboutProps {
     artwork: Artwork
@@ -88,7 +89,7 @@ export const ArtworkAbout = ({ artwork, isOwner = false }: ArtworkAboutProps) =>
                 <div className="mt-4 flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3">
                     <div className="flex items-center gap-2.5">
                         {artwork.user.image ? (
-                            <img
+                            <Img
                                 src={artwork.user.image}
                                 alt={artwork.user.name}
                                 className="h-10 w-10 rounded-full object-cover"

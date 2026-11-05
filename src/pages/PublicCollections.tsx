@@ -42,6 +42,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 export default function PublicCollectionsPage() {
     const [page, setPage] = useState(1)
@@ -683,7 +684,7 @@ export default function PublicCollectionsPage() {
                                 <div className="mt-2 space-y-2">
                                     {coverImagePreview ? (
                                         <div className="relative h-32 w-full overflow-hidden rounded-md border border-gray-200">
-                                            <img
+                                            <Img
                                                 src={coverImagePreview}
                                                 alt="Cover preview"
                                                 className="h-full w-full object-cover"

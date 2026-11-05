@@ -11,6 +11,7 @@ import { ArrowRight, Heart, ShoppingBag, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 export default function FavoritesPage() {
     const [page, setPage] = useState(1)
@@ -121,7 +122,7 @@ export default function FavoritesPage() {
                                             {/* Artwork Image */}
                                             <Link to={`/artwork/${artwork.id}`}>
                                                 <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
-                                                    <img
+                                                    <Img
                                                         src={
                                                             artwork.photos?.[0] ||
                                                             "/placeholder.svg"

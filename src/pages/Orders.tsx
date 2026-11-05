@@ -26,6 +26,7 @@ import {
     getFriendlyTrackingLabel,
 } from "@/lib/shipment-tracking"
 import { formatMoney, isFedExServiceType } from "@/lib/format-money"
+import { Img } from "@/components/ui/img"
 
 const STATUS_STYLES: Record<
     string,
@@ -816,7 +817,7 @@ export default function OrdersPage() {
                                                                 className="shrink-0"
                                                             >
                                                                 <div className="relative h-14 w-14 overflow-hidden rounded-md bg-zinc-100">
-                                                                    <img
+                                                                    <Img
                                                                         src={
                                                                             artwork
                                                                                 .photos?.[0] ||

@@ -7,6 +7,7 @@ import { useCartItems } from "@/queries/cartQueries"
 import { useRemoveFromCart } from "@/services/cart/useRemoveFromCart"
 import { Trash2 } from "lucide-react"
 import { useEffect, useMemo } from "react"
+import { Img } from "@/components/ui/img"
 
 function formatCheckoutDimensions(dimensions: unknown): string | null {
     if (!dimensions || typeof dimensions !== "object") return null
@@ -190,7 +191,7 @@ export function OrderSummary() {
                                     />
                                 </div>
                                 <div className="relative h-16 w-14 flex-shrink-0 overflow-hidden bg-stone-100">
-                                    <img
+                                    <Img
                                         src={item.artwork?.photos?.[0] || "/placeholder.svg"}
                                         alt={item.artwork?.title || "Artwork"}
                                         className="h-full w-full object-cover"

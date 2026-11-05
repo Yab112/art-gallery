@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { usePlatformSettings } from "@/queries/settingsQueries";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Img } from "@/components/ui/img";
 
 const slides = [
   {
@@ -44,11 +45,15 @@ export function HeroCarousel() {
     <div className="relative">
       <div className={" relative min-h-[60vh] overflow-hidden"}>
         {/* Full-width background image */}
-        <div
-          className="absolute inset-0 bg-center bg-cover bg-no-repeat"
-          style={{
-            backgroundImage: `url(${currentSlideData.artwork})`,
-          }}
+        <Img
+          key={currentSlideData.artwork}
+          src={currentSlideData.artwork}
+          alt=""
+          aria-hidden="true"
+          sizes="100vw"
+          loading={currentSlide === 0 ? "eager" : "lazy"}
+          fetchPriority={currentSlide === 0 ? "high" : "auto"}
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
 
         <div className="relative z-10 mx-auto flex h-full min-h-[85vh] max-w-7xl items-center justify-end px-4 py-12">

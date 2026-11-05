@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Img } from "@/components/ui/img"
 
 export function CTASection() {
     return (
@@ -25,7 +26,7 @@ export function CTASection() {
 
                     {/* Right content - Phone mockups */}
                     <div className="relative col-span-2 h-[40vh] bg-red-300 ">
-                        <img src="/cta.webp" alt="" className="h-full w-full object-cover" />
+                        <Img src="/cta.webp" alt="" className="h-full w-full object-cover" />
                     </div>
                 </div>
             </div>

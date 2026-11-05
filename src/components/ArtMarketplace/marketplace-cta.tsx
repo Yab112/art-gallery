@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 export interface CtaPreviewArtwork {
     id: string
@@ -60,7 +61,7 @@ export function MarketplaceCta({
                                         height: "5.75rem"
                                     }}
                                 >
-                                    <img
+                                    <Img
                                         src={artwork.image}
                                         alt={artwork.title || "Artwork preview"}
                                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"

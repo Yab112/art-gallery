@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { getAvatarUrl } from "@/utils/avatar"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 interface TalentType {
     id: string
@@ -88,14 +89,14 @@ export function ArtistCard({ artist, showSales, showViews }: ArtistCardProps) {
             {/* Avatar - Clickable */}
             <div className="relative mb-3">
                 {hasAvatar && !imageError ? (
-                    <img
+                    <Img
                         src={avatarUrl!}
                         alt={artist.name}
                         onError={handleImageError}
                         className="h-24 w-24 rounded-full border-4 border-gray-100 object-cover shadow-md sm:h-28 sm:w-28 md:h-32 md:w-32"
                     />
                 ) : !placeholderError ? (
-                    <img
+                    <Img
                         src={placeholderUrl}
                         alt={artist.name}
                         onError={handlePlaceholderError}

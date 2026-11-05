@@ -10,6 +10,7 @@ import { useOrder } from "@/queries/orderQueries"
 import { useConfirmDelivery, useDeliveryConfirmation } from "@/services/delivery/useDelivery"
 import { AlertCircle, CheckCircle2, ChevronLeft, RefreshCw, Info } from "lucide-react"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 /** Avoid react-signature-canvas getTrimmedCanvas() — trim-canvas breaks under Vite ESM. */
 function canvasToTrimmedDataUrl(source: HTMLCanvasElement): string {
@@ -208,7 +209,7 @@ export default function DeliveryConfirmPage() {
                                 {order.items.map(item => (
                                     <div key={item.id} className="flex items-center gap-4">
                                         <div className="h-16 w-16 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
-                                            <img 
+                                            <Img 
                                                 src={item.artwork?.photos?.[0] || "/placeholder.svg"} 
                                                 alt={item.artwork?.title} 
                                                 className="h-full w-full object-cover"

@@ -67,6 +67,7 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 export default function CollectionsPage() {
     const [page, setPage] = useState(1)
@@ -659,7 +660,7 @@ export default function CollectionsPage() {
                             <div className="mt-2 space-y-2">
                                 {coverImagePreview ? (
                                     <div className="relative h-32 w-full overflow-hidden rounded-md border border-gray-200">
-                                        <img
+                                        <Img
                                             src={coverImagePreview}
                                             alt="Cover preview"
                                             className="h-full w-full object-cover"

@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { Suspense, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import { Footer } from "../footer"
 import Header from "../header"
@@ -12,7 +12,9 @@ export function AppLayout() {
                 <ScrollToHash />
                 <AuthRedirectHandler />
                 <Header />
-                <Outlet />
+                <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
+                    <Outlet />
+                </Suspense>
                 <Footer />
             </div>
         </>

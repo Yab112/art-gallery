@@ -9,6 +9,19 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      target: 'es2020',
+      rollupOptions: {
+        output: {
+          // Long-lived vendor chunks: cached across deploys, shared by routes.
+          manualChunks: {
+            react: ['react', 'react-dom', 'react-router-dom'],
+            query: ['@tanstack/react-query', 'axios'],
+            motion: ['framer-motion'],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

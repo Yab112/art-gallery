@@ -32,6 +32,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { Img } from "@/components/ui/img"
 
 interface CommentFormData {
   content: string;
@@ -228,7 +229,7 @@ export default function BlogDetailPage() {
                 <div className="flex flex-wrap items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
                     {blogPost.author?.image && !authorImgError ? (
-                      <img
+                      <Img
                         src={blogPost.author.image}
                         alt={blogPost.author.name}
                         onError={() => setAuthorImgError(true)}
@@ -287,7 +288,7 @@ export default function BlogDetailPage() {
               />
             ) : blogPost.featuredImage && !imgError ? (
               <div className="mb-12 overflow-hidden bg-gray-100">
-                <img
+                <Img
                   src={blogPost.featuredImage}
                   alt={blogPost.title}
                   onError={() => setImgError(true)}
@@ -470,7 +471,7 @@ export default function BlogDetailPage() {
                     >
                       <div className="flex items-start gap-4">
                         {comment.user.image ? (
-                          <img
+                          <Img
                             src={comment.user.image}
                             alt={comment.user.name}
                             className="h-12 w-12 rounded-full object-cover grayscale"
@@ -518,7 +519,7 @@ export default function BlogDetailPage() {
                   </h3>
                   <div className="flex items-center gap-4 mb-6">
                     {blogPost.featuredArtist.image && !artistImgError ? (
-                      <img
+                      <Img
                         src={blogPost.featuredArtist.image}
                         alt={blogPost.featuredArtist.name}
                         onError={() => setArtistImgError(true)}
@@ -568,7 +569,7 @@ export default function BlogDetailPage() {
                             <div className="h-20 w-20 flex-shrink-0 overflow-hidden bg-gray-100">
                               {artwork.photos?.[0] &&
                               !artworkImgErrors[artwork.id] ? (
-                                <img
+                                <Img
                                   src={artwork.photos[0]}
                                   alt={artwork.title}
                                   onError={() =>

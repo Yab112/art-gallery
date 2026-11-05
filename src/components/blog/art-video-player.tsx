@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Img } from "@/components/ui/img"
 
 interface ArtVideoPlayerProps {
   url: string;
@@ -315,7 +316,7 @@ export function ArtVideoPlayer({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-20 pointer-events-none"
           >
-            <img
+            <Img
               src={poster}
               alt="Video poster"
               className="h-full w-full object-cover grayscale transition-all duration-700"

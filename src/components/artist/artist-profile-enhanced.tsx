@@ -27,6 +27,7 @@ import {
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 interface ArtistProfileEnhancedProps {
     user: UserProfile
@@ -169,7 +170,7 @@ export function ArtistProfileEnhanced({
             <div className="px-4">
                 <div className="relative h-32 w-full overflow-hidden bg-black sm:h-48">
                     {!coverImageError && user.coverImage ? (
-                        <img
+                        <Img
                             src={user.coverImage}
                             alt={`${user.name || "Artist"} cover`}
                             className="h-full w-full object-cover"
@@ -195,7 +196,7 @@ export function ArtistProfileEnhanced({
                             {/* Profile Picture */}
                             <div className="relative -mt-16 flex w-full flex-shrink-0 justify-center sm:-mt-20 sm:w-auto">
                                 {user.image && !profileImageFailed ? (
-                                    <img
+                                    <Img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
                                         className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
@@ -205,7 +206,7 @@ export function ArtistProfileEnhanced({
                                         }}
                                     />
                                 ) : !placeholderImageFailed ? (
-                                    <img
+                                    <Img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
                                         className="h-32 w-32 rounded-full border-[6px] object-cover sm:h-48 sm:w-48 sm:border-[8px]"
@@ -293,7 +294,7 @@ export function ArtistProfileEnhanced({
                                                             className="relative block flex-shrink-0"
                                                             style={{ zIndex: 4 - index }}
                                                         >
-                                                            <img
+                                                            <Img
                                                                 src={getAvatarUrl(
                                                                     followingUser.image,
                                                                     followingUser.name || "User",

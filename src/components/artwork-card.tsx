@@ -7,6 +7,7 @@ import { useRemoveFavorite } from "@/services/favorites/useRemoveFavorite"
 import { Heart } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 interface ArtworkCardProps {
     id: string
@@ -194,7 +195,7 @@ export function ArtworkCard({
                         </div>
                     </div>
                 ) : (
-                    <img
+                    <Img
                         src={image}
                         alt={`${title} by ${artist}`}
                         loading="lazy"

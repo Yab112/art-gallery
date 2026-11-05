@@ -8,6 +8,7 @@ import { CheckSquare, Heart, Palette, Square } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { ArtworkMasonryGrid } from "./artwork-masonry-grid"
+import { Img } from "@/components/ui/img"
 
 const statusConfig = {
     APPROVED: {
@@ -162,7 +163,7 @@ export function ArtworkGrid({
                                 {/* Image */}
                                 <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded bg-gray-100">
                                     {artwork.image && !imageErrors.has(artwork.id) ? (
-                                        <img
+                                        <Img
                                             src={artwork.image}
                                             alt={`${artwork.title} by ${artwork.artist}`}
                                             className="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

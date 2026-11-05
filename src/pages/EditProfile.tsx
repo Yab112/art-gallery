@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 export default function EditProfilePage() {
     const { user: sessionUser } = useAuth()
@@ -381,7 +382,7 @@ export default function EditProfilePage() {
                                 <div className="flex items-center gap-4">
                                     {avatarPreview ? (
                                         <div className="relative">
-                                            <img
+                                            <Img
                                                 src={avatarPreview}
                                                 alt="Profile preview"
                                                 className="h-24 w-24 rounded-full border-2 border-gray-200 object-cover"
@@ -446,7 +447,7 @@ export default function EditProfilePage() {
                                 <div className="space-y-2">
                                     {coverImagePreview ? (
                                         <div className="relative">
-                                            <img
+                                            <Img
                                                 src={coverImagePreview}
                                                 alt="Cover preview"
                                                 className="h-48 w-full rounded-lg border border-gray-200 object-cover"

@@ -6,6 +6,7 @@ import { getAvatarUrl } from "@/utils/avatar"
 import { Bell, Globe, Heart, MapPin, Palette, Share2 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 interface ArtistProfileProps {
     user: UserProfile
@@ -31,7 +32,7 @@ export function ArtistProfile({ user }: ArtistProfileProps) {
                 {/* Cover Image */}
                 <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
                     {!coverImageError && coverImageUrl && coverImageUrl !== "/default-cover.jpg" ? (
-                        <img
+                        <Img
                             src={coverImageUrl}
                             alt={`${user.name || "Artist"} cover`}
                             className="h-full w-full object-cover"
@@ -51,7 +52,7 @@ export function ArtistProfile({ user }: ArtistProfileProps) {
                             {/* Profile Picture */}
                             <div className="relative">
                                 <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white bg-white shadow-md">
-                                    <img
+                                    <Img
                                         src={displayUrl}
                                         alt={user.name || "Artist profile"}
                                         className="h-full w-full object-cover"

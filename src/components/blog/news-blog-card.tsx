@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Play, Video } from "lucide-react";
 import { useState } from "react";
 import { ArtVideoPlayer } from "./art-video-player";
+import { Img } from "@/components/ui/img"
 
 export type BlogPostLayout =
   | "HERO"
@@ -119,7 +120,7 @@ export function NewsBlogCard({
         ) : (
           <Link to={`/blog/${blogPost.slug}`}>
             {blogPost.featuredImage && !imgError ? (
-              <img
+              <Img
                 src={blogPost.featuredImage}
                 alt={blogPost.title}
                 onError={() => setImgError(true)}
@@ -235,7 +236,7 @@ export function NewsBlogCard({
             ) : (
               <>
                 {blogPost.featuredImage && !imgError ? (
-                  <img
+                  <Img
                     src={blogPost.featuredImage}
                     alt={blogPost.title}
                     onError={() => setImgError(true)}
@@ -314,7 +315,7 @@ export function NewsBlogCard({
             ) : (
               <>
                 {blogPost.featuredImage && !imgError ? (
-                  <img
+                  <Img
                     src={blogPost.featuredImage}
                     alt={blogPost.title}
                     onError={() => setImgError(true)}
@@ -401,7 +402,7 @@ export function NewsBlogCard({
               onClick={handlePlayClick}
             >
               {blogPost.featuredImage && !imgError ? (
-                <img
+                <Img
                   src={blogPost.featuredImage}
                   alt={blogPost.title}
                   onError={() => setImgError(true)}
@@ -486,7 +487,7 @@ export function NewsBlogCard({
           ) : (
             <>
               {blogPost.featuredImage && !imgError ? (
-                <img
+                <Img
                   src={blogPost.featuredImage}
                   alt={blogPost.title}
                   onError={() => setImgError(true)}

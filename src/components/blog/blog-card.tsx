@@ -1,6 +1,7 @@
 import type { BlogPost } from "@/types/blog.types"
 import { User } from "lucide-react"
 import { Link } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 interface BlogCardProps {
     blogPost: BlogPost
@@ -81,7 +82,7 @@ export function BlogCard({ blogPost, returnTo, returnState }: BlogCardProps) {
                 {/* Featured Image - Now on the right */}
                 {blogPost.featuredImage && (
                     <div className="aspect-[16/9] w-full flex-shrink-0 overflow-hidden rounded-sm bg-gray-50 md:w-[440px]">
-                        <img
+                        <Img
                             src={blogPost.featuredImage}
                             alt={blogPost.title}
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

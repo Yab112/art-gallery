@@ -1,5 +1,6 @@
 import { useGetCategories } from "@/services/category/useGetCategories"
 import { useNavigate } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 export function CategoriesSection() {
     const { data: categoriesData, isLoading } = useGetCategories()
@@ -40,7 +41,7 @@ export function CategoriesSection() {
                                 onClick={() => handleCategoryClick(category.id)}
                             >
                                 <div className="group-hover:-translate-y-1 mb-3 aspect-square overflow-hidden rounded-lg bg-gray-200 transition-all duration-300 group-hover:shadow-lg">
-                                    <img
+                                    <Img
                                         src={category.image || "/placeholder.svg"}
                                         alt={category.name}
                                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"

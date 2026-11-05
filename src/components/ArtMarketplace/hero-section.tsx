@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { useRef, useState } from "react"
+import { Img } from "@/components/ui/img"
 
 interface HeroCategory {
     id: string
@@ -149,7 +150,7 @@ export function MarketplaceHero({
                                                     : "group-hover:shadow-md"
                                             }`}
                                         >
-                                            <img
+                                            <Img
                                                 src={category.image || "/placeholder.svg"}
                                                 alt={category.name}
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"

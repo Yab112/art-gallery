@@ -1,5 +1,7 @@
 import type React from "react"
 import { useState, useRef } from "react"
+import { isOptimizable, optimizedUrl } from "@/lib/image"
+import { Img } from "@/components/ui/img"
 
 interface ArtworkImageProps {
   src: string
@@ -70,11 +72,14 @@ export const ArtworkImage: React.FC<ArtworkImageProps> = ({
             </div>
           </div>
         ) : (
-          <img
+          <Img
             ref={imageRef}
             src={src}
             alt={alt}
             className="h-full w-full object-cover"
+            sizes="(max-width: 1024px) 100vw, 60vw"
+            loading="eager"
+            fetchPriority="high"
             onError={() => setImageError(true)}
           />
         )}
@@ -105,7 +110,7 @@ export const ArtworkImage: React.FC<ArtworkImageProps> = ({
             style={{
               width: `${imageRef.current.width * magnificationLevel}px`,
               height: `${imageRef.current.height * magnificationLevel}px`,
-              backgroundImage: `url(${highResSrc || src})`,
+              backgroundImage: `url(${zoomSrc(highResSrc || src)})`,
               backgroundRepeat: 'no-repeat',
               backgroundSize: `${imageRef.current.width * magnificationLevel}px ${imageRef.current.height * magnificationLevel}px`,
               backgroundPosition: `-${imagePosition.x * magnificationLevel - magnifierSize / 2}px -${imagePosition.y * magnificationLevel - magnifierSize / 2}px`,
@@ -115,4 +120,8 @@ export const ArtworkImage: React.FC<ArtworkImageProps> = ({
       )}
     </>
   )
+}
+
+function zoomSrc(src: string): string {
+  return isOptimizable(src) ? optimizedUrl(src, 2048, 85) : src
 }

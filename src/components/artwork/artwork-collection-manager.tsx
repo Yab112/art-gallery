@@ -30,6 +30,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { FolderOpen, FolderPlus, Loader2, Upload, X } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 interface ArtworkCollectionManagerProps {
     artworkId: string
@@ -381,7 +382,7 @@ export function ArtworkCollectionManager({ artworkId }: ArtworkCollectionManager
                                 <div className="space-y-2">
                                     {coverImagePreview ? (
                                         <div className="relative">
-                                            <img
+                                            <Img
                                                 src={coverImagePreview}
                                                 alt="Cover preview"
                                                 className="h-48 w-full rounded-lg border border-gray-200 object-cover"

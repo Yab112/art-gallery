@@ -32,6 +32,7 @@ import {
   Link,
 } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { Img } from "@/components/ui/img"
 
 export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -551,7 +552,7 @@ export default function ArtistDetailPage() {
                       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-lg">
                         {collection.coverImage &&
                         !collectionImageErrors[collection.id] ? (
-                          <img
+                          <Img
                             src={collection.coverImage}
                             alt={collection.name}
                             className="h-48 w-full object-cover"

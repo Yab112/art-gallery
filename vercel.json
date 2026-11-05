@@ -1,11 +1,31 @@
 {
+    "images": {
+        "sizes": [64, 128, 256, 384, 640, 828, 1080, 1600, 2048],
+        "formats": ["image/avif", "image/webp"],
+        "minimumCacheTTL": 2678400,
+        "localPatterns": [{ "pathname": "^/.*$" }],
+        "remotePatterns": [
+            { "protocol": "https", "hostname": "^amzn-artwork-storage\\.s3\\.eu-north-1\\.amazonaws\\.com$", "pathname": "^/.*$" },
+            { "protocol": "https", "hostname": "^hebbkx1anhila5yf\\.public\\.blob\\.vercel-storage\\.com$", "pathname": "^/.*$" }
+        ]
+    },
+    "headers": [
+        {
+            "source": "/assets/(.*)",
+            "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        },
+        {
+            "source": "/(.*)\\.(jpg|jpeg|png|webp|avif|gif|svg|ico)",
+            "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/:path*",
             "destination": "https://art-store-backend-x1bi.onrender.com/api/:path*"
         },
         {
-            "source": "/(.*)",
+            "source": "/((?!.*\\.(?:png|jpe?g|webp|avif|gif|svg|ico|js|css|map|woff2?|txt|xml|json)$).*)",
             "destination": "/index.html"
         }
     ]

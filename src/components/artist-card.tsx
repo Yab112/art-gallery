@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Eye, Heart, ShoppingBag } from "lucide-react"
+import { Img } from "@/components/ui/img"
 
 interface ArtistCardProps {
     name: string
@@ -63,7 +64,7 @@ export function ArtistCard({
             {/* Circular Avatar */}
             <div className="relative mb-4">
                 <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-gray-100 transition-colors group-hover:border-gray-300">
-                    <img
+                    <Img
                         src={avatar || "/placeholder.svg"}
                         alt={`${name} - Artist`}
                         className="h-full w-full object-cover"

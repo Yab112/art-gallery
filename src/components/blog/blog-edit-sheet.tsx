@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Img } from "@/components/ui/img"
 
 const editBlogSchema = z.object({
   title: z
@@ -266,7 +267,7 @@ export function BlogEditSheet({
               <div className="relative group aspect-video w-full bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center transition-colors hover:border-gray-400">
                 {featuredImagePreview ? (
                   <>
-                    <img
+                    <Img
                       src={featuredImagePreview}
                       alt="Cover Preview"
                       className="absolute inset-0 h-full w-full object-cover"

@@ -14,6 +14,7 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { usePlatformSettings } from "@/queries/settingsQueries"
+import { Img } from "@/components/ui/img"
 
 function Logo() {
     const [imageError, setImageError] = useState(false)
@@ -25,7 +26,7 @@ function Logo() {
     }
 
     return (
-        <img
+        <Img
             src="/mainlogo.png"
             alt="Logo"
             className="h-10 w-auto"

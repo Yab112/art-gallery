@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 export interface CollectionCardData {
     id: string
@@ -54,7 +55,7 @@ export function CollectionCoverImage({
             onMouseLeave={handleMouseLeave}
             onMouseMove={handleMouseMove}
         >
-            <img
+            <Img
                 src={src}
                 alt={alt}
                 className="block h-full w-full object-cover transition-transform duration-300 ease-in-out transform-gpu"

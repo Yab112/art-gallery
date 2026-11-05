@@ -8,6 +8,7 @@ import { getAvatarUrl } from "@/utils/avatar"
 import { ArrowLeft, Loader2, Users } from "lucide-react"
 import { useState } from "react"
 import { Link, useParams } from "react-router-dom"
+import { Img } from "@/components/ui/img"
 
 export default function FollowersPage() {
     const { userId } = useParams<{ userId: string }>()
@@ -83,7 +84,7 @@ export default function FollowersPage() {
                                         to={`/profile/${follower.id}`}
                                         className="flex min-w-0 flex-1 items-center space-x-4"
                                     >
-                                        <img
+                                        <Img
                                             src={getAvatarUrl(follower.image, follower.name, 60)}
                                             alt={follower.name}
                                             className="h-12 w-12 flex-shrink-0 rounded-full object-cover"

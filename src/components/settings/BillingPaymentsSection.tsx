@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Img } from "@/components/ui/img"
 
 export function BillingPaymentsSection() {
     const { data: capabilities = [], isLoading, error } = usePayoutCapabilities()
@@ -133,7 +134,7 @@ export function BillingPaymentsSection() {
                             <div key={m.id} className="bg-white">
                                 <div className="flex items-center gap-4 px-4 py-3.5">
                                     <div className="flex-shrink-0 w-16 flex items-center">
-                                        <img
+                                        <Img
                                             src={m.logo}
                                             alt={m.label}
                                             className="h-5 w-auto object-contain"

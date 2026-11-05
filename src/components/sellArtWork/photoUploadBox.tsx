@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { ACCEPTED_IMAGE_FORMATS } from "@/lib/constants/srtsell.constant"
 import { ImageIcon, X } from "lucide-react"
 import type React from "react"
+import { Img } from "@/components/ui/img"
 
 interface PhotoUploadBoxProps {
     index: number
@@ -24,7 +25,7 @@ export function PhotoUploadBox({ index, file, onFileSelect, onRemove }: PhotoUpl
 
         return (
             <div className="group relative aspect-square">
-                <img
+                <Img
                     src={imageSrc || "/placeholder.svg"}
                     alt={`Photo ${index + 1}`}
                     className="h-full w-full rounded-lg border border-border object-cover"

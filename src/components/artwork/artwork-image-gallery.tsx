@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import type React from "react"
 import { useState } from "react"
 import { ArtworkImage } from "./artwork-image"
+import { Img } from "@/components/ui/img"
 
 interface ArtworkImageGalleryProps {
     photos: string[]
@@ -167,9 +168,10 @@ export const ArtworkImageGallery: React.FC<ArtworkImageGalleryProps> = ({ photos
                                         </svg>
                                     </div>
                                 ) : (
-                                    <img
+                                    <Img
                                         src={photo}
                                         alt={`Thumbnail ${index + 1}`}
+                                        sizes="96px"
                                         className="h-full w-full object-cover"
                                         onError={() => handleImageError(index)}
                                     />

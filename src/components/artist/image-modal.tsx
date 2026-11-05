@@ -3,6 +3,7 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Download, RotateCw, X, ZoomIn, ZoomOut } from "lucide-react"
 import { useRef, useState } from "react"
+import { Img } from "@/components/ui/img"
 
 interface ImageModalProps {
     src: string
@@ -72,10 +73,12 @@ export function ImageModal({ src, onClose }: ImageModalProps) {
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
             >
-                <img
+                <Img
                     ref={imageRef}
                     src={src || "/placeholder.svg"}
                     alt="Artwork detail"
+                    sizes="100vw"
+                    loading="eager"
                     className="max-h-full max-w-full object-contain transition-transform duration-200"
                     style={{
                         transform: `scale(${zoom}) translate(${position.x / zoom}px, ${

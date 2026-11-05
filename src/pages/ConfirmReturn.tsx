@@ -11,6 +11,7 @@ import {
 } from "@/services/disputes/useConfirmReturn"
 import { AlertCircle, CheckCircle2, ChevronLeft, Info } from "lucide-react"
 import { toast } from "sonner"
+import { Img } from "@/components/ui/img"
 
 /** Avoid react-signature-canvas getTrimmedCanvas() — trim-canvas breaks under Vite ESM. */
 function canvasToTrimmedDataUrl(source: HTMLCanvasElement): string {
@@ -247,7 +248,7 @@ function ConfirmReturnInner() {
                 key={`${i}-${src.slice(0, 32)}`}
                 className="group relative aspect-square overflow-hidden rounded-md border bg-muted"
               >
-                <img
+                <Img
                   src={src}
                   alt={`Return photo ${i + 1}`}
                   className="h-full w-full object-cover"

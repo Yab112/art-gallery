@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useArtworks } from "@/queries/artworkQueries";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Img } from "@/components/ui/img"
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -95,7 +96,7 @@ export function AuthLayout({
                   key={`col1-${artwork.id}-${i}`}
                   className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-gray-200 shadow-sm transition-all duration-500 hover:shadow-2xl"
                 >
-                  <img
+                  <Img
                     src={artwork.photos?.[0]}
                     alt=""
                     className="h-full w-full object-cover grayscale-[0.2] transition-all duration-700 hover:grayscale-0 hover:scale-105"
@@ -117,7 +118,7 @@ export function AuthLayout({
                   key={`col2-${artwork.id}-${i}`}
                   className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-gray-200 shadow-sm transition-all duration-500 hover:shadow-2xl"
                 >
-                  <img
+                  <Img
                     src={artwork.photos?.[0]}
                     alt=""
                     className="h-full w-full object-cover grayscale-[0.2] transition-all duration-700 hover:grayscale-0 hover:scale-105"
@@ -139,7 +140,7 @@ export function AuthLayout({
                   key={`col3-${artwork.id}-${i}`}
                   className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-gray-200 shadow-sm transition-all duration-500 hover:shadow-2xl"
                 >
-                  <img
+                  <Img
                     src={artwork.photos?.[0]}
                     alt=""
                     className="h-full w-full object-cover grayscale-[0.2] transition-all duration-700 hover:grayscale-0 hover:scale-105"
